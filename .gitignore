@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Magic Hand
+.DS_Store
+hand_landmarker.task
+magic_hand_log*.csv
