@@ -1,0 +1,8 @@
+# Magic Hand Demo
+# Installation: pip install -r requirements.txt
+#
+# OpenCV ist absichtlich nicht aufgeführt: mediapipe installiert opencv-contrib-python
+# (inkl. Vorschaufenster) selbst. Ein zusätzliches opencv-python würde damit kollidieren.
+
+mediapipe>=0.10.14,<0.11   # getestet mit 0.10.32 (Tasks-API, HandLandmarker)
+pynput>=1.7                # sendet die Pfeiltasten an die Präsentation
