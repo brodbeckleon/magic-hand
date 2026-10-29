@@ -149,3 +149,15 @@ test.describe("multiple presenters", () => {
     await expect(page.getByTestId("pref-signal").getByRole("radio", { name: "Aktivste Person" })).toHaveAttribute("aria-checked", "true");
   });
 });
+
+test("Help > Try it now: shows what was recognised without sending keys", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-help").click();
+  await page.getByTestId("try-it").click();
+  await expect(page.getByTestId("try-panel")).toContainText("hold a hand still");
+  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(1.2).move(-120, 100, 0.25).hold(0.3));
+  await expect(page.getByTestId("try-result")).toContainText("Too diagonal");
+  await expect(page.getByTestId("try-panel")).toContainText("1 swipe recognised");
+  expect(await sentKeys(page)).toEqual([]);
+});

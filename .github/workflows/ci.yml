@@ -34,6 +34,8 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      HAS_APPLE_CERT: ${{ secrets.APPLE_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,7 +53,21 @@ jobs:
       - run: pnpm assets
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml
-      - run: pnpm tauri build
+      # Signed + notarised only when the secrets exist (docs/release.md). Empty variables would make
+      # the bundler try to import an empty certificate, so the unsigned build sets none.
+      - name: tauri build (signed)
+        if: env.HAS_APPLE_CERT == 'true' && runner.os == 'macOS'
+        run: pnpm tauri build
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: tauri build
+        if: env.HAS_APPLE_CERT != 'true' || runner.os != 'macOS'
+        run: pnpm tauri build
       - uses: actions/upload-artifact@v4
         with:
           name: magic-hand-${{ matrix.os }}

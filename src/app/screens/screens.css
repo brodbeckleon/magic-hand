@@ -82,7 +82,9 @@ html[data-view="pill"] .stage { display: block; }
 .view-pill .hand-layer { display: none; }
 .pill {
   position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 18px;
-  border-radius: 999px; background: var(--glass-strong); overflow: hidden; transition: box-shadow 200ms;
+  border-radius: 999px; overflow: hidden; transition: box-shadow 200ms;
+  /* Nearly opaque: the pill floats over whatever is on screen (bright slides included). */
+  background: rgb(20 20 27 / 0.94);
 }
 .pill[data-flash="next"], .pill[data-flash="prev"] { box-shadow: inset 0 0 0 2px var(--coral), 0 0 24px rgb(224 69 42 / 0.5); }
 .pill[data-flash="calibrated"] { box-shadow: inset 0 0 0 2px var(--green); }
@@ -159,3 +161,25 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .chrome.sheet-open.sheet-wide .swipe-bar { left: calc((100% - 584px) / 2); width: min(420px, calc(100% - 624px)); }
 .chrome.sheet-open .arrow-flash { right: 444px; }
 .chrome.sheet-open .toast-slot { left: calc((100% - 444px) / 2); }
+
+.hint-slot { position: absolute; left: 50%; bottom: 132px; transform: translateX(-50%); pointer-events: none; z-index: 22; }
+.hint-slot.anchor-present { left: auto; right: 18px; bottom: 80px; transform: none; }
+.hint {
+  pointer-events: auto; display: flex; align-items: center; gap: 10px; max-width: min(460px, calc(100vw - 40px));
+  padding: 10px 14px; border-radius: var(--radius-m); font-size: 14px; line-height: 1.4; border-color: rgb(18 165 148 / 0.4);
+}
+.hint svg { flex: none; color: var(--teal); }
+.hint .link { white-space: nowrap; margin-left: 4px; }
+.anchor-present .hint::after {
+  content: ""; position: absolute; right: 48px; bottom: -7px; width: 12px; height: 12px; transform: rotate(45deg);
+  background: inherit; border-right: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+}
+
+.try-start { justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
+.try-panel { border-radius: var(--radius-m); background: rgb(18 165 148 / 0.1); border: 1px solid rgb(18 165 148 / 0.35); padding: 14px 16px; display: grid; gap: 8px; }
+.try-head { display: flex; justify-content: space-between; align-items: center; }
+.try-panel p { margin: 0; }
+.try-result { min-height: 56px; display: grid; place-items: center; }
+.try-fb { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+.try-fb.ok { color: var(--green); }
+.try-fb.warn { color: var(--amber); }

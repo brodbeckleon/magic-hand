@@ -13,9 +13,9 @@ declare const self: DedicatedWorkerGlobalScope & { import?: (url: string) => Pro
 
 // MediaPipe loads its wasm loader with a dynamic import (preferring self.import if present) and
 // reads globalThis.ModuleFactory, which it clears after creating each model. A module is only
-// evaluated once, so a second model (e.g. pose) would find no factory: the hook sets it again from
-// the module's default export on every load. In dev it also bypasses Vite's rewriting of dynamic
-// imports (appended ?import), which breaks loading files from public/.
+// evaluated once, so a second model (pose, face, wrist crops) would find no factory: the hook
+// sets it again from the module's default export on every load. In dev it also bypasses Vite's
+// rewriting of dynamic imports (appended ?import), which breaks loading files from public/.
 const dynamicImport: (url: string) => Promise<{ default: unknown }> = import.meta.env.DEV
   ? (new Function("u", "return import(u)") as (url: string) => Promise<{ default: unknown }>)
   : (url) => import(/* @vite-ignore */ url);

@@ -6,6 +6,7 @@ import { useSettings } from "../state/settings.ts";
 import { useUi, type HelpTab } from "../state/ui.ts";
 import { formatShortcut } from "./format.ts";
 import { HoldStillDemo, SwipeDemo } from "./illustrations.tsx";
+import { TryIt } from "./TryIt.tsx";
 
 const TEAM = ["Léon Brodbeck", "Michael Gasser", "Kaspar Streiff", "Diego Esposito"];
 
@@ -66,6 +67,7 @@ function GettingStarted() {
           <p className="dim">{t("help.step3Return")}</p>
         </div>
       </article>
+      <TryIt />
       <div className="help-tips">
         <h3>{t("help.tipsTitle")}</h3>
         <ul>

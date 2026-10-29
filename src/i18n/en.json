@@ -286,6 +286,22 @@
       "m": "Report missed gesture",
       "f": "Report false trigger",
       "esc": "Close panel"
+    },
+    "try": {
+      "start": "Try it now",
+      "title": "Try it",
+      "stop": "Stop",
+      "lead": "Swipe briskly to the {{dir}} or back. No key is sent.",
+      "armFirst": "First hold a hand still for about a second until the ring is full.",
+      "result": {
+        "next": "Recognised: next slide",
+        "prev": "Recognised: previous slide",
+        "ignored_dir": "Too diagonal: swipe more horizontally",
+        "ignored_return": "Return movement: ignored on purpose",
+        "ignored_not_speaker": "Someone else is the speaker"
+      },
+      "count_one": "{{count}} swipe recognised",
+      "count_other": "{{count}} swipes recognised"
     }
   },
   "toast": {
@@ -381,5 +397,13 @@
       "stay": "Stay here",
       "calibrateLater": "Use “Calibrate” later to tune Magic Hand more closely to your movements."
     }
+  },
+  "hints": {
+    "ok": "Got it",
+    "noHand": "Hold a hand up to the camera and keep it still for a moment to start.",
+    "focus": "The key went to Magic Hand itself. Click into your presentation or on “Present”.",
+    "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
+    "takeover": "Several people in view: to take over, raise an open hand for about a second.",
+    "far": "You are far away: swipe with big, clear arm movements."
   }
 }

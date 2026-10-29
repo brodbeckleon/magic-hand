@@ -1,8 +1,9 @@
+// Base styles first: component styles imported by App must be able to override them.
+import "./app/global.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App.tsx";
 import { initSettings } from "./app/state/settings.ts";
-import "./app/global.css";
 import "./i18n/index.ts";
 import { installNetworkGuard } from "./platform/networkGuard.ts";
 

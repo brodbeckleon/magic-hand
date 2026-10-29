@@ -45,7 +45,7 @@ export function StatusChip() {
       <div className="mode">
         <span className="dot" data-state={state} />
         <span data-testid="mode">{t(`status.${state}`)}</span>
-        <span ref={handRef} className="hand-seen" data-seen="false" data-testid="hand-seen">
+        <span ref={handRef} className="hand-seen" role="img" data-seen="false" data-testid="hand-seen">
           <Icon name="hand" size={16} />
         </span>
       </div>
