@@ -20,6 +20,11 @@ export function useNativeIntegration(engine: Engine): void {
   const live = useEngine((s) => s.status.kind === "live");
   const firstRunDone = useSettings((s) => s.firstRunDone);
   const openWizard = useUi((s) => s.openWizard);
+  const dev = useSettings((s) => s.dev.unlocked);
+
+  useEffect(() => {
+    document.documentElement.dataset.dev = String(dev);
+  }, [dev]);
 
   // First start (or "show the introduction again"): guided setup once the camera runs.
   useEffect(() => {

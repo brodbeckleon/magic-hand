@@ -3,7 +3,8 @@
 // (forVisionTasks(path, true)) is imported dynamically. Frames arrive as ImageBitmaps already
 // cropped to the presenter zone.
 import { FaceLandmarker, FilesetResolver, HandLandmarker, PoseLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
-import type { FaceObs } from "../../core/types.ts";
+import type { FaceObs, HandObs } from "../../core/types.ts";
+import { fullToCrop, type Rect } from "../../core/zone/Zone.ts";
 import { cropToFull } from "../../core/zone/Zone.ts";
 import { MODEL_PATHS, toHandObs, WASM_PATH, type Delegate } from "../landmarkers.ts";
 import type { FromWorker, ToWorker } from "./protocol.ts";
@@ -28,6 +29,9 @@ let fileset: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null =
 let hands: HandLandmarker | null = null;
 let pose: PoseLandmarker | null = null;
 let face: FaceLandmarker | null = null;
+let cropHands: HandLandmarker | null = null;
+let cropCanvas: OffscreenCanvas | null = null;
+const CROP_PX = 224;
 let faceCanvas: OffscreenCanvas | null = null;
 const FACE_PX = 256;
 let delegate: Delegate = "GPU";
@@ -117,6 +121,48 @@ async function facesFor(bitmap: ImageBitmap, posesRaw: NormalizedLandmark[][], c
   });
 }
 
+async function getCropHands(): Promise<HandLandmarker> {
+  cropHands ??= await HandLandmarker.createFromOptions(fileset!, {
+    baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate },
+    runningMode: "IMAGE",
+    numHands: 1,
+    minHandDetectionConfidence: 0.5,
+    minHandPresenceConfidence: 0.5,
+  });
+  return cropHands;
+}
+
+/**
+ * Far away the palm detector misses hands that are only a few pixels big in the whole picture.
+ * Around a far presenter's wrist (from the pose) the hand fills a 224 px crop and is found again.
+ * Skips crops where the regular pass already found a hand.
+ */
+async function handsInCrops(bitmap: ImageBitmap, crops: Rect[], frameCrop: Rect, found: HandObs[]): Promise<HandObs[]> {
+  if (!crops.length) return [];
+  const hl = await getCropHands();
+  cropCanvas ??= new OffscreenCanvas(CROP_PX, CROP_PX);
+  const ctx = cropCanvas.getContext("2d")!;
+  const out: HandObs[] = [];
+  for (const c of crops) {
+    if (found.some((h) => { const w = h.landmarks[0]!; return w.x >= c.x && w.x <= c.x + c.w && w.y >= c.y && w.y <= c.y + c.h; })) continue;
+    // The crop in bitmap pixels (the bitmap shows `frameCrop` of the full frame).
+    const tl = fullToCrop({ x: c.x, y: c.y, z: 0 }, frameCrop);
+    const br = fullToCrop({ x: c.x + c.w, y: c.y + c.h, z: 0 }, frameCrop);
+    const sx = tl.x * bitmap.width;
+    const sy = tl.y * bitmap.height;
+    const sw = (br.x - tl.x) * bitmap.width;
+    const sh = (br.y - tl.y) * bitmap.height;
+    if (sw < 4 || sh < 4) continue;
+    ctx.clearRect(0, 0, CROP_PX, CROP_PX);
+    ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, CROP_PX, CROP_PX);
+    for (const h of toHandObs(hl.detect(cropCanvas))) {
+      h.landmarks = h.landmarks.map((l) => ({ x: c.x + l.x * c.w, y: c.y + l.y * c.h, z: l.z }));
+      out.push(h);
+    }
+  }
+  return out;
+}
+
 self.onmessage = async (e: MessageEvent<ToWorker>) => {
   const msg = e.data;
   try {
@@ -146,9 +192,11 @@ self.onmessage = async (e: MessageEvent<ToWorker>) => {
       const t2 = performance.now();
       const faces = msg.face && raw.length ? await facesFor(bitmap, raw, crop) : null;
       const t3 = performance.now();
-      bitmap.close();
       for (const h of handObs) h.landmarks = h.landmarks.map((l) => cropToFull(l, crop));
-      post({ type: "result", id: msg.id, hands: handObs, poses, faces, handMs: t1 - t0, poseMs: t2 - t1, faceMs: t3 - t2 });
+      const extra = await handsInCrops(bitmap, msg.wristCrops, crop, handObs);
+      const t4 = performance.now();
+      bitmap.close();
+      post({ type: "result", id: msg.id, hands: [...handObs, ...extra], poses, faces, handMs: t1 - t0, poseMs: t2 - t1, faceMs: t3 - t2, cropMs: t4 - t3 });
     }
   } catch (err) {
     if (msg.type === "frame") msg.bitmap.close();

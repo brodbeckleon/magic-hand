@@ -15,6 +15,8 @@ export type ToWorker =
       pose: boolean;
       /** Face landmarks on pose-derived head crops (requires pose). */
       face: boolean;
+      /** Full-frame rects around far presenters' wrists: run the hand model on these enlarged. */
+      wristCrops: Rect[];
     }
   | { type: "reset" }
   | { type: "options"; numHands: number };
@@ -33,4 +35,5 @@ export type FromWorker =
       handMs: number;
       poseMs: number;
       faceMs: number;
+      cropMs: number;
     };

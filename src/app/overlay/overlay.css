@@ -64,3 +64,6 @@
 .person[data-active="false"] .person-label { fill: var(--grey); }
 .claim-track { stroke: rgb(255 255 255 / 0.25); }
 .claim-fill { stroke: var(--amber); filter: drop-shadow(0 0 6px rgb(255 181 71 / 0.8)); }
+.pose-hand { stroke: var(--teal); stroke-dasharray: 6 5; opacity: 0.9; }
+.wrist-crop { stroke: var(--amber); stroke-dasharray: 3 4; stroke-width: 1.5; opacity: 0; }
+html[data-dev="true"] .wrist-crop { opacity: 0.8; }

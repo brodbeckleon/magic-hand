@@ -81,6 +81,12 @@ export class SwipeDetector {
     this._history = [];
   }
 
+  /** Forgets the current movement (the position source changed, e.g. hand model -> pose wrist). */
+  clearHistory(): void {
+    this._history = [];
+    this.progress = 0;
+  }
+
   /** Starts a return period, e.g. because the other hand just triggered (shared cooldown). */
   enterReturn(t: number): void {
     this.returnUntil = t + this.params.returnTime;

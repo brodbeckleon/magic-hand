@@ -185,7 +185,9 @@
     "delete": "Delete all saved data",
     "deleteConfirm": "Delete preferences and calibration?",
     "deleteYes": "Delete",
-    "deleted": "Deleted. No data is stored anymore."
+    "deleted": "Deleted. No data is stored anymore.",
+    "farAssist": "Help at a distance",
+    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement."
   },
   "dev": {
     "title": "Developer",

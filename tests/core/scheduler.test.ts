@@ -21,3 +21,7 @@ describe("scheduler", () => {
     expect(run(10, { loadMs: 80, forcePose: true }).every((s) => s.pose)).toBe(true);
   });
 });
+
+it("runs pose every 2nd frame while a presenter is far away", () => {
+  expect(run(12, { far: true }).filter((s) => s.pose)).toHaveLength(6);
+});

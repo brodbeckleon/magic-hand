@@ -185,7 +185,9 @@
     "delete": "Alle gespeicherten Daten löschen",
     "deleteConfirm": "Einstellungen und Kalibrierung löschen?",
     "deleteYes": "Löschen",
-    "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert."
+    "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert.",
+    "farAssist": "Hilfe auf Distanz",
+    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung."
   },
   "dev": {
     "title": "Entwickler",

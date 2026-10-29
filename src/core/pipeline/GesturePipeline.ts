@@ -1,3 +1,4 @@
+import { FAR_SHOULDER_PX, HandRatio, poseHand, shoulderPx, SMALL_HAND_PX, wristCrop } from "../far/wrist.ts";
 import { handFeatures } from "../features.ts";
 import { MotionEnergy, MouthActivity } from "../speaker/activity.ts";
 import { Arbiter, type AutoSignal, type SpeakerMode, type SwitchReason } from "../speaker/Arbiter.ts";
@@ -17,6 +18,8 @@ export interface PipelineSettings {
   reverse: boolean;
   preferredHand: PreferredHand;
   speaker?: { mode: SpeakerMode; autoSignal: AutoSignal };
+  /** Far away (MHR03/MHR04): hand model on wrist crops, pose wrists when no hand is found. */
+  farAssist?: boolean;
 }
 
 export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
@@ -24,6 +27,7 @@ export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
   reverse: false,
   preferredHand: "either",
   speaker: { mode: "manual", autoSignal: "both" },
+  farAssist: true,
 };
 
 /** Person id used while no pose data is available (one presenter, like the prototype). */
@@ -69,6 +73,8 @@ export interface PersonView {
   motion: number;
   claim: number;
   age: number;
+  /** Far from the camera (small in the picture). */
+  far: boolean;
 }
 
 /** What the overlay needs to draw one frame. */
@@ -88,12 +94,19 @@ export interface PipelineSnapshot {
   returnRemaining: number;
   activeSide: Side;
   lockedSide: Side | null;
+  /** Where to run the hand model on enlarged crops next frame (far presenter, hand missing/small). */
+  wristCrops: Rect[];
+  /** Palms estimated from the pose (no hand landmarks), mirrored pixels. */
+  poseHands: { person: number; side: Side; hand: Hand }[];
 }
 
 interface PersonState {
   lock: HandLock;
   mouth: MouthActivity;
   motion: MotionEnergy;
+  ratio: HandRatio;
+  /** Where each side's position came from last frame (switching sources restarts the swipe). */
+  source: Record<Side, "hand" | "pose" | null>;
 }
 
 /**
@@ -180,6 +193,29 @@ export class GesturePipeline {
       byPerson.set(a.person, m);
     }
 
+    // Far away: learn each person's hand size, and fall back to the pose wrists where no hand is found.
+    const poseHands: PipelineSnapshot["poseHands"] = [];
+    const farIds = new Set<number>();
+    for (const p of persons) {
+      const sh = shoulderPx(p.pose, width, height);
+      if (sh === null) continue;
+      if (sh < FAR_SHOULDER_PX) farIds.add(p.id);
+      const st = this.state(p.id);
+      if (frame.poses && p.poseIndex !== null) {
+        for (const a of assigned) if (a.person === p.id) st.ratio.observe(a.tr.hand.scale, sh);
+      }
+      if (!this.settings.farAssist || !farIds.has(p.id) || !frame.poses || p.poseIndex === null) continue;
+      const m = byPerson.get(p.id) ?? {};
+      for (const side of ["left", "right"] as const) {
+        if (m[side]) continue;
+        const h = poseHand(p.pose, side, width, height, st.ratio.value);
+        if (!h) continue;
+        m[side] = h;
+        poseHands.push({ person: p.id, side, hand: h });
+      }
+      byPerson.set(p.id, m);
+    }
+
     const events: PipelineEvent[] = [];
 
     // Palm claims ("raise an open hand to take over").
@@ -236,6 +272,11 @@ export class GesturePipeline {
       for (const [person, hands] of byPerson) {
         const st = this.state(person);
         if (this.armed && !st.lock.calibrated) st.lock.forceCalibrated(t);
+        for (const side of ["left", "right"] as const) {
+          const src = !hands[side] ? null : poseHands.some((ph) => ph.person === person && ph.side === side) ? "pose" : "hand";
+          if (src && st.source[side] && src !== st.source[side]) st.lock.detectors[side].clearHistory();
+          if (src) st.source[side] = src;
+        }
         for (const { side, event, detector } of st.lock.update(t, hands)) {
           if (event === "calibrated") {
             if (this.armed) continue;
@@ -283,7 +324,7 @@ export class GesturePipeline {
           const st = this.state(p.id);
           return {
             id: p.id, box: p.box, active: p.id === speaker, score: this.arbiter.scores.get(p.id) ?? null,
-            mouth: st.mouth.score(t), motion: st.motion.value, age: t - p.firstSeen,
+            mouth: st.mouth.score(t), motion: st.motion.value, age: t - p.firstSeen, far: farIds.has(p.id),
             claim: Math.max(0, ...assigned.filter((a) => a.person === p.id).map((a) => claimProgress.get(a.tr.id) ?? 0)),
           };
         }),
@@ -296,14 +337,33 @@ export class GesturePipeline {
         returnRemaining: det.returnRemaining(t),
         activeSide: det === shown.detectors.left ? "left" : "right",
         lockedSide: shown.locked,
+        wristCrops: this.wristCrops(persons, assigned, farIds, speaker, width, height),
+        poseHands,
       },
     };
+  }
+
+  /** Crops for the next frame: the speaker's (or only person's) wrists if far and the hand is missing or tiny. */
+  private wristCrops(persons: readonly PersonTrack[], assigned: { tr: HandTrack; person: number; side: Side }[],
+    farIds: Set<number>, speaker: number | null, width: number, height: number): Rect[] {
+    if (!this.settings.farAssist) return [];
+    const target = persons.length === 1 ? persons[0] : persons.find((p) => p.id === speaker);
+    if (!target || !farIds.has(target.id)) return [];
+    const ratio = this.state(target.id).ratio.value;
+    const out: Rect[] = [];
+    for (const side of ["left", "right"] as const) {
+      const real = assigned.find((a) => a.person === target.id && a.side === side);
+      if (real && real.tr.hand.scale >= SMALL_HAND_PX) continue;
+      const crop = wristCrop(target.pose, side, width, height, ratio);
+      if (crop) out.push(crop);
+    }
+    return out;
   }
 
   private state(person: number): PersonState {
     let st = this.people.get(person);
     if (!st) {
-      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy() };
+      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy(), ratio: new HandRatio(), source: { left: null, right: null } };
       this.people.set(person, st);
     }
     return st;
