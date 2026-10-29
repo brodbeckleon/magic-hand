@@ -1,5 +1,5 @@
 .wizard {
-  position: absolute; top: 12px; right: 12px; bottom: 12px; width: min(420px, calc(100% - 24px));
+  position: absolute; top: 12px; max-width: 55%; right: 12px; bottom: 12px; width: min(420px, calc(100% - 24px));
   border-radius: var(--radius-l); background: var(--glass-strong); display: flex; flex-direction: column; z-index: 30;
 }
 .wizard-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 4px 22px; }
@@ -13,7 +13,7 @@
 .step-title { margin: 6px 0 10px; font-size: 22px; line-height: 1.25; }
 .step-body { flex: 1; overflow-y: auto; display: grid; gap: 12px; align-content: start; font-size: 14.5px; line-height: 1.5; }
 .step-body p { margin: 0; }
-.step-actions { display: flex; align-items: center; gap: 8px; padding-top: 14px; }
+.step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 14px; }
 .step-actions .spacer { flex: 1; }
 .lead { font-size: 15.5px; }
 .small { font-size: 12.5px; }

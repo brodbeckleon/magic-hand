@@ -31,6 +31,8 @@ function Root({ engine }: { engine: Engine }) {
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   const view = useUi((s) => s.view);
   const wizard = useUi((s) => s.wizard);
+  const sheet = useUi((s) => s.sheet);
+  const panel = view === "main" && (wizard || sheet) ? (sheet === "help" ? " with-panel wide-panel" : " with-panel") : "";
   const [size, setSize] = useState({ width: 640, height: 480 });
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const aspect = size.width / size.height;
@@ -45,7 +47,7 @@ function Root({ engine }: { engine: Engine }) {
 
   return (
     <FrameContext.Provider value={{ video, ...size, overlayHost: host }}>
-      <main className={`stage view-${view}${wizard ? " in-wizard" : ""}`}>
+      <main className={`stage view-${view}${wizard ? " in-wizard" : ""}${panel}`}>
         <div className="frame" style={{ "--ar": String(aspect), "--ar-num": aspect } as React.CSSProperties}>
           <video
             ref={setVideo}
