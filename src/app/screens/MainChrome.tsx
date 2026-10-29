@@ -5,6 +5,7 @@ import { Icon, type IconName } from "../design/Icon.tsx";
 import { spring } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { DevPanel, RecBadge } from "../debug/DevPanel.tsx";
+import { StudyOverlay } from "../debug/StudyOverlay.tsx";
 import "../debug/dev.css";
 import { HintHost } from "../hints/HintHost.tsx";
 import { ActionToast } from "../overlay/ActionToast.tsx";
@@ -41,6 +42,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       {live && showEvents && <EventList />}
       {devUnlocked && status.kind === "live" && <DevPanel />}
       <RecBadge />
+      {status.kind === "live" && <StudyOverlay />}
       {live && <SwipeBar />}
       {live && <ArrowFlash />}
       {live && <ActionToast />}

@@ -40,3 +40,19 @@
 @media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
 .dev-table tr[data-active="true"] th, .dev-table tr[data-active="true"] td { color: var(--teal); }
 .dev-panel { width: 340px; }
+.dev-panel .segmented { grid-auto-columns: minmax(0, 1fr); }
+.text-input { border: 1px solid var(--glass-border); background: rgb(255 255 255 / 0.06); color: var(--text); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; }
+.text-input:focus-visible { outline: 2px solid var(--teal); }
+.study-overlay { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 35; }
+.study-card { pointer-events: auto; border-radius: var(--radius-l); padding: 22px 30px; display: grid; justify-items: center; gap: 12px; min-width: 340px; }
+.study-progress { color: var(--text-dim); font-size: 13px; }
+.study-prompt { display: grid; justify-items: center; gap: 8px; font-size: 22px; text-align: center; color: var(--text); }
+.study-overlay[data-phase="prompt"] .study-prompt svg { color: var(--coral); }
+.study-overlay[data-phase="free"] .study-prompt svg { color: var(--teal); }
+.study-last.hit { color: var(--green); }
+.study-last.miss, .study-last.wrong { color: var(--amber); }
+.study-card .actions { display: flex; gap: 8px; }
+.study-report { width: min(560px, calc(100% - 40px)); }
+.study-report td[data-ok="true"] { color: var(--green); font-weight: 700; }
+.study-report td[data-ok="false"] { color: var(--amber); font-weight: 700; }
+.study-row { grid-template-columns: 96px 1fr; }

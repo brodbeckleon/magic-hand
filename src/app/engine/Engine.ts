@@ -421,7 +421,7 @@ export class Engine {
     const finish = () => {
       const tKey = performance.now() / 1000;
       const reactionMs = (tKey - e.onset) * 1000;
-      this.emit(e.command, { swipe: e.swipe, reactionMs });
+      this.emit(e.command, { swipe: e.swipe, reactionMs, detectMs: (tKey - meta.captureTime) * 1000 });
       useDev.getState().addTrigger({ detectMs: (tKey - meta.captureTime) * 1000, reactionMs });
       this.addLog({
         ereignis: "ausgeloest", richtung: e.command, wischrichtung, strecke: e.distance,

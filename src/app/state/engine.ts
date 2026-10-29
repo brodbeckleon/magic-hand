@@ -20,6 +20,8 @@ export interface UiEvent {
   clock: string;
   swipe?: "left" | "right";
   reactionMs?: number;
+  /** Threshold frame captured -> key, ms. */
+  detectMs?: number;
   /** Person concerned (speaker changes, ignored swipes); null = nobody has control. */
   person?: number | null;
 }

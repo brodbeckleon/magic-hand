@@ -228,7 +228,8 @@
     "speakerNow": "speaker: {{n}}",
     "noPersons": "No people tracked (the pose model runs every few frames).",
     "age": "age",
-    "hands": "hands"
+    "hands": "hands",
+    "study": "Study"
   },
   "help": {
     "title": "Help",
@@ -405,5 +406,31 @@
     "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
     "takeover": "Several people in view: to take over, raise an open hand for about a second.",
     "far": "You are far away: swipe with big, clear arm movements."
+  },
+  "study": {
+    "intro": "Test session: Magic Hand asks for swipes in alternating directions, then measures false triggers while you talk freely. No keys are sent.",
+    "perDirection": "per direction",
+    "freeTalkS": "free talk",
+    "distance": "Distance (e.g. 3 m)",
+    "note": "Note (person, room, light)",
+    "start": "Start study",
+    "promptNext": "Now: swipe to the next slide",
+    "promptPrev": "Now: swipe to the previous slide",
+    "freeTalk": "Talk freely and gesture as usual. Do not swipe.",
+    "wait": "Get ready …",
+    "progress": "Trial {{n}} of {{total}}",
+    "stop": "Cancel",
+    "endFreeTalk": "End free talk",
+    "outcome": {
+      "hit": "✓ recognised",
+      "miss": "✗ not recognised",
+      "wrong": "✗ wrong direction"
+    },
+    "resultTitle": "Study result",
+    "hitRate": "Hit rate",
+    "hitsMisses": "Hits / missed / wrong",
+    "falseTriggers": "False triggers",
+    "reaction": "Reaction p50 / p95",
+    "export": "Save as CSV"
   }
 }

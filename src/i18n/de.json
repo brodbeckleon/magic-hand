@@ -228,7 +228,8 @@
     "speakerNow": "am Wort: {{n}}",
     "noPersons": "Keine Personen erkannt (Pose-Modell läuft nur alle paar Bilder).",
     "age": "seit",
-    "hands": "Hände"
+    "hands": "Hände",
+    "study": "Studie"
   },
   "help": {
     "title": "Hilfe",
@@ -405,5 +406,31 @@
     "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
     "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
     "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
+  },
+  "study": {
+    "intro": "Testsitzung: Magic Hand fordert abwechselnd Wischgesten an und misst danach Fehlauslösungen beim freien Reden. Es werden keine Tasten gesendet.",
+    "perDirection": "pro Richtung",
+    "freeTalkS": "freies Reden",
+    "distance": "Abstand (z. B. 3 m)",
+    "note": "Notiz (Person, Raum, Licht)",
+    "start": "Studie starten",
+    "promptNext": "Jetzt: nächste Folie wischen",
+    "promptPrev": "Jetzt: vorherige Folie wischen",
+    "freeTalk": "Rede frei und gestikuliere normal. Nicht wischen.",
+    "wait": "Bereit machen …",
+    "progress": "Versuch {{n}} von {{total}}",
+    "stop": "Abbrechen",
+    "endFreeTalk": "Freies Reden beenden",
+    "outcome": {
+      "hit": "✓ erkannt",
+      "miss": "✗ nicht erkannt",
+      "wrong": "✗ falsche Richtung"
+    },
+    "resultTitle": "Ergebnis der Studie",
+    "hitRate": "Trefferquote",
+    "hitsMisses": "Treffer / verpasst / falsch",
+    "falseTriggers": "Fehlauslösungen",
+    "reaction": "Reaktion p50 / p95",
+    "export": "Als CSV speichern"
   }
 }
