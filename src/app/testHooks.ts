@@ -14,6 +14,7 @@ export interface TestHooks {
   log(): Engine["log"];
   /** Requests the privacy guard had to block (must stay empty). */
   blocked(): string[];
+  workerStats(): Engine["workerStats"];
 }
 
 /** Applied before the engine starts: `?delegate=CPU` forces the CPU delegate in tests. */
@@ -32,6 +33,7 @@ export function installTestHooks(engine: Engine): void {
     engine: useEngine,
     log: () => engine.log,
     blocked: () => blockedRequests.slice(),
+    workerStats: () => engine.workerStats,
   };
   (window as unknown as { __magicHand: TestHooks }).__magicHand = hooks;
 }

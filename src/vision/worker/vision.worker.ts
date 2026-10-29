@@ -9,10 +9,19 @@ import type { FromWorker, ToWorker } from "./protocol.ts";
 
 declare const self: DedicatedWorkerGlobalScope & { import?: (url: string) => Promise<unknown> };
 
-// MediaPipe loads its wasm loader with a dynamic import, preferring self.import if present. Vite's
-// dev server rewrites dynamic imports (appends ?import), which breaks loading files from public/;
-// this hook bypasses the rewrite. Production builds leave the import untouched.
-if (import.meta.env.DEV) self.import = new Function("u", "return import(u)") as (url: string) => Promise<unknown>;
+// MediaPipe loads its wasm loader with a dynamic import (preferring self.import if present) and
+// reads globalThis.ModuleFactory, which it clears after creating each model. A module is only
+// evaluated once, so a second model (e.g. pose) would find no factory: the hook sets it again from
+// the module's default export on every load. In dev it also bypasses Vite's rewriting of dynamic
+// imports (appended ?import), which breaks loading files from public/.
+const dynamicImport: (url: string) => Promise<{ default: unknown }> = import.meta.env.DEV
+  ? (new Function("u", "return import(u)") as (url: string) => Promise<{ default: unknown }>)
+  : (url) => import(/* @vite-ignore */ url);
+self.import = async (url: string) => {
+  const m = await dynamicImport(url);
+  (globalThis as unknown as { ModuleFactory: unknown }).ModuleFactory = m.default;
+  return m;
+};
 
 let fileset: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
 let hands: HandLandmarker | null = null;

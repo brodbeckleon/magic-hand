@@ -18,3 +18,10 @@ test("hand tracking runs in the vision worker, off the UI thread", async ({ page
   });
   expect(state).toEqual({ worker: true, delegate: "CPU" });
 });
+
+test("the pose model loads in the worker next to the hand model (zone step)", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-calibrate").click(); // framing step runs the pose model on every frame
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __magicHand: { workerStats(): { poseMs: number } | null } }).__magicHand.workerStats()?.poseMs ?? 0), { timeout: 20_000 }).toBeGreaterThan(0);
+});
