@@ -6,7 +6,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: { baseURL: "http://localhost:1420", trace: "retain-on-failure" },
   webServer: {
-    command: "pnpm dev",
+    command: "pnpm exec vite --mode e2e",
     url: "http://localhost:1420",
     reuseExistingServer: !process.env.CI,
   },

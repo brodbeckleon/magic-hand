@@ -21,6 +21,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm check-bundle
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
 
@@ -56,3 +57,14 @@ jobs:
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: ignore
+
+  golden:
+    # The fixtures must be what the unmodified Python prototype produces.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: python prototype/tools/gen_golden.py
+      - run: git diff --exit-code tests/fixtures

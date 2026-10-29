@@ -1,0 +1,35 @@
+.btn {
+  border: 1px solid var(--glass-border); background: rgb(255 255 255 / 0.08); color: var(--text);
+  padding: 9px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; cursor: pointer;
+  transition: background 150ms, transform 150ms;
+}
+.btn:hover { background: rgb(255 255 255 / 0.14); }
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.btn.primary { background: var(--teal-deep); border-color: transparent; }
+.btn.primary:hover { background: var(--teal); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.6; cursor: default; }
+
+.center-card {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100% - 40px)); padding: 28px; border-radius: var(--radius-l);
+  display: grid; justify-items: center; gap: 10px; text-align: center;
+}
+.center-card h2 { margin: 6px 0 0; font-size: 19px; }
+.center-card p { margin: 0; color: var(--text-dim); line-height: 1.45; }
+.center-card .actions, .side-card .actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+
+.side-card {
+  position: absolute; right: 14px; bottom: 90px; width: min(340px, calc(100% - 28px));
+  padding: 18px 20px; border-radius: var(--radius-l);
+}
+.side-card h3 { margin: 0 0 6px; font-size: 16px; }
+.side-card p { margin: 0; color: var(--text-dim); line-height: 1.45; font-size: 14px; }
+
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-dim); }
+
+.loading-chip {
+  position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+  padding: 10px 18px; border-radius: 999px; font-size: 14px; color: var(--text-dim);
+}

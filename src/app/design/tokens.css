@@ -1,0 +1,33 @@
+/* Design tokens. Accent colours come from the prototype overlay (coral/teal/amber). */
+:root {
+  color-scheme: dark;
+  --bg: #0d0e12;
+  --ink: #1d1a2b;
+  --text: #f4f4f6;
+  --text-dim: rgb(244 244 246 / 0.62);
+  --coral: #e0452a;
+  --coral-soft: #f06a4f;
+  --teal: #12a594;
+  --teal-deep: #0e7c70;
+  --amber: #ffb547;
+  --green: #8cdc96;
+  --grey: #a0a5aa;
+  --danger: #ff6b5b;
+
+  --glass: rgb(22 22 30 / 0.55);
+  --glass-strong: rgb(22 22 30 / 0.78);
+  --glass-border: rgb(255 255 255 / 0.09);
+  --glass-blur: blur(18px) saturate(140%);
+
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --shadow: 0 10px 40px rgb(0 0 0 / 0.35);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-scale: 0; }
+}

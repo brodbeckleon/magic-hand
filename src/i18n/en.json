@@ -1,0 +1,60 @@
+{
+  "app": { "name": "Magic Hand" },
+  "status": {
+    "loading": "Loading hand tracking …",
+    "starting": "Starting camera …",
+    "calibrating": "Calibrating",
+    "active": "Active",
+    "paused": "Paused",
+    "dryRun": "Dry run: no keys",
+    "handNone": "No hand detected",
+    "handSeen": "Hand detected",
+    "blocked": "Briefly locked",
+    "returning": "Return time {{s}} s",
+    "fps": "{{fps}} fps"
+  },
+  "hint": {
+    "holdStill": "Hold your hand still for about 1 s",
+    "next": "next",
+    "prev": "back"
+  },
+  "event": {
+    "calibrated": "Calibrated, gestures active",
+    "next": "Next slide",
+    "prev": "Previous slide",
+    "ignored_dir": "Ignored: not horizontal",
+    "ignored_return": "Ignored: return time",
+    "missed": "Missed (logged)",
+    "false": "False trigger (logged)"
+  },
+  "flash": { "next": "Next slide", "prev": "Previous slide" },
+  "error": {
+    "denied": "Magic Hand is not allowed to use the camera.",
+    "deniedHelp": "Allow camera access in System Settings and restart the app.",
+    "not-found": "No camera found.",
+    "not-foundHelp": "Connect a camera or choose another one in Preferences.",
+    "busy": "The camera is being used by another app.",
+    "busyHelp": "Quit the other app (e.g. Teams or Zoom) and try again.",
+    "unknown": "The camera cannot be opened.",
+    "unknownHelp": "Try again or choose another camera in Preferences.",
+    "model": "Hand tracking could not be loaded.",
+    "modelHelp": "Restart the app. If that does not help, reinstall it.",
+    "retry": "Try again",
+    "openSettings": "Open System Settings"
+  },
+  "accessibility": {
+    "title": "One more permission and you're ready",
+    "body": "To change slides, Magic Hand needs the Accessibility permission on macOS.",
+    "grant": "Grant permission",
+    "later": "Later",
+    "waiting": "Waiting for permission …"
+  },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "recalibrate": "Recalibrate",
+    "markMissed": "Report missed gesture",
+    "markFalse": "Report false trigger",
+    "exportLog": "Export log"
+  }
+}
