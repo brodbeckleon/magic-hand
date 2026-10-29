@@ -79,6 +79,7 @@ export function Pill() {
         )}
       </div>
       <RecBadge />
+      {!platform.native && <span className="pill-preview" title={t("main.browserPreview")}>{t("main.preview")}</span>}
       <div className="pill-thumb-slot" data-tauri-drag-region />
       <button
         className="icon-btn"

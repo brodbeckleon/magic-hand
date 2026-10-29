@@ -20,6 +20,7 @@ import { AccessibilityCard } from "./AccessibilityCard.tsx";
 import { CameraError } from "./CameraError.tsx";
 import { Help } from "./Help.tsx";
 import { Preferences } from "./Preferences.tsx";
+import { PreviewNotice } from "./PreviewNotice.tsx";
 
 const isMacNative = platform.native && /mac/i.test(navigator.platform);
 
@@ -53,6 +54,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       {status.kind === "error" && <CameraError status={status} onRetry={onRetry} />}
       {paused && <PausedCard />}
       <AccessibilityCard />
+      <PreviewNotice />
       <Preferences />
       <Help />
     </div>

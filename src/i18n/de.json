@@ -84,7 +84,9 @@
     "pause": "Pausieren",
     "devUnlocked": "Entwicklerwerkzeuge freigeschaltet",
     "devLocked": "Entwicklerwerkzeuge ausgeblendet",
-    "pausedIdle": "Seit {{n}} Minuten war niemand im Bild. Die Kamera wurde ausgeschaltet."
+    "pausedIdle": "Seit {{n}} Minuten war niemand im Bild. Die Kamera wurde ausgeschaltet.",
+    "browserPreview": "Browser-Vorschau: Gesten werden erkannt, aber keine Tasten an PowerPoint gesendet, und die Leiste kann nicht über der Präsentation schweben. Dafür die installierte App verwenden.",
+    "preview": "Vorschau"
   },
   "pill": {
     "expand": "Fenster öffnen",
