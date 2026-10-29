@@ -82,7 +82,9 @@ html[data-view="pill"] .stage { display: block; }
 .view-pill .hand-layer { display: none; }
 .pill {
   position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 18px;
-  border-radius: 999px; background: var(--glass-strong); overflow: hidden; transition: box-shadow 200ms;
+  border-radius: 999px; overflow: hidden; transition: box-shadow 200ms;
+  /* Nearly opaque: the pill floats over whatever is on screen (bright slides included). */
+  background: rgb(20 20 27 / 0.94);
 }
 .pill[data-flash="next"], .pill[data-flash="prev"] { box-shadow: inset 0 0 0 2px var(--coral), 0 0 24px rgb(224 69 42 / 0.5); }
 .pill[data-flash="calibrated"] { box-shadow: inset 0 0 0 2px var(--green); }
