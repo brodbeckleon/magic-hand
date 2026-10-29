@@ -92,7 +92,9 @@
     "ready": "Bereit",
     "waiting": "Hand ruhig halten",
     "paused": "Pausiert",
-    "noHand": "Keine Hand"
+    "noHand": "Keine Hand",
+    "focusOther": "Tasten gehen an: {{app}}",
+    "focusOtherHint": "Klicke in deine Präsentation, damit die Folien wechseln."
   },
   "tray": {
     "pause": "Pausieren",

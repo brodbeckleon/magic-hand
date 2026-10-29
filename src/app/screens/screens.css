@@ -183,3 +183,5 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .try-fb { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
 .try-fb.ok { color: var(--green); }
 .try-fb.warn { color: var(--amber); }
+.pill[data-focus="other"] { box-shadow: inset 0 0 0 2px var(--amber); }
+.pill-warn { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

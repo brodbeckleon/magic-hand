@@ -92,7 +92,9 @@
     "ready": "Ready",
     "waiting": "Hold your hand still",
     "paused": "Paused",
-    "noHand": "No hand"
+    "noHand": "No hand",
+    "focusOther": "Keys go to: {{app}}",
+    "focusOtherHint": "Click into your presentation so the slides change."
   },
   "tray": {
     "pause": "Pause",

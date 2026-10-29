@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { classifyFocus, type FrontApp } from "../../core/focus/classify.ts";
 import { useTranslation } from "react-i18next";
 import { platform } from "../../platform/index.ts";
 import { RecBadge } from "../debug/DevPanel.tsx";
@@ -20,6 +21,20 @@ export function Pill() {
   const last = useRef<HTMLSpanElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   const handDot = useRef<HTMLSpanElement>(null);
+  const [focus, setFocus] = useState<FrontApp | null>(null);
+
+  // Warn when the slide keys would go to another app (a chat window popped up, wrong window clicked).
+  useEffect(() => {
+    let alive = true;
+    const poll = () => void platform.frontmostApp().then((a) => alive && setFocus(a), () => undefined);
+    poll();
+    const id = window.setInterval(poll, 2000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+  const focusKind = classifyFocus(focus);
 
   useEffect(() => {
     let timer = 0;
@@ -49,13 +64,19 @@ export function Pill() {
 
   const state = paused ? "paused" : calibrated ? "active" : "calibrating";
   return (
-    <div ref={pill} className="pill glass" data-testid="pill" data-state={state} data-tauri-drag-region>
+    <div ref={pill} className="pill glass" data-testid="pill" data-state={state} data-focus={focusKind} data-tauri-drag-region>
       <span ref={handDot} className="pill-dot" data-state={state} data-seen="false" data-tauri-drag-region />
       <div className="pill-text" data-tauri-drag-region>
         <strong data-tauri-drag-region>
           {paused ? t("pill.paused") : calibrated ? t("pill.ready") : t("pill.waiting")}
         </strong>
-        <span ref={last} className="pill-last" data-tauri-drag-region />
+        {focusKind === "other" ? (
+          <span className="pill-warn" data-testid="pill-focus-warning" title={t("pill.focusOtherHint")}>
+            <Icon name="warning" size={13} /> {t("pill.focusOther", { app: focus!.name })}
+          </span>
+        ) : (
+          <span ref={last} className="pill-last" data-tauri-drag-region />
+        )}
       </div>
       <RecBadge />
       <div className="pill-thumb-slot" data-tauri-drag-region />

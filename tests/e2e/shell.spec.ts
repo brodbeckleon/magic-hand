@@ -161,3 +161,14 @@ test("Help > Try it now: shows what was recognised without sending keys", async 
   await expect(page.getByTestId("try-panel")).toContainText("1 swipe recognised");
   expect(await sentKeys(page)).toEqual([]);
 });
+
+test("pill warns when the slide keys would go to another app", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("present").click();
+  await expect(page.getByTestId("pill-focus-warning")).toHaveCount(0);
+  await page.evaluate(() => ((window as unknown as { __frontmostApp: object }).__frontmostApp = { name: "Slack", id: "com.tinyspeck.slackmacgap" }));
+  await expect(page.getByTestId("pill-focus-warning")).toContainText("Keys go to: Slack", { timeout: 5000 });
+  await page.evaluate(() => ((window as unknown as { __frontmostApp: object }).__frontmostApp = { name: "Keynote", id: "com.apple.iWork.Keynote" }));
+  await expect(page.getByTestId("pill-focus-warning")).toHaveCount(0, { timeout: 5000 });
+});
