@@ -45,7 +45,8 @@ export interface FrameObs {
   height: number;
   hands: HandObs[];
   poses?: PoseObs[] | null;
-  faces?: FaceObs[] | null;
+  /** Aligned with `poses` (null entries: no face found for that person). */
+  faces?: (FaceObs | null)[] | null;
 }
 
 export type Command = "next" | "prev";

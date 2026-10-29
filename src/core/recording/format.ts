@@ -1,7 +1,7 @@
 // Recording format for developer test sessions: JSON lines, gzip-compressed by the caller.
 // LANDMARKS ONLY: no images, no face mesh, nothing that shows what the person looks like (MHR08).
 import type { PipelineSettings } from "../pipeline/GesturePipeline.ts";
-import type { FrameObs, HandObs, PoseObs, Side } from "../types.ts";
+import type { FaceObs, FrameObs, HandObs, Landmark, PoseObs, Side } from "../types.ts";
 import type { Rect } from "../zone/Zone.ts";
 
 export const SCHEMA = "magic-hand-rec/1";
@@ -28,6 +28,8 @@ export interface RecFrame {
   hands: { lm: Q[]; side: Side; score: number }[];
   /** null = the pose model did not run on this frame. */
   poses: { lm: [number, number, number, number][] }[] | null;
+  /** Mouth signal per pose (jawOpen + 4 lip/face points, no face mesh); absent = face model did not run. */
+  faces?: ({ j: number | null; lip: Q[] | null } | null)[] | null;
 }
 export interface RecSettings { type: "settings"; t: number; patch: Partial<PipelineSettings> }
 export interface RecMark { type: "mark"; t: number; kind: "missed" | "false" }
@@ -43,6 +45,7 @@ export function encodeFrame(i: number, f: FrameObs): RecFrame {
     t: f.t,
     hands: f.hands.map((h) => ({ lm: h.landmarks.map((l) => [q(l.x), q(l.y), q(l.z)] as Q), side: h.side, score: q(h.sideScore) })),
     poses: f.poses ? f.poses.map((p) => ({ lm: p.landmarks.map((l) => [q(l.x), q(l.y), q(l.z), q(l.visibility ?? 1)] as [number, number, number, number]) })) : null,
+    ...(f.faces ? { faces: f.faces.map((fc) => fc && { j: fc.jawOpen === null ? null : q(fc.jawOpen), lip: fc.lip && fc.lip.map((l) => [q(l.x), q(l.y), q(l.z)] as Q) }) } : {}),
   };
 }
 
@@ -55,7 +58,11 @@ export function decodeFrame(r: RecFrame, src: { w: number; h: number }): FrameOb
   const poses: PoseObs[] | null = r.poses
     ? r.poses.map((p) => ({ landmarks: p.lm.map(([x, y, z, visibility]) => ({ x, y, z, visibility })) }))
     : null;
-  return { t: r.t, width: src.w, height: src.h, hands, poses };
+  const pt = ([x, y, z]: Q): Landmark => ({ x, y, z });
+  const faces: (FaceObs | null)[] | null = r.faces
+    ? r.faces.map((f) => f && { jawOpen: f.j, lip: f.lip && (f.lip.map(pt) as [Landmark, Landmark, Landmark, Landmark]) })
+    : null;
+  return { t: r.t, width: src.w, height: src.h, hands, poses, faces };
 }
 
 export const encodeLine = (l: RecLine): string => JSON.stringify(l) + "\n";

@@ -54,3 +54,13 @@
 
 .arm-ring-track { stroke: rgb(255 255 255 / 0.25); }
 .arm-ring-fill { stroke: var(--teal); filter: drop-shadow(0 0 6px rgb(18 165 148 / 0.8)); }
+
+/* Several presenters */
+.person-halo { stroke: transparent; transition: stroke 250ms; }
+.person[data-active="true"] .person-halo { stroke: var(--teal); filter: drop-shadow(0 0 12px rgb(18 165 148 / 0.9)); }
+.person-dim { fill: rgb(8 8 12 / 0); transition: fill 250ms; }
+.person[data-active="false"] .person-dim { fill: rgb(8 8 12 / 0.35); }
+.person-label { fill: white; font-weight: 700; paint-order: stroke; stroke: rgb(0 0 0 / 0.5); stroke-width: 3px; }
+.person[data-active="false"] .person-label { fill: var(--grey); }
+.claim-track { stroke: rgb(255 255 255 / 0.25); }
+.claim-fill { stroke: var(--amber); filter: drop-shadow(0 0 6px rgb(255 181 71 / 0.8)); }

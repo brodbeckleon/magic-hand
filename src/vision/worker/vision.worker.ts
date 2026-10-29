@@ -2,7 +2,8 @@
 // Runs the MediaPipe landmarkers off the UI thread. Module worker: MediaPipe's ES-module wasm loader
 // (forVisionTasks(path, true)) is imported dynamically. Frames arrive as ImageBitmaps already
 // cropped to the presenter zone.
-import { FilesetResolver, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
+import { FaceLandmarker, FilesetResolver, HandLandmarker, PoseLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { FaceObs } from "../../core/types.ts";
 import { cropToFull } from "../../core/zone/Zone.ts";
 import { MODEL_PATHS, toHandObs, WASM_PATH, type Delegate } from "../landmarkers.ts";
 import type { FromWorker, ToWorker } from "./protocol.ts";
@@ -26,6 +27,9 @@ self.import = async (url: string) => {
 let fileset: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
 let hands: HandLandmarker | null = null;
 let pose: PoseLandmarker | null = null;
+let face: FaceLandmarker | null = null;
+let faceCanvas: OffscreenCanvas | null = null;
+const FACE_PX = 256;
 let delegate: Delegate = "GPU";
 let numHands = 2;
 
@@ -68,6 +72,51 @@ async function getPose(): Promise<PoseLandmarker> {
   return pose;
 }
 
+async function getFace(): Promise<FaceLandmarker> {
+  face ??= await FaceLandmarker.createFromOptions(fileset!, {
+    baseOptions: { modelAssetPath: MODEL_PATHS.face, delegate },
+    runningMode: "IMAGE",
+    numFaces: 1,
+    outputFaceBlendshapes: true,
+  });
+  return face;
+}
+
+/**
+ * Mouth signal per person: the head region is cut out using the pose (nose, eyes, ears, mouth
+ * corners = pose landmarks 0-10) and enlarged, which works at distances where full-frame face
+ * detection gives up. Only jawOpen and four lip/face points leave the worker.
+ */
+async function facesFor(bitmap: ImageBitmap, posesRaw: NormalizedLandmark[][], crop: { x: number; y: number; w: number; h: number }): Promise<(FaceObs | null)[]> {
+  const fl = await getFace();
+  faceCanvas ??= new OffscreenCanvas(FACE_PX, FACE_PX);
+  const ctx = faceCanvas.getContext("2d")!;
+  const W = bitmap.width;
+  const H = bitmap.height;
+  return posesRaw.map((lms) => {
+    const head = lms.slice(0, 11).filter((l) => (l.visibility ?? 1) > 0.5);
+    if (head.length < 4) return null;
+    const xs = head.map((l) => l.x * W);
+    const ys = head.map((l) => l.y * H);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const side = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 2.2;
+    if (side < 8) return null;
+    const sx = cx - side / 2;
+    const sy = cy - side / 2;
+    ctx.clearRect(0, 0, FACE_PX, FACE_PX);
+    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, FACE_PX, FACE_PX);
+    const r = fl.detect(faceCanvas!);
+    const mesh = r.faceLandmarks[0];
+    if (!mesh) return null;
+    const jaw = r.faceBlendshapes[0]?.categories.find((c) => c.categoryName === "jawOpen")?.score ?? null;
+    const toFull = (l: NormalizedLandmark) =>
+      cropToFull({ x: (sx + l.x * side) / W, y: (sy + l.y * side) / H, z: 0 }, crop);
+    const pick = (i: number) => toFull(mesh[i]!);
+    return { jawOpen: jaw, lip: [pick(13), pick(14), pick(10), pick(152)] };
+  });
+}
+
 self.onmessage = async (e: MessageEvent<ToWorker>) => {
   const msg = e.data;
   try {
@@ -87,16 +136,19 @@ self.onmessage = async (e: MessageEvent<ToWorker>) => {
       const handObs = hands ? toHandObs(hands.detectForVideo(bitmap, ts)) : [];
       const t1 = performance.now();
       let poses = null;
+      let raw: NormalizedLandmark[][] = [];
       if (msg.pose) {
-        const r = (await getPose()).detectForVideo(bitmap, ts);
-        poses = r.landmarks.map((lms) => ({
+        raw = (await getPose()).detectForVideo(bitmap, ts).landmarks;
+        poses = raw.map((lms) => ({
           landmarks: lms.map((l) => cropToFull({ x: l.x, y: l.y, z: l.z, visibility: l.visibility }, crop)),
         }));
       }
       const t2 = performance.now();
+      const faces = msg.face && raw.length ? await facesFor(bitmap, raw, crop) : null;
+      const t3 = performance.now();
       bitmap.close();
       for (const h of handObs) h.landmarks = h.landmarks.map((l) => cropToFull(l, crop));
-      post({ type: "result", id: msg.id, hands: handObs, poses, handMs: t1 - t0, poseMs: t2 - t1 });
+      post({ type: "result", id: msg.id, hands: handObs, poses, faces, handMs: t1 - t0, poseMs: t2 - t1, faceMs: t3 - t2 });
     }
   } catch (err) {
     if (msg.type === "frame") msg.bitmap.close();

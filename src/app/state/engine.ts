@@ -10,7 +10,8 @@ export type EngineStatus =
   | { kind: "live" }
   | { kind: "error"; error: CameraError | "model" };
 
-export type UiEventKind = "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "missed" | "false";
+export type UiEventKind =
+  | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "speaker" | "missed" | "false";
 
 export interface UiEvent {
   id: number;
@@ -19,6 +20,8 @@ export interface UiEvent {
   clock: string;
   swipe?: "left" | "right";
   reactionMs?: number;
+  /** Person concerned (speaker changes, ignored swipes); null = nobody has control. */
+  person?: number | null;
 }
 
 interface EngineStore {

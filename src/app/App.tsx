@@ -3,6 +3,7 @@ import { Engine } from "./engine/Engine.ts";
 import { EngineContext } from "./engine/context.ts";
 import { FrameContext } from "./engine/frameContext.ts";
 import { HandLayer } from "./overlay/HandLayer.tsx";
+import { PersonLayer } from "./overlay/PersonLayer.tsx";
 import { ZoneMask } from "./overlay/ZoneMask.tsx";
 import "./overlay/overlay.css";
 import { MainChrome } from "./screens/MainChrome.tsx";
@@ -61,6 +62,7 @@ function Root({ engine }: { engine: Engine }) {
             }}
           />
           <ZoneMask />
+          <PersonLayer />
           <HandLayer />
           <div ref={setHost} className="frame-overlay" />
         </div>

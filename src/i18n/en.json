@@ -27,7 +27,9 @@
     "ignored_dir": "Ignored: not horizontal",
     "ignored_return": "Ignored: return time",
     "missed": "Missed (logged)",
-    "false": "False trigger (logged)"
+    "false": "False trigger (logged)",
+    "ignored_not_speaker": "Ignored: person {{n}} is not the speaker",
+    "speaker": "Speaker: person {{n}}"
   },
   "flash": {
     "next": "Next slide",
@@ -219,7 +221,12 @@
     "speed": "Speed",
     "replayDiff": "{{n}} differences from the live session",
     "replaySame": "Same events as live",
-    "backToCamera": "Back to the camera"
+    "backToCamera": "Back to the camera",
+    "speakers": "Speakers",
+    "speakerNow": "speaker: {{n}}",
+    "noPersons": "No people tracked (the pose model runs every few frames).",
+    "age": "age",
+    "hands": "hands"
   },
   "help": {
     "title": "Help",
@@ -281,7 +288,9 @@
   },
   "toast": {
     "ignored_dir": "Not recognised: swipe more horizontally",
-    "ignored_return": "Return movement ignored"
+    "ignored_return": "Return movement ignored",
+    "ignored_not_speaker": "Person {{n}} is not the speaker. Raise an open hand for 1 s to take over.",
+    "speaker": "Person {{n}} now changes the slides"
   },
   "wizard": {
     "progress": "Step {{n}} of {{total}}",

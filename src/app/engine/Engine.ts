@@ -5,6 +5,7 @@ import type { FrameObs } from "../../core/types.ts";
 import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
 import { createHandLandmarker, HANDEDNESS_SWAP, type Delegate } from "../../vision/landmarkers.ts";
+import { schedule } from "../../core/pipeline/scheduler.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import { LiveSource } from "../../vision/sources/LiveSource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
@@ -114,11 +115,7 @@ export class Engine {
         try {
           const delegate = await w.ready;
           useEngine.getState().set({ delegate, worker: true });
-          const src = new WorkerSource(video, w.handle, () => ({
-            zone: useSettings.getState().zone,
-            pose: this.poseRequests > 0,
-            fullFrame: this.fullFrameRequests > 0,
-          }));
+          const src = new WorkerSource(video, w.handle, () => this.needs());
           this.workerStats = src.stats;
           return src;
         } catch (err) {
@@ -139,6 +136,43 @@ export class Engine {
       this.workerStats = null;
       return new LiveSource(video, hands.landmarker);
     };
+  }
+
+  private numHands = 2;
+  private fewPeopleSince = 0;
+
+  /**
+   * MediaPipe re-runs palm detection on every frame while fewer hands are tracked than numHands, so
+   * we ask for 4 only while several people are in view (back to 2 after 3 s with one person).
+   */
+  private adaptNumHands(t: number): void {
+    const worker = this.worker?.handle;
+    if (!worker) return;
+    if (this.personCount >= 2) {
+      this.fewPeopleSince = t;
+      if (this.numHands !== 4) worker.setNumHands((this.numHands = 4));
+    } else if (this.numHands !== 2 && t - this.fewPeopleSince > 3) {
+      worker.setNumHands((this.numHands = 2));
+    }
+  }
+
+  private scheduleFrame = 0;
+  private loadMs = 0;
+  private personCount = 0;
+
+  /** What the next camera frame should be analysed for (zone crop, which models). */
+  private needs() {
+    const s = useSettings.getState();
+    const st = this.workerStats;
+    if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs);
+    const plan = schedule({
+      frame: this.scheduleFrame++,
+      persons: this.personCount,
+      wantFace: s.speaker.mode === "auto" && s.speaker.autoSignal !== "movement",
+      loadMs: this.loadMs,
+      forcePose: this.poseRequests > 0,
+    });
+    return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, ...plan };
   }
 
   /**
@@ -254,7 +288,7 @@ export class Engine {
     const header: RecHeader = {
       type: "header", schema: SCHEMA, app: `magic-hand ${__APP_VERSION__}`, created: localIsoTimestamp(new Date()),
       platform: navigator.userAgent, src: this.lastSize, mirror: true, handednessSwap: HANDEDNESS_SWAP,
-      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand },
+      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker },
     };
     this.recorder = new Recorder();
     this.recorder.write(header);
@@ -333,7 +367,7 @@ export class Engine {
   }
 
   private applySettings(s: Settings): void {
-    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand };
+    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker };
     this.pipeline.updateSettings(patch);
     this.recorder?.write({ type: "settings", t: this.lastT, patch });
     // A different camera or resolution needs a new stream.
@@ -359,14 +393,21 @@ export class Engine {
       this.handle(e, meta);
     }
     this.frameTap?.();
+    this.personCount = snapshot.persons.length;
+    this.adaptNumHands(frame.t);
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);
   }
 
   private handle(e: PipelineEvent, meta: FrameMeta): void {
+    if (e.type === "speaker") {
+      this.emit("speaker", { person: e.person });
+      this.addLog({ ereignis: "sprecher_gewechselt", person: e.person ?? undefined });
+      return;
+    }
     if (e.type !== "trigger") {
-      this.emit(e.type);
-      this.addLog({ ereignis: e.type });
+      this.emit(e.type, e.type === "ignored_not_speaker" ? { person: e.person } : {});
+      this.addLog({ ereignis: e.type, person: e.person || undefined, hand: e.side });
       return;
     }
     const { dev, keyMapping } = useSettings.getState();
@@ -379,6 +420,7 @@ export class Engine {
       this.addLog({
         ereignis: "ausgeloest", richtung: e.command, wischrichtung, strecke: e.distance,
         reaktionMs: reactionMs, verarbeitungMs: (tKey - meta.captureTime) * 1000, hand: e.side,
+        person: e.person || undefined, detectMs: (tKey - meta.captureTime) * 1000,
       });
     };
     if (dev.dryRun || this.keySuppressions > 0) return finish();
