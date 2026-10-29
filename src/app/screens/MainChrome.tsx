@@ -25,10 +25,12 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
   const status = useEngine((s) => s.status);
   const paused = useEngine((s) => s.paused);
   const showEvents = useSettings((s) => s.dev.unlocked && s.dev.showEvents);
+  const sheet = useUi((s) => s.sheet);
   const live = status.kind === "live" && !paused;
+  const cls = ["chrome", isMacNative && "mac", sheet && "sheet-open", sheet === "help" && "sheet-wide"].filter(Boolean).join(" ");
 
   return (
-    <div className={`chrome${isMacNative ? " mac" : ""}`}>
+    <div className={cls}>
       <div className="drag-strip" data-tauri-drag-region />
       <Toolbar />
       {live && <StatusChip />}
@@ -50,6 +52,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
 
 function Toolbar() {
   const { t } = useTranslation();
+  const engine = useEngineInstance();
   const sheet = useUi((s) => s.sheet);
   const openSheet = useUi((s) => s.openSheet);
   const closeSheet = useUi((s) => s.closeSheet);
@@ -66,7 +69,11 @@ function Toolbar() {
           className="tool"
           aria-pressed={sheet === b.id}
           data-testid={`open-${b.id}`}
-          onClick={() => (sheet === b.id ? closeSheet() : openSheet(b.id))}
+          onClick={() => {
+            if (b.id === "calibrate") return engine.recalibrate();
+            if (sheet === b.id) closeSheet();
+            else openSheet(b.id);
+          }}
         >
           <Icon name={b.icon} />
           <span>{b.label}</span>

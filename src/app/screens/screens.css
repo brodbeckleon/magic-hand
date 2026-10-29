@@ -152,3 +152,9 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
   .ring-fill, .swipe-demo .swipe-hand, .cursor-click { animation: none; }
   .ring-fill { stroke-dashoffset: 30; }
 }
+
+/* With a sheet open, keep the feedback centred in the part of the camera that is still visible. */
+.chrome.sheet-open .swipe-bar { left: calc((100% - 444px) / 2); width: min(460px, calc(100% - 484px)); }
+.chrome.sheet-open.sheet-wide .swipe-bar { left: calc((100% - 584px) / 2); width: min(420px, calc(100% - 624px)); }
+.chrome.sheet-open .arrow-flash { right: 444px; }
+.chrome.sheet-open .toast-slot { left: calc((100% - 444px) / 2); }
