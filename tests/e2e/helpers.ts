@@ -21,3 +21,14 @@ export async function play(page: Page, trace: TraceBuilder): Promise<void> {
 
 export const sentKeys = (page: Page) =>
   page.evaluate(() => (window as unknown as { __sentKeys: string[] }).__sentKeys.slice());
+
+type Hooks = { __magicHand: { settings: { getState(): { update(p: object): void } } } };
+
+/** Shows the developer tools (event list, stats, export) like Ctrl/Cmd+Shift+D does. */
+export async function unlockDev(page: Page): Promise<void> {
+  await page.evaluate(() => (window as never as Hooks).__magicHand.settings.getState().update({ dev: { unlocked: true, showEvents: true } }));
+}
+
+export async function updateSettings(page: Page, patch: object): Promise<void> {
+  await page.evaluate((p) => (window as never as Hooks).__magicHand.settings.getState().update(p), patch);
+}

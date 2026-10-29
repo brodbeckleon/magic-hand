@@ -33,6 +33,27 @@ export function jointsPath(lms: readonly Landmark[], w: number, h: number, r: nu
   return d;
 }
 
+/** Ring around the palm that fills while the hand is held still before calibration (MHR01). */
+function updateArmRing(g: SVGGElement | null, s: PipelineSnapshot, unit: number): void {
+  if (!g) return;
+  const active = s.hands.find((h) => h.side === s.activeSide) ?? s.hands[0];
+  if (s.calibrated || !active || s.calibProgress <= 0) {
+    g.setAttribute("visibility", "hidden");
+    return;
+  }
+  const r = active.hand.scale * 1.6;
+  const [track, fill] = g.children as unknown as [SVGCircleElement, SVGCircleElement];
+  for (const c of [track, fill]) {
+    c.setAttribute("cx", active.hand.cx.toFixed(1));
+    c.setAttribute("cy", active.hand.cy.toFixed(1));
+    c.setAttribute("r", r.toFixed(1));
+    c.setAttribute("stroke-width", String(6 * unit));
+  }
+  fill.setAttribute("stroke-dashoffset", String(100 - s.calibProgress * 100));
+  fill.setAttribute("transform", `rotate(-90 ${active.hand.cx.toFixed(1)} ${active.hand.cy.toFixed(1)})`);
+  g.setAttribute("visibility", "visible");
+}
+
 /**
  * Hand skeletons and the palm trail of the current movement. Updated by direct DOM writes on every
  * frame; React renders this component once.
@@ -42,6 +63,7 @@ export function HandLayer() {
   const svg = useRef<SVGSVGElement>(null);
   const hands = useRef<(SVGGElement | null)[]>([]);
   const trail = useRef<SVGPathElement>(null);
+  const ring = useRef<SVGGElement>(null);
 
   useEffect(
     () =>
@@ -69,6 +91,7 @@ export function HandLayer() {
         const pts = s.trail.map((e) => `${e.hand.cx.toFixed(1)} ${e.hand.cy.toFixed(1)}`);
         trail.current?.setAttribute("d", pts.length > 1 ? `M${pts.join("L")}` : "");
         trail.current?.setAttribute("stroke-width", String(6 * unit));
+        updateArmRing(ring.current, s, unit);
       }),
     [engine],
   );
@@ -76,6 +99,10 @@ export function HandLayer() {
   return (
     <svg ref={svg} className="overlay hand-layer" preserveAspectRatio="none" aria-hidden>
       <path ref={trail} className="trail" fill="none" stroke="var(--amber)" strokeLinecap="round" strokeLinejoin="round" />
+      <g ref={ring} className="arm-ring" visibility="hidden">
+        <circle className="arm-ring-track" fill="none" />
+        <circle className="arm-ring-fill" fill="none" pathLength={100} strokeDasharray="100" strokeLinecap="round" />
+      </g>
       {Array.from({ length: MAX_HANDS }, (_, i) => (
         <g key={i} ref={(el) => { hands.current[i] = el; }} className="hand" visibility="hidden">
           <path fill="none" strokeLinecap="round" />

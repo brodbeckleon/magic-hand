@@ -1,5 +1,7 @@
 {
-  "app": { "name": "Magic Hand" },
+  "app": {
+    "name": "Magic Hand"
+  },
   "status": {
     "loading": "Handerkennung wird geladen …",
     "starting": "Kamera wird gestartet …",
@@ -27,7 +29,10 @@
     "missed": "Verpasst (protokolliert)",
     "false": "Fehlauslösung (protokolliert)"
   },
-  "flash": { "next": "Nächste Folie", "prev": "Vorherige Folie" },
+  "flash": {
+    "next": "Nächste Folie",
+    "prev": "Vorherige Folie"
+  },
   "error": {
     "denied": "Magic Hand darf die Kamera nicht verwenden.",
     "deniedHelp": "Erlaube den Kamerazugriff in den Systemeinstellungen und starte die App neu.",
@@ -56,5 +61,202 @@
     "markMissed": "Verpasste Geste melden",
     "markFalse": "Fehlauslösung melden",
     "exportLog": "Protokoll exportieren"
+  },
+  "common": {
+    "close": "Schliessen",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "done": "Fertig"
+  },
+  "main": {
+    "calibrate": "Kalibrieren",
+    "help": "Hilfe",
+    "preferences": "Einstellungen",
+    "present": "Präsentieren",
+    "presentHint": "Verkleinert Magic Hand zu einer kleinen Leiste, die über der Präsentation schwebt.",
+    "paused": "Gestensteuerung pausiert",
+    "pausedBody": "Die Kamera ist aus. Es wird nichts erkannt.",
+    "resume": "Fortsetzen",
+    "pause": "Pausieren",
+    "devUnlocked": "Entwicklerwerkzeuge freigeschaltet",
+    "devLocked": "Entwicklerwerkzeuge ausgeblendet"
+  },
+  "pill": {
+    "expand": "Fenster öffnen",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "ready": "Bereit",
+    "waiting": "Hand ruhig halten",
+    "paused": "Pausiert",
+    "noHand": "Keine Hand"
+  },
+  "tray": {
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "show": "Magic Hand anzeigen",
+    "recalibrate": "Neu kalibrieren",
+    "quit": "Beenden",
+    "tooltipActive": "Magic Hand: aktiv",
+    "tooltipPaused": "Magic Hand: pausiert",
+    "tooltipCalibrating": "Magic Hand: Hand ruhig halten"
+  },
+  "prefs": {
+    "title": "Einstellungen",
+    "gestures": "Gesten",
+    "hand": "Bevorzugte Hand",
+    "handLeft": "Links",
+    "handRight": "Rechts",
+    "handEither": "Beide",
+    "handHint": {
+      "left": "Nur die linke Hand wechselt Folien. Mit der rechten kannst du frei gestikulieren.",
+      "right": "Nur die rechte Hand wechselt Folien. Mit der linken kannst du frei gestikulieren.",
+      "either": "Beide Hände können wischen. Pro Geste zählt nur die Hand, die zuerst deutlich wischt."
+    },
+    "direction": "Wischrichtung für «nächste Folie»",
+    "directionLeft": "Nach links",
+    "directionRight": "Nach rechts",
+    "sensitivity": "Empfindlichkeit",
+    "sensLow": "Ruhig",
+    "sensNormal": "Normal",
+    "sensHigh": "Empfindlich",
+    "sensCustom": "Eigene",
+    "sensLowHint": "Längere, schnellere Wischgeste nötig",
+    "sensHighHint": "Kürzere Wischgeste reicht",
+    "sensHint": {
+      "low": "Gut, wenn du beim Reden viel gestikulierst.",
+      "normal": "Ausgewogen für die meisten Vortragenden.",
+      "high": "Gut für kleine Bewegungen oder grossen Abstand zur Kamera.",
+      "custom": "Werte aus deiner Kalibrierung."
+    },
+    "presenters": "Mehrere Vortragende",
+    "presentersHint": "Wer darf Folien wechseln, wenn mehrere Personen im Bild sind?",
+    "speakerMode": "Sprecherwahl",
+    "speakerManual": "Per Handzeichen",
+    "speakerAuto": "Automatisch",
+    "speakerHint": {
+      "manual": "Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
+      "auto": "Magic Hand erkennt, wer gerade spricht. Die offene Hand übersteuert das jederzeit."
+    },
+    "autoSignal": "Erkennen an",
+    "signalMouth": "Mundbewegung",
+    "signalMovement": "Bewegung",
+    "signalBoth": "Beidem",
+    "autoSignalHint": {
+      "mouth": "Wer spricht, bewegt den Mund.",
+      "movement": "Wer sich am meisten bewegt, spricht meist.",
+      "both": "Kombiniert beides, am zuverlässigsten."
+    },
+    "camera": "Kamera",
+    "cameraDevice": "Kamera",
+    "cameraDefault": "Standardkamera",
+    "cameraN": "Kamera {{n}}",
+    "resolution": "Auflösung",
+    "resolutionName": {
+      "320x240": "Niedrig (320×240)",
+      "640x480": "Standard (640×480)",
+      "1280x720": "Hoch (1280×720)"
+    },
+    "resolutionHint": {
+      "320x240": "Für schwächere Laptops.",
+      "640x480": "Empfohlen.",
+      "1280x720": "Für grosse Räume, braucht mehr Leistung."
+    },
+    "presentation": "Präsentation",
+    "keys": "Gesendete Tasten",
+    "keysArrows": "Pfeiltasten",
+    "keysPage": "Bild auf/ab",
+    "keysHint": {
+      "arrows": "Funktioniert in PowerPoint, Keynote, Google Slides und PDF-Viewern.",
+      "page": "Wie ein Presenter-Klicker."
+    },
+    "thumbnail": "Kamerabild in der Leiste",
+    "thumbnailHint": "Kleines Vorschaubild, während du präsentierst.",
+    "pauseShortcut": "Pause-Kurzbefehl",
+    "pauseShortcutHint": "Funktioniert auch, wenn die Präsentation im Vordergrund ist.",
+    "language": "Sprache",
+    "languageSystem": "System",
+    "privacy": "Datenschutz",
+    "privacyHint": "Kamerabilder werden nur im Arbeitsspeicher verarbeitet, nie gespeichert und nie gesendet. Gespeichert werden nur deine Einstellungen und die Kalibrierung.",
+    "privacyMore": "Mehr zum Datenschutz",
+    "delete": "Alle gespeicherten Daten löschen",
+    "deleteConfirm": "Einstellungen und Kalibrierung löschen?",
+    "deleteYes": "Löschen",
+    "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert."
+  },
+  "dev": {
+    "title": "Entwickler",
+    "hint": "Nur für Tests. Ein-/ausblenden mit Ctrl/⌘ + Shift + D.",
+    "dryRun": "Probelauf",
+    "dryRunHint": "Gesten erkennen, aber keine Tasten senden.",
+    "events": "Ereignisliste anzeigen",
+    "delegate": "Rechenwerk",
+    "delegateHint": "Wird beim nächsten Start der Erkennung übernommen.",
+    "delegateAuto": "Automatisch",
+    "exportExtended": "Erweitert exportieren",
+    "lock": "Entwicklerwerkzeuge ausblenden"
+  },
+  "help": {
+    "title": "Hilfe",
+    "tabs": {
+      "start": "Erste Schritte",
+      "trouble": "Probleme lösen",
+      "privacy": "Datenschutz",
+      "about": "Über"
+    },
+    "step1Title": "Hand ruhig halten",
+    "step1": "Halte eine Hand ca. 1 Sekunde ruhig vor die Kamera. Der Ring füllt sich, dann sind die Gesten aktiv. Vorher wechselt keine Folie.",
+    "step2Title": "In die Präsentation klicken",
+    "step2": "Klicke auf «Präsentieren» oder in deine Präsentation, damit die Tasten dort ankommen.",
+    "step3Title": "Wischen",
+    "step3Next": "Zügig nach {{dir}} wischen: nächste Folie.",
+    "step3Prev": "Zurück wischen: vorherige Folie.",
+    "step3Return": "Die Hand danach einfach zurückführen. Das löst nichts aus.",
+    "dirLeft": "links",
+    "dirRight": "rechts",
+    "tipsTitle": "Gut zu wissen",
+    "tip1": "Langsame oder schräge Bewegungen beim Erklären werden ignoriert.",
+    "tip2": "Die Handform spielt keine Rolle.",
+    "tip3": "Mit {{shortcut}} pausierst du jederzeit, auch während der Präsentation.",
+    "replayOnboarding": "Einführung erneut zeigen",
+    "trouble": {
+      "noSlideTitle": "Die Folie wechselt nicht",
+      "noSlide": "Die Präsentation muss im Vordergrund sein: einmal hineinklicken. Unter macOS braucht Magic Hand die Berechtigung «Bedienungshilfen». Prüfe auch, ob der Probelauf in den Entwicklereinstellungen aus ist.",
+      "cameraTitle": "Die Kamera startet nicht",
+      "camera": "Erlaube den Kamerazugriff in den Systemeinstellungen. Schliesse andere Apps, die die Kamera nutzen (Teams, Zoom). Unter Windows: Einstellungen → Datenschutz → Kamera → «Desktop-Apps den Zugriff erlauben».",
+      "tooOftenTitle": "Es wechselt zu oft",
+      "tooOften": "Stelle die Empfindlichkeit auf «Ruhig» oder wähle eine bevorzugte Hand. Die andere Hand kann dann frei gestikulieren.",
+      "notRecognizedTitle": "Wischen wird nicht erkannt",
+      "notRecognized": "Wische zügiger und weiter, etwa zwei bis drei Handlängen. Sorge für Licht von vorne und bleib im Bild. Auf grosse Distanz hilft die Auflösung «Hoch».",
+      "slowTitle": "Die App ist langsam",
+      "slow": "Stelle die Auflösung auf «Niedrig». Schliesse rechenintensive Programme.",
+      "permissionTitle": "Berechtigungen (macOS)",
+      "permission": "Systemeinstellungen → Datenschutz & Sicherheit → Kamera und Bedienungshilfen: Magic Hand aktivieren. Danach die App neu starten.",
+      "openCamera": "Kamera-Einstellungen öffnen",
+      "openAccessibility": "Bedienungshilfen öffnen"
+    },
+    "privacyBody": [
+      "Alle Kamerabilder werden ausschliesslich auf diesem Gerät verarbeitet. Sie bleiben nur im Arbeitsspeicher und werden sofort verworfen.",
+      "Es werden keine Bilder, Videos oder Handdaten gespeichert oder übertragen. Magic Hand baut keine Internetverbindung auf.",
+      "Gespeichert werden nur deine Einstellungen und die Kalibrierung (z. B. der Bereich, in dem du präsentierst). Du kannst sie jederzeit in den Einstellungen löschen.",
+      "Die Kamera ist nur aktiv, solange die Gestensteuerung läuft. In der Pause ist sie aus.",
+      "Analysiert wird nur der kalibrierte Bereich, nicht das Publikum."
+    ],
+    "aboutBody": "Magic Hand ist ein Projekt im Modul Natural User Interfaces an der ZHAW.",
+    "team": "Team",
+    "version": "Version {{v}}",
+    "shortcuts": "Tastenkürzel",
+    "shortcutList": {
+      "p": "Pause / Fortsetzen",
+      "k": "Neu kalibrieren",
+      "m": "Verpasste Geste melden",
+      "f": "Fehlauslösung melden",
+      "esc": "Fenster schliessen"
+    }
+  },
+  "toast": {
+    "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
+    "ignored_return": "Rückholbewegung ignoriert"
   }
 }
