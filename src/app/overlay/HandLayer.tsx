@@ -64,6 +64,8 @@ export function HandLayer() {
   const hands = useRef<(SVGGElement | null)[]>([]);
   const trail = useRef<SVGPathElement>(null);
   const ring = useRef<SVGGElement>(null);
+  const poseHands = useRef<SVGPathElement>(null);
+  const crops = useRef<SVGPathElement>(null);
 
   useEffect(
     () =>
@@ -92,6 +94,16 @@ export function HandLayer() {
         trail.current?.setAttribute("d", pts.length > 1 ? `M${pts.join("L")}` : "");
         trail.current?.setAttribute("stroke-width", String(6 * unit));
         updateArmRing(ring.current, s, unit);
+        // Far away: palms estimated from the pose (dashed), and (developers) the wrist crops searched.
+        poseHands.current?.setAttribute("d", s.poseHands.map(({ hand: h }) => {
+          const r = Math.max(h.scale * 1.2, 6 * unit);
+          return `M${(h.cx - r).toFixed(1)} ${h.cy.toFixed(1)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+        }).join(""));
+        poseHands.current?.setAttribute("stroke-width", String(3 * unit));
+        crops.current?.setAttribute("d", s.wristCrops.map((c) => {
+          const x = (1 - c.x - c.w) * s.width;
+          return `M${x.toFixed(1)} ${(c.y * s.height).toFixed(1)}h${(c.w * s.width).toFixed(1)}v${(c.h * s.height).toFixed(1)}h${(-c.w * s.width).toFixed(1)}Z`;
+        }).join(""));
       }),
     [engine],
   );
@@ -99,6 +111,8 @@ export function HandLayer() {
   return (
     <svg ref={svg} className="overlay hand-layer" preserveAspectRatio="none" aria-hidden>
       <path ref={trail} className="trail" fill="none" stroke="var(--amber)" strokeLinecap="round" strokeLinejoin="round" />
+      <path ref={poseHands} className="pose-hand" fill="none" data-testid="pose-hands" />
+      <path ref={crops} className="wrist-crop" fill="none" />
       <g ref={ring} className="arm-ring" visibility="hidden">
         <circle className="arm-ring-track" fill="none" />
         <circle className="arm-ring-fill" fill="none" pathLength={100} strokeDasharray="100" strokeLinecap="round" />

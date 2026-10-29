@@ -6,6 +6,7 @@ import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
 import { createHandLandmarker, HANDEDNESS_SWAP, type Delegate } from "../../vision/landmarkers.ts";
 import { schedule } from "../../core/pipeline/scheduler.ts";
+import type { Rect } from "../../core/zone/Zone.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import { LiveSource } from "../../vision/sources/LiveSource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
@@ -138,6 +139,8 @@ export class Engine {
     };
   }
 
+  private anyFar = false;
+  private wristCrops: Rect[] = [];
   private numHands = 2;
   private fewPeopleSince = 0;
 
@@ -164,15 +167,16 @@ export class Engine {
   private needs() {
     const s = useSettings.getState();
     const st = this.workerStats;
-    if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs);
+    if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs + st.cropMs);
     const plan = schedule({
       frame: this.scheduleFrame++,
       persons: this.personCount,
       wantFace: s.speaker.mode === "auto" && s.speaker.autoSignal !== "movement",
       loadMs: this.loadMs,
       forcePose: this.poseRequests > 0,
+      far: this.anyFar,
     });
-    return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, ...plan };
+    return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, wristCrops: this.wristCrops, ...plan };
   }
 
   /**
@@ -288,7 +292,7 @@ export class Engine {
     const header: RecHeader = {
       type: "header", schema: SCHEMA, app: `magic-hand ${__APP_VERSION__}`, created: localIsoTimestamp(new Date()),
       platform: navigator.userAgent, src: this.lastSize, mirror: true, handednessSwap: HANDEDNESS_SWAP,
-      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker },
+      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist },
     };
     this.recorder = new Recorder();
     this.recorder.write(header);
@@ -367,7 +371,7 @@ export class Engine {
   }
 
   private applySettings(s: Settings): void {
-    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker };
+    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist };
     this.pipeline.updateSettings(patch);
     this.recorder?.write({ type: "settings", t: this.lastT, patch });
     // A different camera or resolution needs a new stream.
@@ -394,6 +398,8 @@ export class Engine {
     }
     this.frameTap?.();
     this.personCount = snapshot.persons.length;
+    this.anyFar = snapshot.persons.some((p) => p.far);
+    this.wristCrops = snapshot.wristCrops;
     this.adaptNumHands(frame.t);
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);

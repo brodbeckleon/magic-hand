@@ -42,6 +42,8 @@ export const settingsSchema = z.object({
   sensitivity: z.enum(["low", "normal", "high", "custom"]).catch("normal"),
   swipe: z.object(swipeShape).catch({ ...DEFAULT_SWIPE_PARAMS }),
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
+  /** Help for presenters far from the camera (MHR03/MHR04). */
+  farAssist: z.boolean().catch(true),
 
   camera: z
     .object({

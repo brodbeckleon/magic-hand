@@ -126,6 +126,7 @@ function PresenterSection() {
 function CameraSection() {
   const { t } = useTranslation();
   const camera = useSettings((s) => s.camera);
+  const farAssist = useSettings((s) => s.farAssist);
   const update = useSettings((s) => s.update);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   useEffect(() => {
@@ -146,6 +147,9 @@ function CameraSection() {
           />
         </Row>
       )}
+      <Row label={t("prefs.farAssist")} hint={t("prefs.farAssistHint")} htmlFor="pref-far">
+        <Switch id="pref-far" label={t("prefs.farAssist")} checked={farAssist} onChange={(v) => update({ farAssist: v })} />
+      </Row>
       <Row label={t("prefs.resolution")} hint={t(`prefs.resolutionHint.${camera.resolution}`)} htmlFor="pref-resolution">
         <Select<Resolution>
           id="pref-resolution"

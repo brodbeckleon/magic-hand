@@ -10,6 +10,8 @@ export interface WorkerSourceNeeds {
   pose: boolean;
   /** Run the face model on head crops (needs pose). */
   face: boolean;
+  /** Wrist regions of far presenters to search for hands (full-frame normalised). */
+  wristCrops: Rect[];
   /** Analyse the whole frame regardless of the zone (zone-proposal step only). */
   fullFrame: boolean;
 }
@@ -19,6 +21,7 @@ export interface WorkerStats {
   handMs: number;
   poseMs: number;
   faceMs: number;
+  cropMs: number;
   /** Capture -> result, ms. */
   pipelineMs: number;
 }
@@ -33,7 +36,7 @@ export class WorkerSource implements LandmarkSource {
   private handle = 0;
   private lastTs = -1;
   private lastCrop = "";
-  readonly stats: WorkerStats = { dropped: 0, handMs: 0, poseMs: 0, faceMs: 0, pipelineMs: 0 };
+  readonly stats: WorkerStats = { dropped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionWorker;
   private readonly needs: () => WorkerSourceNeeds;
@@ -71,17 +74,18 @@ export class WorkerSource implements LandmarkSource {
       const ts = Math.max(Math.round(tCap), this.lastTs + 1);
       this.lastTs = ts;
       createImageBitmap(v, px.sx, px.sy, px.sw, px.sh)
-        .then((bitmap) => this.worker.detect({ bitmap, ts, crop, pose: need.pose, face: need.face && need.pose }))
+        .then((bitmap) => this.worker.detect({ bitmap, ts, crop, pose: need.pose, face: need.face && need.pose, wristCrops: need.wristCrops }))
         .then((r) => {
           if (!this.running) return;
           const tDone = performance.now();
           this.stats.handMs = r.handMs;
           if (r.poses) this.stats.poseMs = r.poseMs;
           if (r.faces) this.stats.faceMs = r.faceMs;
+          this.stats.cropMs = r.cropMs;
           this.stats.pipelineMs = tDone - tCap;
           onFrame(
             { t: tCap / 1000, width: W, height: H, hands: r.hands, poses: r.poses, faces: r.faces },
-            { captureTime: tCap / 1000, inferenceMs: r.handMs + r.poseMs + r.faceMs },
+            { captureTime: tCap / 1000, inferenceMs: r.handMs + r.poseMs + r.faceMs + r.cropMs },
           );
         })
         .catch((err) => console.error("frame failed", err))
