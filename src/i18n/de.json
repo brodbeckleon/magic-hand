@@ -1,0 +1,60 @@
+{
+  "app": { "name": "Magic Hand" },
+  "status": {
+    "loading": "Handerkennung wird geladen …",
+    "starting": "Kamera wird gestartet …",
+    "calibrating": "Kalibrieren",
+    "active": "Aktiv",
+    "paused": "Pausiert",
+    "dryRun": "Probelauf: keine Tasten",
+    "handNone": "Keine Hand erkannt",
+    "handSeen": "Hand erkannt",
+    "blocked": "Kurz gesperrt",
+    "returning": "Rückholzeit {{s}} s",
+    "fps": "{{fps}} fps"
+  },
+  "hint": {
+    "holdStill": "Hand ca. 1 s ruhig halten",
+    "next": "weiter",
+    "prev": "zurück"
+  },
+  "event": {
+    "calibrated": "Kalibriert, Gesten aktiv",
+    "next": "Nächste Folie",
+    "prev": "Vorherige Folie",
+    "ignored_dir": "Ignoriert: nicht waagrecht",
+    "ignored_return": "Ignoriert: Rückholzeit",
+    "missed": "Verpasst (protokolliert)",
+    "false": "Fehlauslösung (protokolliert)"
+  },
+  "flash": { "next": "Nächste Folie", "prev": "Vorherige Folie" },
+  "error": {
+    "denied": "Magic Hand darf die Kamera nicht verwenden.",
+    "deniedHelp": "Erlaube den Kamerazugriff in den Systemeinstellungen und starte die App neu.",
+    "not-found": "Keine Kamera gefunden.",
+    "not-foundHelp": "Schliesse eine Kamera an oder wähle in den Einstellungen eine andere.",
+    "busy": "Die Kamera wird gerade von einer anderen App verwendet.",
+    "busyHelp": "Beende die andere App (z. B. Teams oder Zoom) und versuche es erneut.",
+    "unknown": "Die Kamera lässt sich nicht öffnen.",
+    "unknownHelp": "Versuche es erneut oder wähle in den Einstellungen eine andere Kamera.",
+    "model": "Die Handerkennung konnte nicht geladen werden.",
+    "modelHelp": "Starte die App neu. Falls das nicht hilft, installiere sie neu.",
+    "retry": "Erneut versuchen",
+    "openSettings": "Systemeinstellungen öffnen"
+  },
+  "accessibility": {
+    "title": "Noch eine Berechtigung, dann geht's los",
+    "body": "Damit Magic Hand die Folien wechseln kann, braucht es unter macOS die Berechtigung «Bedienungshilfen».",
+    "grant": "Berechtigung erteilen",
+    "later": "Später",
+    "waiting": "Warte auf die Freigabe …"
+  },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "recalibrate": "Neu kalibrieren",
+    "markMissed": "Verpasste Geste melden",
+    "markFalse": "Fehlauslösung melden",
+    "exportLog": "Protokoll exportieren"
+  }
+}

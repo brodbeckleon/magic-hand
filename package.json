@@ -19,8 +19,12 @@
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.2.0",
     "@tauri-apps/api": "^2.12.4",
+    "i18next": "^26.5.11",
+    "motion": "^14.7.1",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-i18next": "^17.1.9",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
