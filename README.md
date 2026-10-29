@@ -26,6 +26,10 @@ pnpm dev           # nur die Oberfläche im Browser (ohne Tastendrücke)
 | `pnpm test` | Unit-Tests (Vitest) |
 | `pnpm lint` / `pnpm typecheck` | ESLint / TypeScript |
 | `pnpm tauri build` | Installer bauen (DMG bzw. NSIS/MSI) |
+| `pnpm e2e` | Oberflächentests mit Fake-Kamera (Playwright) |
+| `pnpm replay <datei>` | Entwickler-Aufnahme abspielen (siehe [Testen](docs/testing.md)) |
+
+Testen, Entwicklerwerkzeuge und das manuelle Testprotokoll für MHR01–08: [docs/testing.md](docs/testing.md).
 
 ### Projektaufbau
 

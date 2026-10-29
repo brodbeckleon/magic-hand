@@ -24,6 +24,9 @@ jobs:
       - run: pnpm check-bundle
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
+      - run: pnpm e2e
+        env:
+          E2E_PROD: "1"
 
   app:
     strategy:

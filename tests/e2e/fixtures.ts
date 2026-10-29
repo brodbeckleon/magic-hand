@@ -5,7 +5,7 @@ import { test as base, expect } from "@playwright/test";
  *  - `externalRequests` records every request that left the app (must be none),
  *  - after each test, the in-app network guard must not have blocked anything either.
  */
-export const test = base.extend<{ externalRequests: string[]; privacyGuard: void }>({
+export const test = base.extend<{ externalRequests: string[]; privacyGuard: void; visionErrors: void }>({
   externalRequests: async ({ page, baseURL }, use) => {
     const external: string[] = [];
     page.on("request", (r) => {
@@ -21,6 +21,19 @@ export const test = base.extend<{ externalRequests: string[]; privacyGuard: void
         .evaluate(() => (window as unknown as { __magicHand?: { blocked(): string[] } }).__magicHand?.blocked() ?? [])
         .catch(() => []);
       expect(blocked, "requests blocked by the privacy guard").toEqual([]);
+    },
+    { auto: true },
+  ],
+  /** The vision worker must never report errors (e.g. a model that fails to load). */
+  visionErrors: [
+    async ({ page }, use) => {
+      const errors: string[] = [];
+      page.on("console", (m) => {
+        const text = m.text();
+        if (/vision worker|frame failed|unavailable, using the main thread/.test(text)) errors.push(text);
+      });
+      await use();
+      expect(errors, "vision worker errors").toEqual([]);
     },
     { auto: true },
   ],

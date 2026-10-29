@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Engine } from "./engine/Engine.ts";
 import { EngineContext } from "./engine/context.ts";
+import { FrameContext } from "./engine/frameContext.ts";
 import { HandLayer } from "./overlay/HandLayer.tsx";
+import { ZoneMask } from "./overlay/ZoneMask.tsx";
 import "./overlay/overlay.css";
 import { MainChrome } from "./screens/MainChrome.tsx";
 import { Pill } from "./screens/Pill.tsx";
 import "./design/controls.css";
 import "./screens/screens.css";
 import { useUi } from "./state/ui.ts";
+import { Wizard } from "./wizard/Wizard.tsx";
 import { useNativeIntegration } from "./useNativeIntegration.ts";
 import { useShortcuts } from "./useShortcuts.ts";
 
@@ -25,31 +28,44 @@ export function App() {
 }
 
 function Root({ engine }: { engine: Engine }) {
-  const video = useRef<HTMLVideoElement>(null);
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   const view = useUi((s) => s.view);
-  const [aspect, setAspect] = useState(4 / 3);
+  const wizard = useUi((s) => s.wizard);
+  const sheet = useUi((s) => s.sheet);
+  const panel = view === "main" && (wizard || sheet) ? (sheet === "help" ? " with-panel wide-panel" : " with-panel") : "";
+  const [size, setSize] = useState({ width: 640, height: 480 });
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const aspect = size.width / size.height;
   useShortcuts(engine);
   useNativeIntegration(engine);
 
   useEffect(() => {
-    void engine.start(video.current!);
+    if (!video) return;
+    void engine.start(video);
     return () => engine.stop();
-  }, [engine]);
+  }, [engine, video]);
 
   return (
-    <main className={`stage view-${view}`}>
-      <div className="frame" style={{ "--ar": String(aspect), "--ar-num": aspect } as React.CSSProperties}>
-        <video
-          ref={video}
-          className="camera"
-          autoPlay
-          playsInline
-          muted
-          onLoadedMetadata={(e) => setAspect(e.currentTarget.videoWidth / e.currentTarget.videoHeight || 4 / 3)}
-        />
-        <HandLayer />
-      </div>
-      {view === "main" ? <MainChrome onRetry={() => void engine.start(video.current!)} /> : <Pill />}
-    </main>
+    <FrameContext.Provider value={{ video, ...size, overlayHost: host }}>
+      <main className={`stage view-${view}${wizard ? " in-wizard" : ""}${panel}`}>
+        <div className="frame" style={{ "--ar": String(aspect), "--ar-num": aspect } as React.CSSProperties}>
+          <video
+            ref={setVideo}
+            className="camera"
+            autoPlay
+            playsInline
+            muted
+            onLoadedMetadata={(e) => {
+              const v = e.currentTarget;
+              if (v.videoWidth && v.videoHeight) setSize({ width: v.videoWidth, height: v.videoHeight });
+            }}
+          />
+          <ZoneMask />
+          <HandLayer />
+          <div ref={setHost} className="frame-overlay" />
+        </div>
+        {view === "pill" ? <Pill /> : wizard ? <Wizard kind={wizard} /> : <MainChrome onRetry={() => video && void engine.start(video)} />}
+      </main>
+    </FrameContext.Provider>
   );
 }

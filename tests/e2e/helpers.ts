@@ -4,8 +4,8 @@ import { toFrames } from "../support/landmarks.ts";
 import type { TraceBuilder } from "../support/traces.ts";
 
 /** Opens the app. Headless Chromium only has software WebGL, where the CPU delegate is ~10x faster. */
-export async function open(page: Page, path = "/"): Promise<void> {
-  await page.goto(`${path}?delegate=CPU`);
+export async function open(page: Page, path = "/", query = ""): Promise<void> {
+  await page.goto(`${path}?delegate=CPU${query}`);
 }
 
 /** Waits until the camera and the hand model are running. */
@@ -14,8 +14,8 @@ export async function waitLive(page: Page): Promise<void> {
 }
 
 /** Plays a synthetic hand trace through the real engine (replacing the camera's detections). */
-export async function play(page: Page, trace: TraceBuilder): Promise<void> {
-  const frames: FrameObs[] = toFrames(trace.frames);
+export async function play(page: Page, trace: TraceBuilder, extra: Partial<FrameObs> = {}): Promise<void> {
+  const frames: FrameObs[] = toFrames(trace.frames).map((f) => ({ ...f, ...extra }));
   await page.evaluate((f) => (window as unknown as { __magicHand: { play(f: FrameObs[]): Promise<void> } }).__magicHand.play(f), frames);
 }
 

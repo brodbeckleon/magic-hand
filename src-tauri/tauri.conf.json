@@ -34,6 +34,15 @@
         "img-src": "'self' blob: data:",
         "media-src": "'self' blob: mediastream:",
         "style-src": "'self' 'unsafe-inline'"
+      },
+      "devCsp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'wasm-unsafe-eval' 'unsafe-eval'",
+        "worker-src": "'self' blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:1420 ws://localhost:1421",
+        "img-src": "'self' blob: data:",
+        "media-src": "'self' blob: mediastream:",
+        "style-src": "'self' 'unsafe-inline'"
       }
     },
     "macOSPrivateApi": true

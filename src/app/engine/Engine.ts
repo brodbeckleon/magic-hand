@@ -4,10 +4,17 @@ import { GesturePipeline, type PipelineEvent, type PipelineSnapshot } from "../.
 import type { FrameObs } from "../../core/types.ts";
 import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
-import { createHandLandmarker, type Delegate } from "../../vision/landmarkers.ts";
+import { createHandLandmarker, HANDEDNESS_SWAP, type Delegate } from "../../vision/landmarkers.ts";
+import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import { LiveSource } from "../../vision/sources/LiveSource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
+import { WorkerSource, type WorkerStats } from "../../vision/sources/WorkerSource.ts";
+import { VisionWorker } from "../../vision/worker/VisionWorker.ts";
 import { parseResolution } from "../state/schema.ts";
+import { encodeFrame, parseRecording, SCHEMA, type RecHeader } from "../../core/recording/format.ts";
+import { diffEvents, toReplayEvent, type ReplayEvent } from "../../core/recording/replay.ts";
+import { Recorder, readRecordingFile } from "../debug/Recorder.ts";
+import { useDev } from "../state/dev.ts";
 import { useEngine, type UiEvent, type UiEventKind } from "../state/engine.ts";
 import { useSettings, type Settings } from "../state/settings.ts";
 import { FrameBus } from "./FrameBus.ts";
@@ -24,12 +31,26 @@ export class Engine {
   readonly pipeline = new GesturePipeline();
   readonly frames = new FrameBus<PipelineSnapshot>();
   /** Fires for every event that should be visualised (arrow flash, toasts). */
-  readonly events = new FrameBus<UiEvent>();
+  readonly events = new FrameBus<UiEvent>({ replay: false });
+  /** Raw observations of every frame (wizards read poses from here). */
+  readonly observations = new FrameBus<FrameObs>({ replay: false });
   readonly log: LogEntry[] = [];
+  /** Worker timings (developer metrics); null when running on the main thread. */
+  workerStats: WorkerStats | null = null;
 
   private video: HTMLVideoElement | null = null;
   private stream: MediaStream | null = null;
   private landmarker: Promise<{ landmarker: HandLandmarker; delegate: Delegate }> | null = null;
+  private worker: { handle: VisionWorker; ready: Promise<Delegate> } | null = null;
+  private workerFailed = false;
+  private poseRequests = 0;
+  private keySuppressions = 0;
+  private recorder: Recorder | null = null;
+  private recordTimer = 0;
+  private frameIndex = 0;
+  private lastT = 0;
+  private lastSize = { w: 640, h: 480 };
+  private fullFrameRequests = 0;
   private source: LandmarkSource | null = null;
   private nextEventId = 1;
   private fps = 0;
@@ -49,8 +70,7 @@ export class Engine {
     useEngine.getState().set({ status: { kind: "starting" }, paused: false });
     try {
       // Load the model while the camera starts; the preview shows as soon as the camera is ready.
-      this.landmarker ??= createHandLandmarker(2, settings.dev.delegate);
-      this.landmarker.catch(() => undefined);
+      const vision = this.loadVision(settings.dev.delegate);
       const stream = await openCamera({
         deviceId: settings.camera.deviceId ?? undefined,
         ...parseResolution(settings.camera.resolution),
@@ -60,14 +80,17 @@ export class Engine {
       video.srcObject = stream;
       await video.play().catch(() => undefined);
       useEngine.getState().set({ status: { kind: "loading" } });
-      const hands = await this.landmarker;
+      const source = await vision(video);
       if (gen !== this.generation) return;
-      useEngine.getState().set({ delegate: hands.delegate });
-      this.source = new LiveSource(video, hands.landmarker);
-      this.useSource(this.source);
+      this.source = source;
+      this.useSource(source);
       useEngine.getState().set({ status: { kind: "live" } });
     } catch (err) {
-      if (!(err instanceof DOMException)) this.landmarker = null; // let a retry load the model again
+      if (!(err instanceof DOMException)) {
+        this.landmarker = null; // let a retry load the model again
+        this.worker?.handle.terminate();
+        this.worker = null;
+      }
       if (gen !== this.generation) return;
       const isCamera = err instanceof DOMException;
       useEngine.getState().set({ status: { kind: "error", error: isCamera ? classifyCameraError(err) : "model" } });
@@ -75,17 +98,88 @@ export class Engine {
     }
   }
 
+  /**
+   * Prefers the vision worker (inference off the UI thread, zone crop); falls back to the main
+   * thread if workers or the model cannot start there.
+   */
+  private loadVision(pref: Settings["dev"]["delegate"]): (video: HTMLVideoElement) => Promise<LandmarkSource> {
+    if (!this.workerFailed && typeof Worker !== "undefined") {
+      if (!this.worker) {
+        const handle = new VisionWorker();
+        this.worker = { handle, ready: handle.init(pref, 2) };
+      }
+      const w = this.worker;
+      w.ready.catch(() => undefined);
+      return async (video) => {
+        try {
+          const delegate = await w.ready;
+          useEngine.getState().set({ delegate, worker: true });
+          const src = new WorkerSource(video, w.handle, () => ({
+            zone: useSettings.getState().zone,
+            pose: this.poseRequests > 0,
+            fullFrame: this.fullFrameRequests > 0,
+          }));
+          this.workerStats = src.stats;
+          return src;
+        } catch (err) {
+          console.warn("vision worker unavailable, using the main thread", err);
+          this.workerFailed = true;
+          w.handle.terminate();
+          this.worker = null;
+          return this.loadVision(pref)(video);
+        }
+      };
+    }
+    this.landmarker ??= createHandLandmarker(2, pref);
+    this.landmarker.catch(() => undefined);
+    const lm = this.landmarker;
+    return async (video) => {
+      const hands = await lm;
+      useEngine.getState().set({ delegate: hands.delegate, worker: false });
+      this.workerStats = null;
+      return new LiveSource(video, hands.landmarker);
+    };
+  }
+
+  /**
+   * Asks for pose landmarks on every frame until the returned function is called. `fullFrame`
+   * analyses the whole picture instead of the presenter zone (only for proposing a new zone).
+   */
+  requestPose(opts: { fullFrame?: boolean } = {}): () => void {
+    this.poseRequests++;
+    if (opts.fullFrame) this.fullFrameRequests++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.poseRequests--;
+      if (opts.fullFrame) this.fullFrameRequests--;
+    };
+  }
+
+  /** No keystrokes until the returned function is called (wizards: practice swipes). */
+  suppressKeys(): () => void {
+    this.keySuppressions++;
+    let released = false;
+    return () => {
+      if (!released) {
+        released = true;
+        this.keySuppressions--;
+      }
+    };
+  }
+
   /** Feeds frames from any source (live camera, recording replay, tests). */
-  useSource(source: LandmarkSource): void {
-    this.followSettings();
+  useSource(source: LandmarkSource, followSettings = true): void {
+    if (followSettings) this.followSettings();
     source.start((frame, meta) => this.onFrame(frame, meta));
   }
 
   /** Swaps the frame source (e.g. replaying a recording), keeping the camera open. */
-  replaceSource(source: LandmarkSource): void {
+  replaceSource(source: LandmarkSource, followSettings = true): void {
     this.source?.stop();
     this.source = source;
-    this.useSource(source);
+    this.useSource(source, followSettings);
   }
 
   stop(): void {
@@ -100,6 +194,8 @@ export class Engine {
     this.stop();
     void this.landmarker?.then((h) => h.landmarker.close(), () => undefined);
     this.landmarker = null;
+    this.worker?.handle.terminate();
+    this.worker = null;
   }
 
   /** Pause = camera off (LED off), nothing is analysed. Resume reopens it; calibration is kept. */
@@ -127,12 +223,14 @@ export class Engine {
 
   /** The presenter swiped but nothing happened (prototype key m). */
   markMissed(): void {
+    this.recorder?.write({ type: "mark", t: this.lastT, kind: "missed" });
     this.emit("missed");
     this.addLog({ ereignis: "verpasst" });
   }
 
   /** A slide changed although nobody meant to (prototype key f). */
   markFalse(): void {
+    this.recorder?.write({ type: "mark", t: this.lastT, kind: "false" });
     this.emit("false");
     this.addLog({ ereignis: "fehlausloesung" });
   }
@@ -141,6 +239,84 @@ export class Engine {
     const stamp = localIsoTimestamp(new Date()).replace(/[-:]/g, "").replace("T", "_").slice(0, 15);
     return platform.saveTextFile(`magic_hand_log_${stamp}.csv`, "csv", toCsv(this.log, extended));
   }
+
+  // ---- Developer recordings (landmarks only, opt-in, MHR08) ----------------------------------
+
+  static readonly MAX_RECORDING_MS = 30 * 60 * 1000;
+
+  get recording(): boolean {
+    return this.recorder !== null;
+  }
+
+  startRecording(): void {
+    if (this.recorder) return;
+    const s = useSettings.getState();
+    const header: RecHeader = {
+      type: "header", schema: SCHEMA, app: `magic-hand ${__APP_VERSION__}`, created: localIsoTimestamp(new Date()),
+      platform: navigator.userAgent, src: this.lastSize, mirror: true, handednessSwap: HANDEDNESS_SWAP,
+      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand },
+    };
+    this.recorder = new Recorder();
+    this.recorder.write(header);
+    this.frameIndex = 0;
+    useDev.getState().set({ recording: { startedAt: Date.now(), seconds: 0, frames: 0 } });
+    this.recordTimer = window.setInterval(() => {
+      const r = this.recorder;
+      const st = useDev.getState().recording;
+      if (!r || !st) return;
+      useDev.getState().set({ recording: { ...st, frames: r.frames, seconds: Math.round((Date.now() - st.startedAt) / 1000) } });
+      if (Date.now() - st.startedAt > Engine.MAX_RECORDING_MS) void this.stopRecording(true);
+    }, 500);
+  }
+
+  /** Ends the recording; `save` asks where to store it, otherwise it is discarded. */
+  async stopRecording(save: boolean): Promise<string | null> {
+    const r = this.recorder;
+    if (!r) return null;
+    this.recorder = null;
+    window.clearInterval(this.recordTimer);
+    useDev.getState().set({ recording: null });
+    const bytes = await r.finish();
+    if (!save) return null;
+    const stamp = localIsoTimestamp(new Date()).replace(/[-:]/g, "").replace("T", "_").slice(0, 15);
+    return platform.saveBinaryFile(`magic_hand_${stamp}.jsonl.gz`, bytes);
+  }
+
+  /**
+   * Plays a recording through the live engine with its recorded settings (no keys sent) and
+   * compares the outcome with the events recorded live.
+   */
+  async replayFile(file: File, speed = 1): Promise<void> {
+    const rec = parseRecording(await readRecordingFile(file));
+    const release = this.suppressKeys();
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
+    this.pipeline.updateSettings(rec.header.settings);
+    this.pipeline.resetCalibration();
+    const live: ReplayEvent[] = [];
+    const total = rec.frames.length;
+    let done = 0;
+    const progress = (finished: boolean, diff: number | null) =>
+      useDev.getState().set({ replay: { name: file.name, done, total, finished, diff } });
+    progress(false, null);
+    this.eventTap = (e) => live.push(toReplayEvent(e));
+    this.frameTap = () => ++done % 10 === 0 && progress(false, null);
+    await new Promise<void>((resolve) => this.replaceSource(new ReplaySource(rec.frames, { speed, onDone: resolve }), false));
+    this.eventTap = this.frameTap = null;
+    release();
+    progress(true, diffEvents(rec.events, live).length);
+    this.pipeline.resetCalibration();
+    this.followSettings();
+  }
+
+  /** After a replay: back to the live camera. */
+  backToCamera(): void {
+    useDev.getState().set({ replay: null });
+    if (this.video) void this.start(this.video);
+  }
+
+  private eventTap: ((e: PipelineEvent) => void) | null = null;
+  private frameTap: (() => void) | null = null;
 
   private stopCamera(): void {
     this.source?.stop();
@@ -157,7 +333,9 @@ export class Engine {
   }
 
   private applySettings(s: Settings): void {
-    this.pipeline.updateSettings({ swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand });
+    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand };
+    this.pipeline.updateSettings(patch);
+    this.recorder?.write({ type: "settings", t: this.lastT, patch });
     // A different camera or resolution needs a new stream.
     const key = cameraKeyOf(s);
     if (key !== this.cameraKey && this.stream && this.video) {
@@ -169,9 +347,18 @@ export class Engine {
   }
 
   private onFrame(frame: FrameObs, meta: FrameMeta): void {
+    this.lastT = frame.t;
+    this.lastSize = { w: frame.width, h: frame.height };
+    this.observations.publish(frame);
+    this.recorder?.write(encodeFrame(this.frameIndex++, frame));
     const { paused } = useEngine.getState();
     const { events, snapshot } = this.pipeline.step(frame, paused);
-    for (const e of events) this.handle(e, meta);
+    for (const e of events) {
+      this.recorder?.write({ type: "event", ...toReplayEvent(e) });
+      this.eventTap?.(e);
+      this.handle(e, meta);
+    }
+    this.frameTap?.();
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);
   }
@@ -188,12 +375,13 @@ export class Engine {
       const tKey = performance.now() / 1000;
       const reactionMs = (tKey - e.onset) * 1000;
       this.emit(e.command, { swipe: e.swipe, reactionMs });
+      useDev.getState().addTrigger({ detectMs: (tKey - meta.captureTime) * 1000, reactionMs });
       this.addLog({
         ereignis: "ausgeloest", richtung: e.command, wischrichtung, strecke: e.distance,
         reaktionMs: reactionMs, verarbeitungMs: (tKey - meta.captureTime) * 1000, hand: e.side,
       });
     };
-    if (dev.dryRun) return finish();
+    if (dev.dryRun || this.keySuppressions > 0) return finish();
     platform.sendKey(e.command, keyMapping).then(finish, (err) => {
       console.error("send_key failed", err);
       finish();
@@ -218,6 +406,8 @@ export class Engine {
     if (t - this.lastStatsAt > 0.25) {
       this.lastStatsAt = t;
       s.set({ fps: this.fps, inferenceMs: meta.inferenceMs });
+      const w = this.workerStats;
+      useDev.getState().addSample({ fps: this.fps, handMs: w ? w.handMs : meta.inferenceMs, pipelineMs: w ? w.pipelineMs : meta.inferenceMs }, w?.dropped ?? 0);
     }
   }
 }

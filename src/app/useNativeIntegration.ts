@@ -17,6 +17,14 @@ export function useNativeIntegration(engine: Engine): void {
   const view = useUi((s) => s.view);
   const paused = useEngine((s) => s.paused);
   const calibrated = useEngine((s) => s.calibrated);
+  const live = useEngine((s) => s.status.kind === "live");
+  const firstRunDone = useSettings((s) => s.firstRunDone);
+  const openWizard = useUi((s) => s.openWizard);
+
+  // First start (or "show the introduction again"): guided setup once the camera runs.
+  useEffect(() => {
+    if (live && !firstRunDone && !useUi.getState().wizard) openWizard("firstRun");
+  }, [live, firstRunDone, openWizard]);
 
   useEffect(() => {
     const lng = language === "system" ? systemLanguage() : language;

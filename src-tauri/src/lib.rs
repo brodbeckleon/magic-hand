@@ -35,6 +35,7 @@ pub fn run() {
             permissions::open_accessibility_settings,
             permissions::open_camera_settings,
             export::save_text_file,
+            export::save_binary_file,
             window::set_pill_mode,
             window::yield_focus,
             tray::update_tray,

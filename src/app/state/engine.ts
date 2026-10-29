@@ -28,6 +28,8 @@ interface EngineStore {
   fps: number;
   inferenceMs: number;
   delegate: Delegate | null;
+  /** Inference runs in the vision worker (false: main-thread fallback). */
+  worker: boolean;
   /** Newest first, at most 5 (prototype overlay list). */
   recent: UiEvent[];
   set(patch: Partial<Omit<EngineStore, "set" | "push">>): void;
@@ -41,6 +43,7 @@ export const useEngine = create<EngineStore>()((set) => ({
   fps: 0,
   inferenceMs: 0,
   delegate: null,
+  worker: false,
   recent: [],
   set: (patch) => set(patch),
   push: (e) => set((s) => ({ recent: [e, ...s.recent].slice(0, 5) })),

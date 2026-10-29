@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { platform } from "../../platform/index.ts";
+import { RecBadge } from "../debug/DevPanel.tsx";
 import { Icon } from "../design/Icon.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { useEngine } from "../state/engine.ts";
@@ -56,6 +57,7 @@ export function Pill() {
         </strong>
         <span ref={last} className="pill-last" data-tauri-drag-region />
       </div>
+      <RecBadge />
       <div className="pill-thumb-slot" data-tauri-drag-region />
       <button
         className="icon-btn"

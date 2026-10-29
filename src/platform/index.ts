@@ -25,6 +25,7 @@ export interface Platform {
   openCameraSettings(): Promise<void>;
   /** Lets the user pick a location and saves the text there. Returns the path, or null if cancelled. */
   saveTextFile(defaultName: string, extension: string, contents: string): Promise<string | null>;
+  saveBinaryFile(defaultName: string, bytes: Uint8Array): Promise<string | null>;
   /** Morphs the main window into the presenter pill (or back). */
   setPillMode(pill: boolean, width: number, height: number): Promise<void>;
   /** Gives keyboard focus back to the app behind us (the presentation). */
@@ -56,6 +57,7 @@ const native: Platform = {
   openCameraSettings: () => invoke("open_camera_settings"),
   saveTextFile: (defaultName, extension, contents) =>
     invoke("save_text_file", { defaultName, extension, contents }),
+  saveBinaryFile: (defaultName, bytes) => invoke("save_binary_file", bytes, { headers: { "x-file-name": defaultName } }),
   setPillMode: (pill, width, height) => invoke("set_pill_mode", { pill, width, height }),
   yieldFocus: () => invoke("yield_focus"),
   updateTray: (labels) => invoke("update_tray", { labels }),
@@ -78,6 +80,13 @@ const browser: Platform = {
   openCameraSettings: async () => {},
   saveTextFile: async (defaultName, _extension, contents) => {
     const url = URL.createObjectURL(new Blob([contents], { type: "text/plain" }));
+    const a = Object.assign(document.createElement("a"), { href: url, download: defaultName });
+    a.click();
+    URL.revokeObjectURL(url);
+    return defaultName;
+  },
+  saveBinaryFile: async (defaultName, bytes) => {
+    const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/gzip" }));
     const a = Object.assign(document.createElement("a"), { href: url, download: defaultName });
     a.click();
     URL.revokeObjectURL(url);

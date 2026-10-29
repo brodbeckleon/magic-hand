@@ -24,11 +24,18 @@ button { font: inherit; color: inherit; }
 
 /* The camera and its SVG overlay share one box with the camera's aspect ratio, so source pixels
    map 1:1 onto the overlay's viewBox. */
-.stage { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); }
+.stage {
+  position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg);
+  transition: padding 260ms cubic-bezier(.2, .8, .2, 1);
+}
+/* An open side panel (sheet, wizard) moves the camera into the free space next to it. */
+.stage.with-panel { padding: 12px min(444px, 55%) 12px 12px; }
+.stage.with-panel.wide-panel { padding-right: min(584px, 60%); }
 .frame {
   position: relative;
   aspect-ratio: var(--ar, 4 / 3);
   width: min(100%, calc(100vh * var(--ar-num, 1.3333)));
+  transition: width 260ms cubic-bezier(.2, .8, .2, 1);
   max-height: 100%;
   overflow: hidden;
 }
