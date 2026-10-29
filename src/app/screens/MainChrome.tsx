@@ -4,6 +4,8 @@ import { platform } from "../../platform/index.ts";
 import { Icon, type IconName } from "../design/Icon.tsx";
 import { spring } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
+import { DevPanel, RecBadge } from "../debug/DevPanel.tsx";
+import "../debug/dev.css";
 import { ActionToast } from "../overlay/ActionToast.tsx";
 import { ArrowFlash } from "../overlay/ArrowFlash.tsx";
 import { EventList } from "../overlay/EventList.tsx";
@@ -25,6 +27,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
   const status = useEngine((s) => s.status);
   const paused = useEngine((s) => s.paused);
   const showEvents = useSettings((s) => s.dev.unlocked && s.dev.showEvents);
+  const devUnlocked = useSettings((s) => s.dev.unlocked);
   const sheet = useUi((s) => s.sheet);
   const live = status.kind === "live" && !paused;
   const cls = ["chrome", isMacNative && "mac", sheet && "sheet-open", sheet === "help" && "sheet-wide"].filter(Boolean).join(" ");
@@ -35,6 +38,8 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       <Toolbar />
       {live && <StatusChip />}
       {live && showEvents && <EventList />}
+      {devUnlocked && status.kind === "live" && <DevPanel />}
+      <RecBadge />
       {live && <SwipeBar />}
       {live && <ArrowFlash />}
       {live && <ActionToast />}

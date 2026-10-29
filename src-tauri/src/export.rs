@@ -25,3 +25,33 @@ pub async fn save_text_file<R: Runtime>(
     std::fs::write(&path, contents).map_err(|e| e.to_string())?;
     Ok(Some(path.display().to_string()))
 }
+
+/// Like save_text_file for binary data (developer recordings). The bytes arrive as the raw
+/// request body; the suggested file name comes in the `x-file-name` header.
+#[tauri::command]
+pub async fn save_binary_file<R: Runtime>(
+    app: AppHandle<R>,
+    request: tauri::ipc::Request<'_>,
+) -> Result<Option<String>, String> {
+    let tauri::ipc::InvokeBody::Raw(data) = request.body() else {
+        return Err("expected raw bytes".into());
+    };
+    let name = request
+        .headers()
+        .get("x-file-name")
+        .and_then(|v| v.to_str().ok())
+        .filter(|n| !n.is_empty() && !n.contains(['/', '\\']))
+        .unwrap_or("recording.bin")
+        .to_string();
+    let Some(path) = app
+        .dialog()
+        .file()
+        .set_file_name(&name)
+        .blocking_save_file()
+    else {
+        return Ok(None);
+    };
+    let path = path.into_path().map_err(|e| e.to_string())?;
+    std::fs::write(&path, data).map_err(|e| e.to_string())?;
+    Ok(Some(path.display().to_string()))
+}
