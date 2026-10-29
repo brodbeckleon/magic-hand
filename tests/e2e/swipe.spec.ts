@@ -1,11 +1,12 @@
 import { TraceBuilder } from "../support/traces.ts";
 import { expect, test } from "./fixtures.ts";
-import { open, play, sentKeys, waitLive } from "./helpers.ts";
+import { open, play, sentKeys, unlockDev, updateSettings, waitLive } from "./helpers.ts";
 
 test.describe("live view (synthetic hand)", () => {
   test.beforeEach(async ({ page }) => {
     await open(page);
     await waitLive(page);
+    await unlockDev(page);
   });
 
   test("calibrate, swipe left -> next slide key, arrow and event list", async ({ page, externalRequests }) => {
@@ -38,19 +39,21 @@ test.describe("live view (synthetic hand)", () => {
   });
 
   test("reverse setting swaps the command", async ({ page }) => {
-    await page.evaluate(() => (window as never as { __magicHand: { settings: { getState(): { update(p: object): void } } } })
-      .__magicHand.settings.getState().update({ reverse: true }));
+    await updateSettings(page, { reverse: true });
     await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
     expect(await sentKeys(page)).toEqual(["prev"]);
   });
 
-  test("p pauses detection, k recalibrates", async ({ page }) => {
+  test("p pauses: camera off (MHR08); resume keeps the calibration; k recalibrates", async ({ page }) => {
     await play(page, new TraceBuilder().calibrated().hold(0.2));
+    await expect(page.getByTestId("mode")).toHaveText("Active");
     await page.keyboard.press("p");
-    await expect(page.getByTestId("mode")).toHaveText("Paused");
-    await play(page, new TraceBuilder().hold(0.2).move(-160, 0, 0.25).hold(0.3));
-    expect(await sentKeys(page)).toEqual([]);
-    await page.keyboard.press("p");
+    await expect(page.getByTestId("paused")).toBeVisible();
+    await expect.poll(() => page.locator("video.camera").evaluate((v: HTMLVideoElement) => v.srcObject)).toBeNull();
+    await page.getByTestId("resume").click();
+    await waitLive(page);
+    await expect.poll(() => page.locator("video.camera").evaluate((v: HTMLVideoElement) => (v.srcObject as MediaStream | null)?.active)).toBe(true);
+    await expect(page.getByTestId("mode")).toHaveText("Active");
     await page.keyboard.press("k");
     await expect(page.getByTestId("mode")).toHaveText("Calibrating");
   });
@@ -79,6 +82,7 @@ test.describe("German UI", () => {
   test("uses the OS language", async ({ page }) => {
     await open(page);
     await waitLive(page);
+    await unlockDev(page);
     await expect(page.getByTestId("mode")).toHaveText("Kalibrieren");
     await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
     await expect(page.getByTestId("events")).toContainText("Nächste Folie");

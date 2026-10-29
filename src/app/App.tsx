@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Engine } from "./engine/Engine.ts";
 import { EngineContext } from "./engine/context.ts";
-import { ArrowFlash } from "./overlay/ArrowFlash.tsx";
-import { EventList } from "./overlay/EventList.tsx";
 import { HandLayer } from "./overlay/HandLayer.tsx";
-import { StatusChip } from "./overlay/StatusChip.tsx";
-import { SwipeBar } from "./overlay/SwipeBar.tsx";
 import "./overlay/overlay.css";
-import { AccessibilityCard } from "./screens/AccessibilityCard.tsx";
-import { CameraError } from "./screens/CameraError.tsx";
+import { MainChrome } from "./screens/MainChrome.tsx";
+import { Pill } from "./screens/Pill.tsx";
+import "./design/controls.css";
 import "./screens/screens.css";
-import { useEngine } from "./state/engine.ts";
+import { useUi } from "./state/ui.ts";
+import { useNativeIntegration } from "./useNativeIntegration.ts";
 import { useShortcuts } from "./useShortcuts.ts";
 
 export function App() {
@@ -22,17 +19,17 @@ export function App() {
   }, [engine]);
   return (
     <EngineContext.Provider value={engine}>
-      <LiveView engine={engine} />
+      <Root engine={engine} />
     </EngineContext.Provider>
   );
 }
 
-function LiveView({ engine }: { engine: Engine }) {
-  const { t } = useTranslation();
+function Root({ engine }: { engine: Engine }) {
   const video = useRef<HTMLVideoElement>(null);
-  const status = useEngine((s) => s.status);
+  const view = useUi((s) => s.view);
   const [aspect, setAspect] = useState(4 / 3);
   useShortcuts(engine);
+  useNativeIntegration(engine);
 
   useEffect(() => {
     void engine.start(video.current!);
@@ -40,7 +37,7 @@ function LiveView({ engine }: { engine: Engine }) {
   }, [engine]);
 
   return (
-    <main className="stage">
+    <main className={`stage view-${view}`}>
       <div className="frame" style={{ "--ar": String(aspect), "--ar-num": aspect } as React.CSSProperties}>
         <video
           ref={video}
@@ -52,18 +49,7 @@ function LiveView({ engine }: { engine: Engine }) {
         />
         <HandLayer />
       </div>
-      {status.kind === "starting" && <div className="loading">{t("status.starting")}</div>}
-      {status.kind === "loading" && <div className="loading-chip glass">{t("status.loading")}</div>}
-      {status.kind === "error" && <CameraError status={status} onRetry={() => void engine.start(video.current!)} />}
-      {status.kind === "live" && (
-        <>
-          <StatusChip />
-          <EventList />
-          <SwipeBar />
-          <ArrowFlash />
-        </>
-      )}
-      <AccessibilityCard />
+      {view === "main" ? <MainChrome onRetry={() => void engine.start(video.current!)} /> : <Pill />}
     </main>
   );
 }

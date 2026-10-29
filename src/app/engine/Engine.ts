@@ -7,6 +7,7 @@ import { classifyCameraError, closeCamera, openCamera } from "../../vision/camer
 import { createHandLandmarker, type Delegate } from "../../vision/landmarkers.ts";
 import { LiveSource } from "../../vision/sources/LiveSource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
+import { parseResolution } from "../state/schema.ts";
 import { useEngine, type UiEvent, type UiEventKind } from "../state/engine.ts";
 import { useSettings, type Settings } from "../state/settings.ts";
 import { FrameBus } from "./FrameBus.ts";
@@ -16,6 +17,8 @@ const clock = () => new Date().toLocaleTimeString("de-CH", { hour12: false });
 /**
  * Owns the camera, the landmark source and the gesture pipeline; turns triggers into keystrokes
  * and keeps the event log (in memory only, exported on request).
+ *
+ * The camera runs only while gesture control is on: pausing closes it (MHR08).
  */
 export class Engine {
   readonly pipeline = new GesturePipeline();
@@ -24,6 +27,7 @@ export class Engine {
   readonly events = new FrameBus<UiEvent>();
   readonly log: LogEntry[] = [];
 
+  private video: HTMLVideoElement | null = null;
   private stream: MediaStream | null = null;
   private landmarker: Promise<{ landmarker: HandLandmarker; delegate: Delegate }> | null = null;
   private source: LandmarkSource | null = null;
@@ -33,17 +37,24 @@ export class Engine {
   private lastStatsAt = 0;
   private unsubscribeSettings: (() => void) | null = null;
   private generation = 0;
+  private cameraKey = "";
 
   /** Opens the camera into `video` and starts detection. Safe to call again after stop(). */
   async start(video: HTMLVideoElement): Promise<void> {
+    this.video = video;
     const gen = ++this.generation;
     this.followSettings();
-    useEngine.getState().set({ status: { kind: "starting" } });
+    const settings = useSettings.getState();
+    this.cameraKey = cameraKeyOf(settings);
+    useEngine.getState().set({ status: { kind: "starting" }, paused: false });
     try {
       // Load the model while the camera starts; the preview shows as soon as the camera is ready.
-      this.landmarker ??= createHandLandmarker(2, useSettings.getState().delegate);
+      this.landmarker ??= createHandLandmarker(2, settings.dev.delegate);
       this.landmarker.catch(() => undefined);
-      const stream = await openCamera();
+      const stream = await openCamera({
+        deviceId: settings.camera.deviceId ?? undefined,
+        ...parseResolution(settings.camera.resolution),
+      });
       if (gen !== this.generation) return closeCamera(stream);
       this.stream = stream;
       video.srcObject = stream;
@@ -79,10 +90,7 @@ export class Engine {
 
   stop(): void {
     this.generation++;
-    this.source?.stop();
-    this.source = null;
-    closeCamera(this.stream);
-    this.stream = null;
+    this.stopCamera();
     this.unsubscribeSettings?.();
     this.unsubscribeSettings = null;
     useEngine.getState().set({ status: { kind: "idle" } });
@@ -94,10 +102,21 @@ export class Engine {
     this.landmarker = null;
   }
 
-  togglePause(): void {
-    const paused = !useEngine.getState().paused;
-    useEngine.getState().set({ paused });
+  /** Pause = camera off (LED off), nothing is analysed. Resume reopens it; calibration is kept. */
+  setPaused(paused: boolean): void {
+    if (paused === useEngine.getState().paused) return;
+    if (paused) {
+      this.generation++;
+      this.stopCamera();
+      useEngine.getState().set({ paused: true });
+    } else if (this.video) {
+      void this.start(this.video);
+    }
     this.addLog({ ereignis: paused ? "pause" : "fortgesetzt" });
+  }
+
+  togglePause(): void {
+    this.setPaused(!useEngine.getState().paused);
   }
 
   recalibrate(): void {
@@ -123,6 +142,14 @@ export class Engine {
     return platform.saveTextFile(`magic_hand_log_${stamp}.csv`, "csv", toCsv(this.log, extended));
   }
 
+  private stopCamera(): void {
+    this.source?.stop();
+    this.source = null;
+    closeCamera(this.stream);
+    this.stream = null;
+    if (this.video) this.video.srcObject = null;
+  }
+
   private followSettings(): void {
     if (this.unsubscribeSettings) return;
     this.applySettings(useSettings.getState());
@@ -131,6 +158,14 @@ export class Engine {
 
   private applySettings(s: Settings): void {
     this.pipeline.updateSettings({ swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand });
+    // A different camera or resolution needs a new stream.
+    const key = cameraKeyOf(s);
+    if (key !== this.cameraKey && this.stream && this.video) {
+      this.cameraKey = key;
+      this.generation++;
+      this.stopCamera();
+      void this.start(this.video);
+    }
   }
 
   private onFrame(frame: FrameObs, meta: FrameMeta): void {
@@ -147,7 +182,7 @@ export class Engine {
       this.addLog({ ereignis: e.type });
       return;
     }
-    const { dryRun, keyMapping } = useSettings.getState();
+    const { dev, keyMapping } = useSettings.getState();
     const wischrichtung = e.swipe === "left" ? "links" : "rechts";
     const finish = () => {
       const tKey = performance.now() / 1000;
@@ -158,7 +193,7 @@ export class Engine {
         reaktionMs: reactionMs, verarbeitungMs: (tKey - meta.captureTime) * 1000, hand: e.side,
       });
     };
-    if (dryRun) return finish();
+    if (dev.dryRun) return finish();
     platform.sendKey(e.command, keyMapping).then(finish, (err) => {
       console.error("send_key failed", err);
       finish();
@@ -186,3 +221,5 @@ export class Engine {
     }
   }
 }
+
+const cameraKeyOf = (s: Settings) => `${s.camera.deviceId ?? ""}|${s.camera.resolution}`;

@@ -34,3 +34,6 @@ button { font: inherit; color: inherit; }
 }
 .camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; transform: scaleX(-1); }
 .overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+/* Pill: the window itself becomes transparent and only the bar is drawn. */
+html[data-view="pill"], html[data-view="pill"] body, html[data-view="pill"] .stage { background: transparent; }
