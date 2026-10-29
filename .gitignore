@@ -230,3 +230,7 @@ dist/
 public/models/
 public/mediapipe/
 *.tsbuildinfo
+
+# Playwright
+test-results/
+playwright-report/
