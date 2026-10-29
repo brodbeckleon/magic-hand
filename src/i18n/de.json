@@ -286,6 +286,22 @@
       "m": "Verpasste Geste melden",
       "f": "Fehlauslösung melden",
       "esc": "Fenster schliessen"
+    },
+    "try": {
+      "start": "Jetzt ausprobieren",
+      "title": "Ausprobieren",
+      "stop": "Beenden",
+      "lead": "Wische zügig nach {{dir}} oder zurück. Es wird keine Taste gesendet.",
+      "armFirst": "Halte zuerst eine Hand ca. 1 Sekunde ruhig, bis der Ring voll ist.",
+      "result": {
+        "next": "Erkannt: nächste Folie",
+        "prev": "Erkannt: vorherige Folie",
+        "ignored_dir": "Zu schräg: eher waagrecht wischen",
+        "ignored_return": "Rückholbewegung: wird bewusst ignoriert",
+        "ignored_not_speaker": "Eine andere Person ist am Wort"
+      },
+      "count_one": "{{count}} Wischgeste erkannt",
+      "count_other": "{{count}} Wischgesten erkannt"
     }
   },
   "toast": {

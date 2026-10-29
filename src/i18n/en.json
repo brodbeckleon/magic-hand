@@ -286,6 +286,22 @@
       "m": "Report missed gesture",
       "f": "Report false trigger",
       "esc": "Close panel"
+    },
+    "try": {
+      "start": "Try it now",
+      "title": "Try it",
+      "stop": "Stop",
+      "lead": "Swipe briskly to the {{dir}} or back. No key is sent.",
+      "armFirst": "First hold a hand still for about a second until the ring is full.",
+      "result": {
+        "next": "Recognised: next slide",
+        "prev": "Recognised: previous slide",
+        "ignored_dir": "Too diagonal: swipe more horizontally",
+        "ignored_return": "Return movement: ignored on purpose",
+        "ignored_not_speaker": "Someone else is the speaker"
+      },
+      "count_one": "{{count}} swipe recognised",
+      "count_other": "{{count}} swipes recognised"
     }
   },
   "toast": {

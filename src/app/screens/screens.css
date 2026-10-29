@@ -172,3 +172,12 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
   content: ""; position: absolute; right: 48px; bottom: -7px; width: 12px; height: 12px; transform: rotate(45deg);
   background: inherit; border-right: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
 }
+
+.try-start { justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
+.try-panel { border-radius: var(--radius-m); background: rgb(18 165 148 / 0.1); border: 1px solid rgb(18 165 148 / 0.35); padding: 14px 16px; display: grid; gap: 8px; }
+.try-head { display: flex; justify-content: space-between; align-items: center; }
+.try-panel p { margin: 0; }
+.try-result { min-height: 56px; display: grid; place-items: center; }
+.try-fb { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+.try-fb.ok { color: var(--green); }
+.try-fb.warn { color: var(--amber); }
