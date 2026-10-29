@@ -18,6 +18,7 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_ENV_"],
   define: { __APP_VERSION__: JSON.stringify(version) },
+  worker: { format: "es" },
   build: {
     target: "safari16",
     sourcemap: !!process.env.TAURI_ENV_DEBUG,

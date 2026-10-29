@@ -6,7 +6,7 @@ import type { HandObs, Side } from "../core/types.ts";
 export type Delegate = "GPU" | "CPU";
 export type DelegatePreference = "auto" | Delegate;
 
-const WASM_PATH = "/mediapipe/wasm";
+export const WASM_PATH = "/mediapipe/wasm";
 export const MODEL_PATHS = {
   hand: "/models/hand_landmarker.task",
   pose: "/models/pose_landmarker_lite.task",
