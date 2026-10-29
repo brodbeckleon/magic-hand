@@ -49,9 +49,9 @@ export interface DetectResult {
 export class VisionRunner {
   private fileset: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
   private hands: HandLandmarker | null = null;
-  private pose: PoseLandmarker | null = null;
-  private face: FaceLandmarker | null = null;
-  private cropHands: HandLandmarker | null = null;
+  private pose = new LazyModel<PoseLandmarker>("pose");
+  private face = new LazyModel<FaceLandmarker>("face");
+  private cropHands = new LazyModel<HandLandmarker>("wrist-crop hands");
   private cropCanvas: OffscreenCanvas | null = null;
   private faceCanvas: OffscreenCanvas | null = null;
   private numHands = 2;
@@ -98,8 +98,9 @@ export class VisionRunner {
   }
 
   close(): void {
-    for (const m of [this.hands, this.pose, this.face, this.cropHands]) m?.close();
-    this.hands = this.pose = this.face = this.cropHands = null;
+    this.hands?.close();
+    this.hands = null;
+    for (const m of [this.pose, this.face, this.cropHands]) m.close();
   }
 
   async detect(req: DetectRequest): Promise<DetectResult> {
@@ -109,17 +110,21 @@ export class VisionRunner {
     const t1 = performance.now();
     let poses: PoseObs[] | null = null;
     let raw: NormalizedLandmark[][] = [];
-    if (req.pose) {
-      raw = (await this.getPose()).detectForVideo(bitmap, ts).landmarks;
+    // Extra models load in the background on first use; until then the frame simply has no poses.
+    const pose = req.pose ? this.pose.get(() => this.createPose()) : null;
+    if (pose) {
+      raw = pose.detectForVideo(bitmap, ts).landmarks;
       poses = raw.map((lms) => ({
         landmarks: lms.map((l) => cropToFull({ x: l.x, y: l.y, z: l.z, visibility: l.visibility }, crop)),
       }));
     }
     const t2 = performance.now();
-    const faces = req.face && raw.length ? await this.facesFor(bitmap, raw, crop) : null;
+    const face = req.face && raw.length ? this.face.get(() => this.createFace()) : null;
+    const faces = face ? this.facesFor(face, bitmap, raw, crop) : null;
     const t3 = performance.now();
     for (const h of hands) h.landmarks = h.landmarks.map((l) => cropToFull(l, crop));
-    const extra = await this.handsInCrops(bitmap, req.wristCrops, crop, hands);
+    const cropHands = req.wristCrops.length ? this.cropHands.get(() => this.createCropHands()) : null;
+    const extra = cropHands ? this.handsInCrops(cropHands, bitmap, req.wristCrops, crop, hands) : [];
     const t4 = performance.now();
     return { hands: [...hands, ...extra], poses, faces, handMs: t1 - t0, poseMs: t2 - t1, faceMs: t3 - t2, cropMs: t4 - t3 };
   }
@@ -143,8 +148,8 @@ export class VisionRunner {
     }
   }
 
-  private async getPose(): Promise<PoseLandmarker> {
-    this.pose ??= await PoseLandmarker.createFromOptions(this.fileset!, {
+  private createPose(): Promise<PoseLandmarker> {
+    return PoseLandmarker.createFromOptions(this.fileset!, {
       baseOptions: { modelAssetPath: MODEL_PATHS.pose, delegate: this.delegate },
       runningMode: "VIDEO",
       numPoses: 4,
@@ -152,28 +157,25 @@ export class VisionRunner {
       minPosePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,
     });
-    return this.pose;
   }
 
-  private async getFace(): Promise<FaceLandmarker> {
-    this.face ??= await FaceLandmarker.createFromOptions(this.fileset!, {
+  private createFace(): Promise<FaceLandmarker> {
+    return FaceLandmarker.createFromOptions(this.fileset!, {
       baseOptions: { modelAssetPath: MODEL_PATHS.face, delegate: this.delegate },
       runningMode: "IMAGE",
       numFaces: 1,
       outputFaceBlendshapes: true,
     });
-    return this.face;
   }
 
-  private async getCropHands(): Promise<HandLandmarker> {
-    this.cropHands ??= await HandLandmarker.createFromOptions(this.fileset!, {
+  private createCropHands(): Promise<HandLandmarker> {
+    return HandLandmarker.createFromOptions(this.fileset!, {
       baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate: this.delegate },
       runningMode: "IMAGE",
       numHands: 1,
       minHandDetectionConfidence: 0.5,
       minHandPresenceConfidence: 0.5,
     });
-    return this.cropHands;
   }
 
   /**
@@ -181,8 +183,7 @@ export class VisionRunner {
    * corners = pose landmarks 0-10) and enlarged, which works at distances where full-frame face
    * detection gives up. Only jawOpen and four lip/face points are returned.
    */
-  private async facesFor(bitmap: ImageBitmap, posesRaw: NormalizedLandmark[][], crop: Rect): Promise<(FaceObs | null)[]> {
-    const fl = await this.getFace();
+  private facesFor(fl: FaceLandmarker, bitmap: ImageBitmap, posesRaw: NormalizedLandmark[][], crop: Rect): (FaceObs | null)[] {
     this.faceCanvas ??= new OffscreenCanvas(FACE_PX, FACE_PX);
     const canvas = this.faceCanvas;
     const ctx = canvas.getContext("2d")!;
@@ -215,9 +216,7 @@ export class VisionRunner {
    * Around a far presenter's wrist (from the pose) the hand fills a 224 px crop and is found again.
    * Skips crops where the regular pass already found a hand.
    */
-  private async handsInCrops(bitmap: ImageBitmap, crops: Rect[], frameCrop: Rect, found: HandObs[]): Promise<HandObs[]> {
-    if (!crops.length) return [];
-    const hl = await this.getCropHands();
+  private handsInCrops(hl: HandLandmarker, bitmap: ImageBitmap, crops: Rect[], frameCrop: Rect, found: HandObs[]): HandObs[] {
     this.cropCanvas ??= new OffscreenCanvas(CROP_PX, CROP_PX);
     const canvas = this.cropCanvas;
     const ctx = canvas.getContext("2d")!;
@@ -238,5 +237,46 @@ export class VisionRunner {
       }
     }
     return out;
+  }
+}
+
+/**
+ * A model that is created on first use without blocking the frame that asked for it. A failed
+ * load (e.g. a slow disk or an aborted fetch) is retried a few seconds later.
+ */
+class LazyModel<T extends { close(): void }> {
+  private model: T | null = null;
+  private loading = false;
+  private retryAt = 0;
+  private closed = false;
+  private readonly name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  /** The model if ready; otherwise starts loading it and returns null for now. */
+  get(create: () => Promise<T>): T | null {
+    if (this.model || this.loading || this.closed || performance.now() < this.retryAt) return this.model;
+    this.loading = true;
+    create().then(
+      (m) => {
+        this.loading = false;
+        if (this.closed) m.close();
+        else this.model = m;
+      },
+      (err) => {
+        this.loading = false;
+        this.retryAt = performance.now() + 3000;
+        console.warn(`${this.name} model could not be loaded, retrying`, err);
+      },
+    );
+    return null;
+  }
+
+  close(): void {
+    this.closed = true;
+    this.model?.close();
+    this.model = null;
   }
 }
