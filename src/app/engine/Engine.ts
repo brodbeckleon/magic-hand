@@ -138,6 +138,24 @@ export class Engine {
     };
   }
 
+  private numHands = 2;
+  private fewPeopleSince = 0;
+
+  /**
+   * MediaPipe re-runs palm detection on every frame while fewer hands are tracked than numHands, so
+   * we ask for 4 only while several people are in view (back to 2 after 3 s with one person).
+   */
+  private adaptNumHands(t: number): void {
+    const worker = this.worker?.handle;
+    if (!worker) return;
+    if (this.personCount >= 2) {
+      this.fewPeopleSince = t;
+      if (this.numHands !== 4) worker.setNumHands((this.numHands = 4));
+    } else if (this.numHands !== 2 && t - this.fewPeopleSince > 3) {
+      worker.setNumHands((this.numHands = 2));
+    }
+  }
+
   private scheduleFrame = 0;
   private loadMs = 0;
   private personCount = 0;
@@ -376,6 +394,7 @@ export class Engine {
     }
     this.frameTap?.();
     this.personCount = snapshot.persons.length;
+    this.adaptNumHands(frame.t);
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);
   }
