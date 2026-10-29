@@ -65,3 +65,18 @@ test.describe("developer tools", () => {
     await waitLive(page);
   });
 });
+
+test("pausing during a replay ends it cleanly; keys work again afterwards", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await unlockDev(page);
+  await page.getByTestId("dev-tabs").getByRole("radio", { name: "Recording" }).click();
+  await page.getByTestId("replay-file").setInputFiles("tests/fixtures/recordings/synthetic-session.jsonl.gz");
+  await expect(page.getByTestId("replay-status")).toBeVisible();
+  await page.keyboard.press("p"); // stops the replay mid-way
+  await expect(page.getByTestId("paused")).toBeVisible();
+  await page.getByTestId("resume").click();
+  await waitLive(page);
+  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
+  expect(await sentKeys(page)).toEqual(["next"]);
+});

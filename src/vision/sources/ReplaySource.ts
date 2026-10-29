@@ -22,8 +22,8 @@ export class ReplaySource implements LandmarkSource {
   }
 
   start(onFrame: (frame: FrameObs, meta: FrameMeta) => void): void {
-    const { speed = 1, retime = false, onDone } = this.opts;
-    if (!this.frames.length) return onDone?.();
+    const { speed = 1, retime = false } = this.opts;
+    if (!this.frames.length) return this.finish();
     const t0 = this.frames[0]!.t;
     const wall0 = performance.now();
     let i = 0;
@@ -35,15 +35,25 @@ export class ReplaySource implements LandmarkSource {
         const t = retime ? wall0 / 1000 + (f.t - t0) : f.t;
         onFrame({ ...f, t }, { captureTime: retime ? t : performance.now() / 1000, inferenceMs: 0 });
       }
-      if (i >= this.frames.length) return onDone?.();
+      if (i >= this.frames.length) return this.finish();
       const next = (this.frames[i]!.t - t0 - elapsed) / speed;
       this.timer = window.setTimeout(tick, Math.max(0, next * 1000));
     };
     tick();
   }
 
+  /** Stops early; onDone still fires (once) so whoever waits for the replay is released. */
   stop(): void {
+    if (this.stopped) return;
     this.stopped = true;
     window.clearTimeout(this.timer);
+    this.finish();
+  }
+
+  private finished = false;
+  private finish(): void {
+    if (this.finished) return;
+    this.finished = true;
+    this.opts.onDone?.();
   }
 }

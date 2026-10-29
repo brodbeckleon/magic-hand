@@ -2,8 +2,6 @@
 
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use serde::Deserialize;
-use std::sync::mpsc;
-use tauri::{AppHandle, Runtime};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -36,21 +34,12 @@ fn press(key: Key) -> Result<(), String> {
     enigo.key(key, Direction::Click).map_err(|e| e.to_string())
 }
 
-/// Presses the key for `command`. Runs on the main thread: enigo's macOS keyboard-layout lookups
-/// must not run elsewhere. Waits until the key was posted so the caller can measure latency.
+/// Presses the key for `command`. A synchronous command, so Tauri runs it on the main thread,
+/// which enigo's macOS keyboard-layout lookups require. Returns once the key was posted, so the
+/// caller can measure latency.
 #[tauri::command]
-pub async fn send_key<R: Runtime>(
-    app: AppHandle<R>,
-    command: SlideCommand,
-    mapping: Option<KeyMapping>,
-) -> Result<(), String> {
-    let key = key_for(command, mapping.unwrap_or_default());
-    let (tx, rx) = mpsc::channel();
-    app.run_on_main_thread(move || {
-        let _ = tx.send(press(key));
-    })
-    .map_err(|e| e.to_string())?;
-    rx.recv().map_err(|e| e.to_string())?
+pub fn send_key(command: SlideCommand, mapping: Option<KeyMapping>) -> Result<(), String> {
+    press(key_for(command, mapping.unwrap_or_default()))
 }
 
 #[cfg(test)]

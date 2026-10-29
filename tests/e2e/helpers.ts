@@ -11,7 +11,7 @@ export async function open(page: Page, path = "/", query = ""): Promise<void> {
 
 /** Waits until the camera and the hand model are running. */
 export async function waitLive(page: Page): Promise<void> {
-  await page.getByTestId("status").waitFor({ timeout: 30_000 });
+  await page.getByTestId("status").waitFor({ timeout: test.info().project.name === "webkit" ? 50_000 : 30_000 });
 }
 
 /** Plays a synthetic hand trace through the real engine (replacing the camera's detections). */

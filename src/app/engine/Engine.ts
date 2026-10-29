@@ -65,6 +65,9 @@ export class Engine {
   async start(video: HTMLVideoElement): Promise<void> {
     this.video = video;
     const gen = ++this.generation;
+    // A previous camera (e.g. kept open during a replay, or opened before a model error) must be
+    // closed, or its LED stays on after the next pause (MHR08).
+    this.stopCamera();
     this.followSettings();
     const settings = useSettings.getState();
     this.cameraKey = cameraKeyOf(settings);
@@ -87,11 +90,8 @@ export class Engine {
       this.useSource(source);
       useEngine.getState().set({ status: { kind: "live" } });
     } catch (err) {
-      if (!(err instanceof DOMException)) {
-        this.vision?.backend.terminate(); // let a retry load the model again
-        this.vision = null;
-      }
       if (gen !== this.generation) return;
+      if (!(err instanceof DOMException)) this.dropVision(); // let a retry load the model again
       const isCamera = err instanceof DOMException;
       useEngine.getState().set({ status: { kind: "error", error: isCamera ? classifyCameraError(err) : "model" } });
       console.error(err);
@@ -118,8 +118,8 @@ export class Engine {
         // E.g. WebKit before Safari 17 cannot use WebGL in workers: same analysis on the main thread.
         console.warn("vision worker unavailable, using the main thread", err);
         this.workerFailed = true;
-        v.backend.terminate();
-        this.vision = null;
+        if (this.vision === v) this.dropVision();
+        else v.backend.terminate();
         return this.loadVision(pref)(video);
       }
       const src = new WorkerSource(video, v.backend, () => this.needs());
@@ -130,10 +130,12 @@ export class Engine {
 
 
   private lastPresence = performance.now() / 1000;
+  private presenceReset = true;
 
   /** Nobody in view for the configured time: turn the camera off (privacy, battery). */
   private checkIdle(t: number, present: boolean): void {
-    if (present || this.lastPresence > t) this.lastPresence = t;
+    if (present || this.presenceReset || this.lastPresence > t) this.lastPresence = t;
+    this.presenceReset = false;
     const minutes = useSettings.getState().autoPauseMinutes;
     if (minutes > 0 && !useEngine.getState().paused && t - this.lastPresence > minutes * 60) {
       this.setPaused(true, "idle");
@@ -187,6 +189,13 @@ export class Engine {
     return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, wristCrops: this.wristCrops, ...plan };
   }
 
+  /** Closes the vision backend; the next start creates a fresh one (with 2 hands, see adaptNumHands). */
+  private dropVision(): void {
+    this.vision?.backend.terminate();
+    this.vision = null;
+    this.numHands = 2;
+  }
+
   /**
    * Asks for pose landmarks on every frame until the returned function is called. `fullFrame`
    * analyses the whole picture instead of the presenter zone (only for proposing a new zone).
@@ -218,6 +227,7 @@ export class Engine {
   /** Feeds frames from any source (live camera, recording replay, tests). */
   useSource(source: LandmarkSource, followSettings = true): void {
     if (followSettings) this.followSettings();
+    this.presenceReset = true; // a new source may run on a different clock (recordings)
     source.start((frame, meta) => this.onFrame(frame, meta));
   }
 
@@ -238,8 +248,7 @@ export class Engine {
 
   dispose(): void {
     this.stop();
-    this.vision?.backend.terminate();
-    this.vision = null;
+    this.dropVision();
   }
 
   /** Pause = camera off (LED off), nothing is analysed. Resume reopens it; calibration is kept. */
@@ -250,7 +259,6 @@ export class Engine {
       this.stopCamera();
       useEngine.getState().set({ paused: true, pausedReason: reason });
     } else if (this.video) {
-      this.lastPresence = performance.now() / 1000;
       void this.start(this.video);
     }
     this.addLog({ ereignis: paused ? "pause" : "fortgesetzt" });
@@ -346,10 +354,14 @@ export class Engine {
     progress(false, null);
     this.eventTap = (e) => live.push(toReplayEvent(e));
     this.frameTap = () => ++done % 10 === 0 && progress(false, null);
-    await new Promise<void>((resolve) => this.replaceSource(new ReplaySource(rec.frames, { speed, onDone: resolve }), false));
-    this.eventTap = this.frameTap = null;
-    release();
-    progress(true, diffEvents(rec.events, live).length);
+    try {
+      // Also settles when the replay is stopped early (pause, stop): ReplaySource calls onDone.
+      await new Promise<void>((resolve) => this.replaceSource(new ReplaySource(rec.frames, { speed, onDone: resolve }), false));
+    } finally {
+      this.eventTap = this.frameTap = null;
+      release();
+    }
+    progress(true, done < total ? null : diffEvents(rec.events, live).length);
     this.pipeline.resetCalibration();
     this.followSettings();
   }

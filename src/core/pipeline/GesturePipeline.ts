@@ -168,8 +168,10 @@ export class GesturePipeline {
 
     // People (only on frames where the pose model ran).
     if (frame.poses) {
+      const hadPersons = this.lastPersons.length > 0;
       this.lastPersons = this.persons.update(t, frame.poses);
       this.associator.update(tracks, this.lastPersons, aspect);
+      if (!hadPersons && this.lastPersons.length) this.handOverSolo(tracks, aspect);
       for (const p of this.lastPersons) {
         const st = this.state(p.id);
         if (p.poseIndex !== null) {
@@ -252,11 +254,6 @@ export class GesturePipeline {
         sp.autoSignal,
       );
       if (change) {
-        // The solo detectors (hands seen before people were) belong to the first speaker.
-        if (change.id !== null && this.people.has(SOLO) && !this.people.has(change.id)) {
-          this.people.set(change.id, this.people.get(SOLO)!);
-          this.people.delete(SOLO);
-        }
         events.push({ type: "speaker", t, person: change.id, reason: change.reason });
       }
     }
@@ -358,6 +355,18 @@ export class GesturePipeline {
       if (crop) out.push(crop);
     }
     return out;
+  }
+
+  /**
+   * Hands seen before the pose model found anyone were tracked as SOLO. When people appear, those
+   * detectors (calibration progress, a swipe in flight) move to the person the hands belong to.
+   */
+  private handOverSolo(tracks: readonly HandTrack[], aspect: number): void {
+    const solo = this.people.get(SOLO);
+    if (!solo) return;
+    this.people.delete(SOLO);
+    const owner = tracks.length ? this.ownerOf(tracks[0]!, this.lastPersons, aspect).person : this.lastPersons[0]!.id;
+    if (!this.people.has(owner)) this.people.set(owner, solo);
   }
 
   private state(person: number): PersonState {
