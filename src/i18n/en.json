@@ -381,5 +381,13 @@
       "stay": "Stay here",
       "calibrateLater": "Use “Calibrate” later to tune Magic Hand more closely to your movements."
     }
+  },
+  "hints": {
+    "ok": "Got it",
+    "noHand": "Hold a hand up to the camera and keep it still for a moment to start.",
+    "focus": "The key went to Magic Hand itself. Click into your presentation or on “Present”.",
+    "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
+    "takeover": "Several people in view: to take over, raise an open hand for about a second.",
+    "far": "You are far away: swipe with big, clear arm movements."
   }
 }

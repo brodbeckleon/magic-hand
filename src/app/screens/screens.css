@@ -159,3 +159,16 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .chrome.sheet-open.sheet-wide .swipe-bar { left: calc((100% - 584px) / 2); width: min(420px, calc(100% - 624px)); }
 .chrome.sheet-open .arrow-flash { right: 444px; }
 .chrome.sheet-open .toast-slot { left: calc((100% - 444px) / 2); }
+
+.hint-slot { position: absolute; left: 50%; bottom: 132px; transform: translateX(-50%); pointer-events: none; z-index: 22; }
+.hint-slot.anchor-present { left: auto; right: 18px; bottom: 80px; transform: none; }
+.hint {
+  pointer-events: auto; display: flex; align-items: center; gap: 10px; max-width: min(460px, calc(100vw - 40px));
+  padding: 10px 14px; border-radius: var(--radius-m); font-size: 14px; line-height: 1.4; border-color: rgb(18 165 148 / 0.4);
+}
+.hint svg { flex: none; color: var(--teal); }
+.hint .link { white-space: nowrap; margin-left: 4px; }
+.anchor-present .hint::after {
+  content: ""; position: absolute; right: 48px; bottom: -7px; width: 12px; height: 12px; transform: rotate(45deg);
+  background: inherit; border-right: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+}

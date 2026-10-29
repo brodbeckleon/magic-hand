@@ -381,5 +381,13 @@
       "stay": "Hier bleiben",
       "calibrateLater": "Mit «Kalibrieren» passt du Magic Hand später genauer an deine Bewegungen an."
     }
+  },
+  "hints": {
+    "ok": "Verstanden",
+    "noHand": "Halte eine Hand in die Kamera und kurz ruhig, um zu starten.",
+    "focus": "Die Taste ging an Magic Hand selbst. Klicke in deine Präsentation oder auf «Präsentieren».",
+    "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
+    "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
+    "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
   }
 }

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import i18n, { systemLanguage } from "../i18n/index.ts";
 import { platform } from "../platform/index.ts";
 import type { Engine } from "./engine/Engine.ts";
+import { learnedKey } from "./hints/registry.ts";
 import { pillSize } from "./screens/Pill.tsx";
 import { useEngine } from "./state/engine.ts";
 import { useSettings } from "./state/settings.ts";
@@ -40,6 +41,9 @@ export function useNativeIntegration(engine: Engine): void {
   useEffect(() => {
     document.documentElement.dataset.view = view;
     if (view === "pill") {
+      // Using presenting mode means the "present" hint is no longer needed.
+      const { hints, update } = useSettings.getState();
+      if (!hints[learnedKey("present")]) update({ hints: { [learnedKey("present")]: 1 } });
       const { width, height } = pillSize(thumbnail);
       void platform.setPillMode(true, width, height).then(() => platform.yieldFocus());
     } else {

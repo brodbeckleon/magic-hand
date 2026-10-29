@@ -6,6 +6,7 @@ import { spring } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { DevPanel, RecBadge } from "../debug/DevPanel.tsx";
 import "../debug/dev.css";
+import { HintHost } from "../hints/HintHost.tsx";
 import { ActionToast } from "../overlay/ActionToast.tsx";
 import { ArrowFlash } from "../overlay/ArrowFlash.tsx";
 import { EventList } from "../overlay/EventList.tsx";
@@ -43,6 +44,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       {live && <SwipeBar />}
       {live && <ArrowFlash />}
       {live && <ActionToast />}
+      {live && <HintHost />}
       {status.kind === "live" && <PresentButton />}
       {status.kind === "starting" && <div className="loading">{t("status.starting")}</div>}
       {status.kind === "loading" && <div className="loading-chip glass">{t("status.loading")}</div>}
