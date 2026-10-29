@@ -23,7 +23,7 @@ export function HoldStillDemo() {
       <circle cx="60" cy="40" r="30" fill="none" stroke="rgb(255 255 255 / 0.15)" strokeWidth="5" />
       <circle cx="60" cy="40" r="30" fill="none" stroke="var(--teal)" strokeWidth="5" strokeLinecap="round"
         pathLength={100} strokeDasharray="100" className="ring-fill" transform="rotate(-90 60 40)" />
-      <path transform="translate(48.6 25.5) scale(0.9)" d={HAND_PATH} fill="var(--text)" />
+      <path transform="translate(48.6 25.5) scale(0.9)" d={HAND_PATH} fill="var(--text)" stroke="var(--text)" strokeWidth={1.1} strokeLinejoin="round" />
     </svg>
   );
 }
@@ -34,7 +34,7 @@ export function SwipeDemo({ next }: { next: "left" | "right" }) {
     <svg viewBox="0 0 120 80" width="120" height="80" aria-hidden className={`help-illu swipe-demo to-${next}`}>
       <path d="M20 46 H100" stroke="var(--amber)" strokeWidth="4" strokeLinecap="round" strokeDasharray="4 8" opacity="0.5" />
       <g className="swipe-hand">
-        <path transform="translate(50 18) scale(0.85)" d={HAND_PATH} fill="var(--text)" />
+        <path transform="translate(50 18) scale(0.85)" d={HAND_PATH} fill="var(--text)" stroke="var(--text)" strokeWidth={1.1} strokeLinejoin="round" />
       </g>
     </svg>
   );

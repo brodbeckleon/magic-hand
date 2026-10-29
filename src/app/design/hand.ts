@@ -1,6 +1,9 @@
 // The hand glyph used across the app (icons, illustrations, app icon). Filled outline drawn on a
 // 24 x 32 grid. Source: SVG Repo (provided by the team).
-export const HAND_VIEWBOX = "0 0 24 32";
+/** Extra outline width (grid units) so the glyph matches the 1.8-stroke UI icons; the viewBox is
+ *  padded by half of it so the thicker edge is not clipped. */
+export const HAND_STROKE = 1.3;
+export const HAND_VIEWBOX = `${-HAND_STROKE / 2} ${-HAND_STROKE / 2} ${24 + HAND_STROKE} ${32 + HAND_STROKE}`;
 export const HAND_W = 24;
 export const HAND_H = 32;
 export const HAND_PATH =

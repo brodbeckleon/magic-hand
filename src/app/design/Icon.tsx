@@ -1,6 +1,6 @@
 // Small inline icon set (24px grid, stroke icons) so the app needs no icon font or image files.
 import type { SVGProps } from "react";
-import { HAND_H, HAND_PATH, HAND_VIEWBOX, HAND_W } from "./hand.ts";
+import { HAND_H, HAND_PATH, HAND_STROKE, HAND_VIEWBOX, HAND_W } from "./hand.ts";
 
 const PATHS = {
   calibrate: "M12 3v3M12 18v3M3 12h3M18 12h3M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8M12 11.2a.8.8 0 1 0 0 1.6a.8.8 0 1 0 0-1.6",
@@ -35,7 +35,8 @@ export function Icon({ name, size = 20, ...rest }: { name: IconName; size?: numb
   if (name === "hand") {
     // Filled glyph on its own 24 x 32 grid: same height as the other icons, proportional width.
     return (
-      <svg width={(size * HAND_W) / HAND_H} height={size} viewBox={HAND_VIEWBOX} fill="currentColor" aria-hidden {...rest}>
+      <svg width={(size * HAND_W) / HAND_H} height={size} viewBox={HAND_VIEWBOX} fill="currentColor"
+        stroke="currentColor" strokeWidth={HAND_STROKE} strokeLinejoin="round" aria-hidden {...rest}>
         <path d={HAND_PATH} />
       </svg>
     );
