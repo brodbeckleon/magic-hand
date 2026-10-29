@@ -1,3 +1,5 @@
+import { HAND_PATH } from "../design/hand.ts";
+
 // Small SVG illustrations used in Preferences, the first-run wizard and Help.
 
 /** A hand moving in the direction that means "next slide", with the slide stack reacting. */
@@ -21,9 +23,7 @@ export function HoldStillDemo() {
       <circle cx="60" cy="40" r="30" fill="none" stroke="rgb(255 255 255 / 0.15)" strokeWidth="5" />
       <circle cx="60" cy="40" r="30" fill="none" stroke="var(--teal)" strokeWidth="5" strokeLinecap="round"
         pathLength={100} strokeDasharray="100" className="ring-fill" transform="rotate(-90 60 40)" />
-      <g transform="translate(46 24) scale(1.2)" fill="none" stroke="var(--text)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7c-3 0-4.3-1.6-6-4.3L3 14.2a1.5 1.5 0 0 1 2.5-1.6L8 15.5" />
-      </g>
+      <path transform="translate(48.6 25.5) scale(0.9)" d={HAND_PATH} fill="var(--text)" />
     </svg>
   );
 }
@@ -33,8 +33,8 @@ export function SwipeDemo({ next }: { next: "left" | "right" }) {
   return (
     <svg viewBox="0 0 120 80" width="120" height="80" aria-hidden className={`help-illu swipe-demo to-${next}`}>
       <path d="M20 46 H100" stroke="var(--amber)" strokeWidth="4" strokeLinecap="round" strokeDasharray="4 8" opacity="0.5" />
-      <g className="swipe-hand" fill="none" stroke="var(--text)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path transform="translate(48 22) scale(1.1)" d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7c-3 0-4.3-1.6-6-4.3L3 14.2a1.5 1.5 0 0 1 2.5-1.6L8 15.5" />
+      <g className="swipe-hand">
+        <path transform="translate(50 18) scale(0.85)" d={HAND_PATH} fill="var(--text)" />
       </g>
     </svg>
   );
