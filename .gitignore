@@ -223,3 +223,10 @@ __marimo__/
 .DS_Store
 hand_landmarker.task
 magic_hand_log*.csv
+
+# Magic Hand app
+node_modules/
+dist/
+public/models/
+public/mediapipe/
+*.tsbuildinfo

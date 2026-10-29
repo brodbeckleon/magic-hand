@@ -1,0 +1,19 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #0f1115;
+  color: #f2f2f2;
+}
+
+html, body, #root { margin: 0; height: 100%; overflow: hidden; }
+
+.stage { position: relative; width: 100%; height: 100%; background: #0f1115; }
+
+/* Mirrored like a mirror; the pixels themselves are never flipped (handedness, see plan). */
+.camera { width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
+
+.notice {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  padding: 16px 20px; border-radius: 14px; max-width: 420px; text-align: center;
+  background: rgb(30 26 29 / 0.7); backdrop-filter: blur(16px);
+}
