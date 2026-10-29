@@ -87,3 +87,32 @@ jobs:
           python-version: "3.14"
       - run: python prototype/tools/gen_golden.py
       - run: git diff --exit-code tests/fixtures
+
+  native-linux:
+    # Starts the real app (WebKitGTK) under Xvfb and drives it through tauri-driver: IPC commands,
+    # settings.json on disk, the pill window, and real keystrokes arriving (tests/native/smoke.ts).
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libxdo-dev libssl-dev webkitgtk-webdriver xvfb
+      - run: cargo install tauri-driver --locked
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm assets
+      - run: pnpm tauri build --debug --no-bundle
+      - run: |
+          Xvfb :99 -screen 0 1440x900x24 &
+          sleep 2
+          DISPLAY=:99 tauri-driver &
+          sleep 2
+          DISPLAY=:99 pnpm exec tsx tests/native/smoke.ts src-tauri/target/debug/magic-hand
