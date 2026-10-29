@@ -172,3 +172,24 @@ test("pill warns when the slide keys would go to another app", async ({ page }) 
   await page.evaluate(() => ((window as unknown as { __frontmostApp: object }).__frontmostApp = { name: "Keynote", id: "com.apple.iWork.Keynote" }));
   await expect(page.getByTestId("pill-focus-warning")).toHaveCount(0, { timeout: 5000 });
 });
+
+test("camera turns itself off after nobody was in view for the configured time", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await updateSettings(page, { autoPauseMinutes: 5 });
+  const empty = (t: number) => ({ t, width: 640, height: 480, hands: [], poses: [] });
+  await page.evaluate((f) => (window as unknown as { __magicHand: { playRaw(f: object[]): Promise<void> } }).__magicHand.playRaw(f),
+    [empty(100), empty(200), empty(100 + 5 * 60 + 1)]);
+  await expect(page.getByTestId("paused")).toContainText("Nobody was in view for 5 minutes");
+  await expect.poll(() => page.locator("video.camera").evaluate((v: HTMLVideoElement) => v.srcObject)).toBeNull();
+});
+
+test("sound option can be turned on (off by default)", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-preferences").click();
+  const sw = page.getByRole("switch", { name: "Sound on slide change" });
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+});

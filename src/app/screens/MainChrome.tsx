@@ -120,11 +120,13 @@ function PresentButton() {
 function PausedCard() {
   const { t } = useTranslation();
   const engine = useEngineInstance();
+  const reason = useEngine((s) => s.pausedReason);
+  const minutes = useSettings((s) => s.autoPauseMinutes);
   return (
     <div className="center-card glass" data-testid="paused">
       <Icon name="pause" size={40} />
       <h2>{t("main.paused")}</h2>
-      <p>{t("main.pausedBody")}</p>
+      <p>{reason === "idle" ? t("main.pausedIdle", { n: minutes }) : t("main.pausedBody")}</p>
       <div className="actions">
         <button className="btn primary" data-testid="resume" onClick={() => engine.setPaused(false)}>
           <Icon name="play" size={16} />{t("main.resume")}

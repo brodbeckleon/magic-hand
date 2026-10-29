@@ -83,7 +83,8 @@
     "resume": "Resume",
     "pause": "Pause",
     "devUnlocked": "Developer tools unlocked",
-    "devLocked": "Developer tools hidden"
+    "devLocked": "Developer tools hidden",
+    "pausedIdle": "Nobody was in view for {{n}} minutes. The camera was turned off."
   },
   "pill": {
     "expand": "Open window",
@@ -189,7 +190,13 @@
     "deleteYes": "Delete",
     "deleted": "Deleted. No data is stored anymore.",
     "farAssist": "Help at a distance",
-    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement."
+    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement.",
+    "sound": "Sound on slide change",
+    "soundHint": "A short, quiet tone so you know it worked without looking.",
+    "autoPause": "Turn the camera off when nobody is there",
+    "autoPauseHint": "Saves battery and protects privacy when you leave the room.",
+    "minutes": "after {{n}} minutes",
+    "never": "never"
   },
   "dev": {
     "title": "Developer",

@@ -9,6 +9,8 @@ import { useSettings } from "./state/settings.ts";
 
 export interface TestHooks {
   play(frames: FrameObs[]): Promise<void>;
+  /** Plays frames with their own timestamps (no retiming), e.g. to jump minutes ahead. */
+  playRaw(frames: FrameObs[]): Promise<void>;
   settings: typeof useSettings;
   engine: typeof useEngine;
   log(): Engine["log"];
@@ -29,6 +31,7 @@ export function applyTestParams(): void {
 export function installTestHooks(engine: Engine): void {
   const hooks: TestHooks = {
     play: (frames) => new Promise((resolve) => engine.replaceSource(new ReplaySource(frames, { retime: true, onDone: resolve }))),
+    playRaw: (frames) => new Promise((resolve) => engine.replaceSource(new ReplaySource(frames, { speed: 1000, onDone: resolve }))),
     settings: useSettings,
     engine: useEngine,
     log: () => engine.log,

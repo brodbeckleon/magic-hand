@@ -83,7 +83,8 @@
     "resume": "Fortsetzen",
     "pause": "Pausieren",
     "devUnlocked": "Entwicklerwerkzeuge freigeschaltet",
-    "devLocked": "Entwicklerwerkzeuge ausgeblendet"
+    "devLocked": "Entwicklerwerkzeuge ausgeblendet",
+    "pausedIdle": "Seit {{n}} Minuten war niemand im Bild. Die Kamera wurde ausgeschaltet."
   },
   "pill": {
     "expand": "Fenster öffnen",
@@ -189,7 +190,13 @@
     "deleteYes": "Löschen",
     "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert.",
     "farAssist": "Hilfe auf Distanz",
-    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung."
+    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung.",
+    "sound": "Ton beim Folienwechsel",
+    "soundHint": "Kurzer, leiser Ton, damit du ohne Hinsehen weisst, dass es geklappt hat.",
+    "autoPause": "Kamera ausschalten, wenn niemand da ist",
+    "autoPauseHint": "Spart Akku und schützt die Privatsphäre, wenn du den Raum verlässt.",
+    "minutes": "nach {{n}} Minuten",
+    "never": "nie"
   },
   "dev": {
     "title": "Entwickler",

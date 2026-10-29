@@ -19,6 +19,7 @@ import { Recorder, readRecordingFile } from "../debug/Recorder.ts";
 import { useDev } from "../state/dev.ts";
 import { useEngine, type UiEvent, type UiEventKind } from "../state/engine.ts";
 import { useSettings, type Settings } from "../state/settings.ts";
+import { playCue } from "../sound.ts";
 import { FrameBus } from "./FrameBus.ts";
 
 const clock = () => new Date().toLocaleTimeString("de-CH", { hour12: false });
@@ -139,6 +140,24 @@ export class Engine {
     };
   }
 
+  private lastPresence = performance.now() / 1000;
+
+  /** Nobody in view for the configured time: turn the camera off (privacy, battery). */
+  private checkIdle(t: number, present: boolean): void {
+    if (present || this.lastPresence > t) this.lastPresence = t;
+    const minutes = useSettings.getState().autoPauseMinutes;
+    if (minutes > 0 && !useEngine.getState().paused && t - this.lastPresence > minutes * 60) {
+      this.setPaused(true, "idle");
+    }
+  }
+
+  private cue(events: PipelineEvent[]): void {
+    for (const e of events) {
+      if (e.type === "trigger") playCue(e.command);
+      else if (e.type === "speaker" && e.person !== null) playCue("speaker");
+    }
+  }
+
   private anyFar = false;
   private wristCrops: Rect[] = [];
   private numHands = 2;
@@ -237,13 +256,14 @@ export class Engine {
   }
 
   /** Pause = camera off (LED off), nothing is analysed. Resume reopens it; calibration is kept. */
-  setPaused(paused: boolean): void {
+  setPaused(paused: boolean, reason: "user" | "idle" = "user"): void {
     if (paused === useEngine.getState().paused) return;
     if (paused) {
       this.generation++;
       this.stopCamera();
-      useEngine.getState().set({ paused: true });
+      useEngine.getState().set({ paused: true, pausedReason: reason });
     } else if (this.video) {
+      this.lastPresence = performance.now() / 1000;
       void this.start(this.video);
     }
     this.addLog({ ereignis: paused ? "pause" : "fortgesetzt" });
@@ -398,6 +418,8 @@ export class Engine {
     }
     this.frameTap?.();
     this.personCount = snapshot.persons.length;
+    this.checkIdle(frame.t, snapshot.hands.length > 0 || snapshot.persons.length > 0);
+    if (events.length && useSettings.getState().sound && this.keySuppressions === 0) this.cue(events);
     this.anyFar = snapshot.persons.some((p) => p.far);
     this.wristCrops = snapshot.wristCrops;
     this.adaptNumHands(frame.t);
