@@ -15,7 +15,7 @@ test.describe("developer tools", () => {
     await expect(page.getByTestId("dev-panel")).toHaveCount(0);
     await page.keyboard.press("Control+Shift+D");
     await expect(page.getByTestId("dev-metrics")).toBeVisible();
-    await expect(page.getByTestId("dev-metrics")).toContainText("worker");
+    await expect(page.getByTestId("dev-metrics")).toContainText(/worker|main thread/);
   });
 
   test("metrics show trigger latency; sliders change parameters live", async ({ page }) => {

@@ -1,10 +1,13 @@
+import type { VisionBackend } from "../backend.ts";
 import type { DelegatePreference, Delegate } from "../landmarkers.ts";
+import type { DetectRequest, DetectResult } from "../runner.ts";
 import type { FromWorker, ToWorker } from "./protocol.ts";
 
 type Result = Extract<FromWorker, { type: "result" }>;
 
 /** Promise-based handle to the vision worker. */
-export class VisionWorker {
+export class VisionWorker implements VisionBackend {
+  readonly inWorker = true;
   private readonly worker: Worker;
   private pending = new Map<number, (r: Result) => void>();
   private onReady: ((d: Delegate) => void) | null = null;
@@ -45,7 +48,7 @@ export class VisionWorker {
     });
   }
 
-  detect(frame: Omit<Extract<ToWorker, { type: "frame" }>, "type" | "id">): Promise<Result> {
+  detect(frame: DetectRequest): Promise<DetectResult> {
     const id = this.nextId++;
     return new Promise((resolve) => {
       this.pending.set(id, resolve);

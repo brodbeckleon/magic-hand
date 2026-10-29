@@ -15,6 +15,8 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
+    // WebKit is the engine of the macOS app (WKWebView); the camera is a canvas stream there.
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
     {
       name: "chromium",
       use: {

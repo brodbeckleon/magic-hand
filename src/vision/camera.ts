@@ -9,6 +9,11 @@ export interface CameraOptions {
 export const DEFAULT_CAMERA: CameraOptions = { width: 640, height: 480 };
 
 export async function openCamera(opts: CameraOptions = DEFAULT_CAMERA): Promise<MediaStream> {
+  // e2e only (stripped from production builds): a canvas stream instead of a camera.
+  if (import.meta.env.MODE === "e2e") {
+    const fake = (window as unknown as { __fakeCamera?: () => MediaStream }).__fakeCamera;
+    if (fake) return fake();
+  }
   return navigator.mediaDevices.getUserMedia({
     audio: false,
     video: {
@@ -26,6 +31,7 @@ export function closeCamera(stream: MediaStream | null): void {
 }
 
 export async function listCameras(): Promise<MediaDeviceInfo[]> {
+  if (import.meta.env.MODE === "e2e" && (window as unknown as { __fakeCamera?: unknown }).__fakeCamera) return [];
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices.filter((d) => d.kind === "videoinput");
 }

@@ -26,10 +26,14 @@ export const test = base.extend<{ externalRequests: string[]; privacyGuard: void
   ],
   /** The vision worker must never report errors (e.g. a model that fails to load). */
   visionErrors: [
-    async ({ page }, use) => {
+    async ({ page }, use, testInfo) => {
+      // Playwright's WebKit has no WebGL in workers (like Safari < 17): falling back to the main
+      // thread is the expected behaviour there, not an error.
+      const fallbackOk = testInfo.project.name === "webkit";
       const errors: string[] = [];
       page.on("console", (m) => {
         const text = m.text();
+        if (fallbackOk && /unavailable, using the main thread/.test(text)) return;
         if (/vision worker|frame failed|unavailable, using the main thread/.test(text)) errors.push(text);
       });
       await use();
