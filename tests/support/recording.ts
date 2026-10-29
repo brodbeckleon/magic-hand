@@ -15,8 +15,9 @@ export function recordSession(trace: TraceBuilder): string {
   const frames = toFrames(trace.frames);
   const p = new GesturePipeline();
   let text = encodeLine(header());
-  frames.forEach((f, i) => {
-    text += encodeLine(encodeFrame(i, i % 10 === 0 ? { ...f, poses: [person(0.5, 0.3, 0.1)] } : f));
+  frames.forEach((raw, i) => {
+    const f = i % 10 === 0 ? { ...raw, poses: [person(0.5, 0.3, 0.1)] } : raw;
+    text += encodeLine(encodeFrame(i, f));
     for (const e of p.step(f).events) text += encodeLine({ type: "event", ...toReplayEvent(e) });
   });
   return text;

@@ -18,7 +18,7 @@ describe("recording", () => {
     expect(rec.frames[0]!.poses).toHaveLength(1);
     expect(rec.frames[1]!.poses).toBeNull();
     const events = replay(rec);
-    expect(events.map((e) => e.command ?? e.event)).toEqual(["calibrated", "next", "prev", "ignored_return"]);
+    expect(events.map((e) => e.command ?? e.event)).toEqual(["speaker", "calibrated", "next", "prev", "ignored_return"]);
     expect(diffEvents(rec.events, events)).toEqual([]);
   });
 

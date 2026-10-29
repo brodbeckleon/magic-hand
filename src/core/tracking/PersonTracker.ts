@@ -12,6 +12,8 @@ export interface PersonTrack {
   cy: number;
   firstSeen: number;
   lastSeen: number;
+  /** Index into this frame's poses (to match per-pose data such as faces), null if not seen now. */
+  poseIndex: number | null;
 }
 
 export interface PersonTrackerParams {
@@ -120,12 +122,13 @@ export class PersonTracker {
 
   update(t: number, poses: readonly PoseObs[]): PersonTrack[] {
     const p = this.params;
-    const dets = poses.flatMap((pose) => {
+    const dets = poses.flatMap((pose, poseIndex) => {
       const b = poseBox(pose);
       if (!b) return [];
       const [cx, cy] = centre(pose, b.box);
-      return [{ pose, box: b.box, shoulder: Math.max(b.shoulder, 0.02), cx, cy }];
+      return [{ pose, box: b.box, shoulder: Math.max(b.shoulder, 0.02), cx, cy, poseIndex }];
     });
+    for (const tr of this.tracks) tr.poseIndex = null;
     const cost = this.tracks.map((tr) =>
       dets.map((d) => 1 - iou(tr.box, d.box) + Math.hypot(tr.cx - d.cx, tr.cy - d.cy) / tr.shoulder),
     );

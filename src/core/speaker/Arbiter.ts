@@ -118,6 +118,12 @@ export class Arbiter {
     return null;
   }
 
+  /** Gives control to `id` if nobody has it (e.g. the person who just armed gesture control). */
+  grant(id: number, t: number): SpeakerChange | null {
+    if (this.active !== null) return null;
+    return this.switchTo(id, t, "claim");
+  }
+
   /** Switches once `id` has been the best challenger for `hold` seconds. */
   private track(id: number, t: number, noSpeaker: boolean): SpeakerChange | null {
     if (this.challenger?.id !== id) this.challenger = { id, since: t };

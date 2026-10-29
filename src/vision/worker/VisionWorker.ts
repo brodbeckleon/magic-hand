@@ -22,7 +22,7 @@ export class VisionWorker {
         if (this.onInitError) this.onInitError(new Error(m.message));
         else console.error("vision worker:", m.message);
         // A failed frame must not block the pipeline forever.
-        for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, handMs: 0, poseMs: 0 });
+        for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0 });
         this.pending.clear();
       } else if (m.type === "result") {
         this.pending.get(m.id)?.(m);
