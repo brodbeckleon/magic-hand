@@ -15,16 +15,19 @@ export interface HandTrack {
 export interface HandTrackerParams {
   /** Tracks survive this long without a detection, in s. */
   maxAge: number;
-  /** Matching gate: hand lengths per frame, or per s for longer gaps (like SwipeDetector). */
+  /** Matching gate: hand lengths per frame, or per s for longer gaps ... */
   maxJump: number;
   maxSpeed: number;
+  /** ... but a gap never allows more movement than this long at maxSpeed, s. Without this cap a
+   *  stalled frame stream would let one person's hand inherit another person's hand track. */
+  maxGapForSpeed: number;
   /** Votes kept for the side decision. */
   votes: number;
   /** Share of agreeing votes that freezes the side. */
   freezeAt: number;
 }
 
-export const DEFAULT_HAND_TRACKER: HandTrackerParams = { maxAge: 0.3, maxJump: 1.5, maxSpeed: 40, votes: 15, freezeAt: 0.8 };
+export const DEFAULT_HAND_TRACKER: HandTrackerParams = { maxAge: 0.3, maxJump: 1.5, maxSpeed: 40, maxGapForSpeed: 0.12, votes: 15, freezeAt: 0.8 };
 
 interface Internal extends HandTrack {
   votes: Side[];
@@ -56,7 +59,7 @@ export class HandTracker {
     // Greedy assignment by distance; with at most a handful of hands this is optimal enough.
     const pairs: { ti: number; oi: number; d: number }[] = [];
     this.tracks.forEach((tr, ti) => {
-      const allowed = Math.max(p.maxJump, p.maxSpeed * (t - tr.lastSeen)) * tr.hand.scale;
+      const allowed = Math.max(p.maxJump, p.maxSpeed * Math.min(t - tr.lastSeen, p.maxGapForSpeed)) * tr.hand.scale;
       hands.forEach((h, oi) => {
         const d = dist(h.cx, h.cy, tr.hand.cx, tr.hand.cy);
         if (d <= allowed) pairs.push({ ti, oi, d });

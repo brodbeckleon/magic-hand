@@ -1,24 +1,8 @@
 import { GesturePipeline, DEFAULT_PIPELINE_SETTINGS, type PipelineEvent } from "../../src/core/pipeline/GesturePipeline.ts";
-import type { FrameObs, HandObs, Landmark, PoseObs } from "../../src/core/types.ts";
-import { landmarksFor, palmLandmarks } from "../support/landmarks.ts";
-import { person } from "../support/poses.ts";
+import type { FrameObs, HandObs, Landmark } from "../../src/core/types.ts";
+import { aX, bX, H, openHand, presenter, swipeHand, W } from "../support/multi.ts";
 
-const W = 640;
-const H = 480;
 const DT = 1 / 30;
-
-/** A person at normalised (unmirrored) x whose right wrist is at `wrist`. */
-function presenter(x: number, wrist: Landmark): PoseObs {
-  const p = person(x, 0.25, 0.1);
-  const lms = p.landmarks.slice();
-  lms[16] = { ...wrist, visibility: 0.95 };
-  lms[15] = { x: x + 0.05, y: 0.7, z: 0, visibility: 0.95 };
-  return { landmarks: lms };
-}
-
-/** Hand landmarks for a palm at mirrored-pixel position (cx, cy). */
-const swipeHand = (cx: number, cy: number): HandObs => ({ landmarks: landmarksFor({ cx, cy, scale: 40 }, W, H), side: "right", sideScore: 0.9 });
-const openHand = (x: number, y: number): HandObs => ({ landmarks: palmLandmarks(x, y, 0.07, true), side: "right", sideScore: 0.9 });
 
 class Scene {
   t = 10;
@@ -47,9 +31,6 @@ class Scene {
   }
 }
 
-// In the mirrored view, person A (x=0.3) is on the right, B (x=0.7) on the left.
-const aX = (1 - 0.25) * W;
-const bX = (1 - 0.65) * W;
 
 describe("GesturePipeline with two presenters", () => {
   it("whoever arms gets control; the other person's swipes are ignored", () => {

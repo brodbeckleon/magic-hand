@@ -38,3 +38,5 @@
 }
 .pill .rec-badge { position: static; transform: none; padding: 2px 8px; font-size: 10.5px; }
 @media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
+.dev-table tr[data-active="true"] th, .dev-table tr[data-active="true"] td { color: var(--teal); }
+.dev-panel { width: 340px; }

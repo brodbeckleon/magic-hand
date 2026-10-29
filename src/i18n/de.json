@@ -27,7 +27,9 @@
     "ignored_dir": "Ignoriert: nicht waagrecht",
     "ignored_return": "Ignoriert: Rückholzeit",
     "missed": "Verpasst (protokolliert)",
-    "false": "Fehlauslösung (protokolliert)"
+    "false": "Fehlauslösung (protokolliert)",
+    "ignored_not_speaker": "Ignoriert: Person {{n}} ist nicht am Wort",
+    "speaker": "Am Wort: Person {{n}}"
   },
   "flash": {
     "next": "Nächste Folie",
@@ -219,7 +221,12 @@
     "speed": "Tempo",
     "replayDiff": "{{n}} Abweichungen gegenüber der Live-Sitzung",
     "replaySame": "Gleiche Ereignisse wie live",
-    "backToCamera": "Zurück zur Kamera"
+    "backToCamera": "Zurück zur Kamera",
+    "speakers": "Sprecher",
+    "speakerNow": "am Wort: {{n}}",
+    "noPersons": "Keine Personen erkannt (Pose-Modell läuft nur alle paar Bilder).",
+    "age": "seit",
+    "hands": "Hände"
   },
   "help": {
     "title": "Hilfe",
@@ -281,7 +288,9 @@
   },
   "toast": {
     "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
-    "ignored_return": "Rückholbewegung ignoriert"
+    "ignored_return": "Rückholbewegung ignoriert",
+    "ignored_not_speaker": "Person {{n}} ist nicht am Wort. Offene Hand 1 s heben, um zu übernehmen.",
+    "speaker": "Person {{n}} wechselt jetzt die Folien"
   },
   "wizard": {
     "progress": "Schritt {{n}} von {{total}}",

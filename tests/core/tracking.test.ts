@@ -53,3 +53,20 @@ describe("HandTracker", () => {
     }
   });
 });
+
+describe("HandTracker after a stalled frame stream", () => {
+  it("does not hand another hand's track to a hand that appears far away after a pause", () => {
+    const tr = new HandTracker();
+    const a = step(tr, 0, [[{ cx: 224, cy: 300, scale: 40 }, "right"]])[0]!.id;
+    // 0.2 s without any frame, then a different hand 256 px away.
+    const b = step(tr, 0.2, [[{ cx: 480, cy: 300, scale: 40 }, "right"]])[0]!.id;
+    expect(b).not.toBe(a);
+  });
+});
+
+it("keeps one track through a very fast swipe at 15 fps", () => {
+  const tr = new HandTracker();
+  const ids = new Set<number>();
+  for (let i = 0; i < 6; i++) ids.add(step(tr, i / 15, [[{ cx: 500 - i * 100, cy: 300, scale: 40 }, "right"]])[0]!.id); // 37 hand lengths/s
+  expect(ids.size).toBe(1);
+});

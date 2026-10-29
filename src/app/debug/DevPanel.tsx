@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { PipelineSnapshot } from "../../core/pipeline/GesturePipeline.ts";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 import { Icon } from "../design/Icon.tsx";
@@ -8,7 +9,7 @@ import { percentile, useDev } from "../state/dev.ts";
 import { useEngine } from "../state/engine.ts";
 import { useSettings } from "../state/settings.ts";
 
-type Tab = "metrics" | "params" | "record";
+type Tab = "metrics" | "params" | "speakers" | "record";
 
 /** Hidden developer tools (Ctrl/Cmd+Shift+D): live metrics, parameter sliders, recordings. */
 export function DevPanel() {
@@ -23,6 +24,7 @@ export function DevPanel() {
           <Segmented<Tab> label={t("dev.title")} value={tab} onChange={setTab} testId="dev-tabs" options={[
             { value: "metrics", label: t("dev.metrics") },
             { value: "params", label: t("dev.params") },
+            { value: "speakers", label: t("dev.speakers") },
             { value: "record", label: t("dev.record") },
           ]} />
         )}
@@ -32,6 +34,7 @@ export function DevPanel() {
       </header>
       {open && tab === "metrics" && <Metrics />}
       {open && tab === "params" && <Params />}
+      {open && tab === "speakers" && <Speakers />}
       {open && tab === "record" && <Recording />}
     </section>
   );
@@ -103,6 +106,49 @@ function Params() {
         );
       })}
       <button className="btn" onClick={() => updateSwipe({ ...DEFAULT_SWIPE_PARAMS })}>{t("dev.resetParams")}</button>
+    </div>
+  );
+}
+
+/** Speaker-detection internals: per tracked person, refreshed 4× per second. */
+function Speakers() {
+  const { t } = useTranslation();
+  const engine = useEngineInstance();
+  const [snap, setSnap] = useState<PipelineSnapshot | null>(null);
+  useEffect(() => {
+    let last = 0;
+    return engine.frames.subscribe((s) => {
+      if (s.t - last < 0.25) return;
+      last = s.t;
+      setSnap(s);
+    });
+  }, [engine]);
+  const mode = useSettings((s) => s.speaker);
+  if (!snap) return null;
+  const f = (v: number | null, d = 2) => (v === null ? "–" : v.toFixed(d));
+  return (
+    <div className="dev-body" data-testid="dev-speakers">
+      <p className="dev-meta">{mode.mode}{mode.mode === "auto" ? ` · ${mode.autoSignal}` : ""} · {t("dev.speakerNow", { n: snap.speaker ?? "–" })}</p>
+      {snap.persons.length === 0 ? (
+        <p className="dev-meta">{t("dev.noPersons")}</p>
+      ) : (
+        <table className="dev-table">
+          <thead><tr><th>id</th><th>{t("dev.age")}</th><th>{t("dev.hands")}</th><th>mouth</th><th>motion</th><th>score</th><th>claim</th></tr></thead>
+          <tbody>
+            {snap.persons.map((p) => (
+              <tr key={p.id} data-active={p.active}>
+                <th>{p.active ? "★" : ""}{p.id}</th>
+                <td>{p.age.toFixed(0)}s</td>
+                <td>{snap.hands.filter((h) => h.person === p.id).map((h) => h.side[0]).join("") || "–"}</td>
+                <td>{f(p.mouth, 3)}</td>
+                <td>{f(p.motion)}</td>
+                <td>{f(p.score)}</td>
+                <td>{p.claim > 0 ? `${Math.round(p.claim * 100)}%` : "–"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

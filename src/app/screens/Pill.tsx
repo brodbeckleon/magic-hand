@@ -25,7 +25,7 @@ export function Pill() {
     let timer = 0;
     const offEvents = engine.events.subscribe((e) => {
       if (!last.current || !pill.current) return;
-      const text = e.kind === "next" || e.kind === "prev" ? `${e.swipe === "left" ? "←" : "→"} ${t(`event.${e.kind}`)}` : t(`event.${e.kind}`);
+      const text = e.kind === "next" || e.kind === "prev" ? `${e.swipe === "left" ? "←" : "→"} ${t(`event.${e.kind}`)}` : t(`event.${e.kind}`, { n: e.person ?? "–" });
       last.current.textContent = text;
       pill.current.dataset.flash = e.kind;
       clearTimeout(timer);

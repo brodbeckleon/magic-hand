@@ -6,7 +6,7 @@ import { useSettings } from "../state/settings.ts";
 import type { UiEvent } from "../state/engine.ts";
 
 /** How often each explanation is shown before the user is assumed to know it. */
-const MAX_SHOWS: Partial<Record<UiEvent["kind"], number>> = { ignored_dir: 5, ignored_return: 3 };
+const MAX_SHOWS: Partial<Record<UiEvent["kind"], number>> = { ignored_dir: 5, ignored_return: 3, ignored_not_speaker: 5, speaker: Infinity };
 
 /**
  * Explains why a movement did not change the slide, a few times only (guided, not nagging).
@@ -27,7 +27,7 @@ export function ActionToast() {
       const key = `toast.${e.kind}`;
       const shown = hints[key] ?? 0;
       if (shown >= max) return;
-      update({ hints: { [key]: shown + 1 } });
+      if (Number.isFinite(max)) update({ hints: { [key]: shown + 1 } });
       setToast(e);
       clearTimeout(timer);
       timer = window.setTimeout(() => setToast(null), 1800);
@@ -50,7 +50,7 @@ export function ActionToast() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
           >
-            {t(`toast.${toast.kind}`)}
+            {t(`toast.${toast.kind}`, { n: toast.person ?? "–" })}
           </motion.div>
         )}
       </AnimatePresence>

@@ -32,3 +32,8 @@ export async function unlockDev(page: Page): Promise<void> {
 export async function updateSettings(page: Page, patch: object): Promise<void> {
   await page.evaluate((p) => (window as never as Hooks).__magicHand.settings.getState().update(p), patch);
 }
+
+/** Plays prepared observations (e.g. several people) through the real engine. */
+export async function playFrames(page: Page, frames: FrameObs[]): Promise<void> {
+  await page.evaluate((f) => (window as unknown as { __magicHand: { play(f: FrameObs[]): Promise<void> } }).__magicHand.play(f), frames);
+}

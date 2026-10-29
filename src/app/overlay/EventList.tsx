@@ -13,7 +13,7 @@ export function EventList() {
           <time>{e.clock}</time>
           <span>
             {e.swipe && (e.swipe === "left" ? "← " : "→ ")}
-            {t(`event.${e.kind}`)}
+            {t(`event.${e.kind}`, { n: e.person ?? "–" })}
             {e.reactionMs !== undefined && ` · ${e.reactionMs.toFixed(0)} ms`}
           </span>
         </li>
