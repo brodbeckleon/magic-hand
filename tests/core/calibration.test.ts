@@ -3,7 +3,7 @@ import { checkFraming, meanLuma } from "../../src/core/calibration/framingCheck.
 import { MovementSegmenter, type Movement } from "../../src/core/calibration/practice.ts";
 import { DEFAULT_SWIPE_PARAMS } from "../../src/core/swipe/params.ts";
 import { TraceBuilder } from "../support/traces.ts";
-import { person } from "./zone.test.ts";
+import { person } from "../support/poses.ts";
 
 function segment(frames: TraceBuilder["frames"]): Movement[] {
   const seg = new MovementSegmenter();
