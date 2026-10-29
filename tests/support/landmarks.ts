@@ -27,3 +27,22 @@ export function toFrames(frames: Frame[], side: (i: number) => Side = () => "rig
     hands: f.hand ? [handObs(f.hand, side(i), 0.9, width, height)] : [],
   }));
 }
+
+/**
+ * A hand at normalised (x, y) of the source frame with fingers pointing up; `open` stretches the
+ * fingers (palm claim), otherwise they are curled into a fist. size = wrist->MCP9 length (normalised y).
+ */
+export function palmLandmarks(x: number, y: number, size: number, open: boolean): Landmark[] {
+  const lms: Landmark[] = Array.from({ length: 21 }, () => ({ x, y, z: 0 }));
+  const set = (i: number, dx: number, dy: number) => (lms[i] = { x: x + dx * size * 0.75, y: y + dy * size, z: 0 });
+  set(0, 0, 0);
+  const fingers = [[5, 6, 7, 8, -0.3], [9, 10, 11, 12, 0], [13, 14, 15, 16, 0.25], [17, 18, 19, 20, 0.5]] as const;
+  for (const [mcp, pip, dip, tip, dx] of fingers) {
+    set(mcp, dx, -1);
+    set(pip, dx, -1.35);
+    set(dip, dx, open ? -1.6 : -1.15);
+    set(tip, dx, open ? -1.85 : -0.95);
+  }
+  set(1, -0.4, -0.3); set(2, -0.6, -0.55); set(3, -0.75, -0.75); set(4, -0.85, -0.95);
+  return lms;
+}
