@@ -83,7 +83,8 @@
     "resume": "Resume",
     "pause": "Pause",
     "devUnlocked": "Developer tools unlocked",
-    "devLocked": "Developer tools hidden"
+    "devLocked": "Developer tools hidden",
+    "pausedIdle": "Nobody was in view for {{n}} minutes. The camera was turned off."
   },
   "pill": {
     "expand": "Open window",
@@ -92,7 +93,9 @@
     "ready": "Ready",
     "waiting": "Hold your hand still",
     "paused": "Paused",
-    "noHand": "No hand"
+    "noHand": "No hand",
+    "focusOther": "Keys go to: {{app}}",
+    "focusOtherHint": "Click into your presentation so the slides change."
   },
   "tray": {
     "pause": "Pause",
@@ -187,7 +190,13 @@
     "deleteYes": "Delete",
     "deleted": "Deleted. No data is stored anymore.",
     "farAssist": "Help at a distance",
-    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement."
+    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement.",
+    "sound": "Sound on slide change",
+    "soundHint": "A short, quiet tone so you know it worked without looking.",
+    "autoPause": "Turn the camera off when nobody is there",
+    "autoPauseHint": "Saves battery and protects privacy when you leave the room.",
+    "minutes": "after {{n}} minutes",
+    "never": "never"
   },
   "dev": {
     "title": "Developer",
@@ -228,7 +237,8 @@
     "speakerNow": "speaker: {{n}}",
     "noPersons": "No people tracked (the pose model runs every few frames).",
     "age": "age",
-    "hands": "hands"
+    "hands": "hands",
+    "study": "Study"
   },
   "help": {
     "title": "Help",
@@ -405,5 +415,31 @@
     "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
     "takeover": "Several people in view: to take over, raise an open hand for about a second.",
     "far": "You are far away: swipe with big, clear arm movements."
+  },
+  "study": {
+    "intro": "Test session: Magic Hand asks for swipes in alternating directions, then measures false triggers while you talk freely. No keys are sent.",
+    "perDirection": "per direction",
+    "freeTalkS": "free talk",
+    "distance": "Distance (e.g. 3 m)",
+    "note": "Note (person, room, light)",
+    "start": "Start study",
+    "promptNext": "Now: swipe to the next slide",
+    "promptPrev": "Now: swipe to the previous slide",
+    "freeTalk": "Talk freely and gesture as usual. Do not swipe.",
+    "wait": "Get ready …",
+    "progress": "Trial {{n}} of {{total}}",
+    "stop": "Cancel",
+    "endFreeTalk": "End free talk",
+    "outcome": {
+      "hit": "✓ recognised",
+      "miss": "✗ not recognised",
+      "wrong": "✗ wrong direction"
+    },
+    "resultTitle": "Study result",
+    "hitRate": "Hit rate",
+    "hitsMisses": "Hits / missed / wrong",
+    "falseTriggers": "False triggers",
+    "reaction": "Reaction p50 / p95",
+    "export": "Save as CSV"
   }
 }

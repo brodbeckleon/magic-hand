@@ -44,6 +44,10 @@ export const settingsSchema = z.object({
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
+  /** Short tone when a slide changes. */
+  sound: z.boolean().catch(false),
+  /** Turn the camera off after this many minutes without anyone in view (0 = never). */
+  autoPauseMinutes: z.union([z.literal(0), z.literal(5), z.literal(10), z.literal(20)]).catch(10),
 
   camera: z
     .object({

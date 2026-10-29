@@ -83,7 +83,8 @@
     "resume": "Fortsetzen",
     "pause": "Pausieren",
     "devUnlocked": "Entwicklerwerkzeuge freigeschaltet",
-    "devLocked": "Entwicklerwerkzeuge ausgeblendet"
+    "devLocked": "Entwicklerwerkzeuge ausgeblendet",
+    "pausedIdle": "Seit {{n}} Minuten war niemand im Bild. Die Kamera wurde ausgeschaltet."
   },
   "pill": {
     "expand": "Fenster öffnen",
@@ -92,7 +93,9 @@
     "ready": "Bereit",
     "waiting": "Hand ruhig halten",
     "paused": "Pausiert",
-    "noHand": "Keine Hand"
+    "noHand": "Keine Hand",
+    "focusOther": "Tasten gehen an: {{app}}",
+    "focusOtherHint": "Klicke in deine Präsentation, damit die Folien wechseln."
   },
   "tray": {
     "pause": "Pausieren",
@@ -187,7 +190,13 @@
     "deleteYes": "Löschen",
     "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert.",
     "farAssist": "Hilfe auf Distanz",
-    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung."
+    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung.",
+    "sound": "Ton beim Folienwechsel",
+    "soundHint": "Kurzer, leiser Ton, damit du ohne Hinsehen weisst, dass es geklappt hat.",
+    "autoPause": "Kamera ausschalten, wenn niemand da ist",
+    "autoPauseHint": "Spart Akku und schützt die Privatsphäre, wenn du den Raum verlässt.",
+    "minutes": "nach {{n}} Minuten",
+    "never": "nie"
   },
   "dev": {
     "title": "Entwickler",
@@ -228,7 +237,8 @@
     "speakerNow": "am Wort: {{n}}",
     "noPersons": "Keine Personen erkannt (Pose-Modell läuft nur alle paar Bilder).",
     "age": "seit",
-    "hands": "Hände"
+    "hands": "Hände",
+    "study": "Studie"
   },
   "help": {
     "title": "Hilfe",
@@ -405,5 +415,31 @@
     "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
     "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
     "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
+  },
+  "study": {
+    "intro": "Testsitzung: Magic Hand fordert abwechselnd Wischgesten an und misst danach Fehlauslösungen beim freien Reden. Es werden keine Tasten gesendet.",
+    "perDirection": "pro Richtung",
+    "freeTalkS": "freies Reden",
+    "distance": "Abstand (z. B. 3 m)",
+    "note": "Notiz (Person, Raum, Licht)",
+    "start": "Studie starten",
+    "promptNext": "Jetzt: nächste Folie wischen",
+    "promptPrev": "Jetzt: vorherige Folie wischen",
+    "freeTalk": "Rede frei und gestikuliere normal. Nicht wischen.",
+    "wait": "Bereit machen …",
+    "progress": "Versuch {{n}} von {{total}}",
+    "stop": "Abbrechen",
+    "endFreeTalk": "Freies Reden beenden",
+    "outcome": {
+      "hit": "✓ erkannt",
+      "miss": "✗ nicht erkannt",
+      "wrong": "✗ falsche Richtung"
+    },
+    "resultTitle": "Ergebnis der Studie",
+    "hitRate": "Trefferquote",
+    "hitsMisses": "Treffer / verpasst / falsch",
+    "falseTriggers": "Fehlauslösungen",
+    "reaction": "Reaktion p50 / p95",
+    "export": "Als CSV speichern"
   }
 }

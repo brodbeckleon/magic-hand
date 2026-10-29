@@ -7,9 +7,10 @@ import { Segmented } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { percentile, useDev } from "../state/dev.ts";
 import { useEngine } from "../state/engine.ts";
+import { DEFAULT_PLAN, useStudy } from "./study.ts";
 import { useSettings } from "../state/settings.ts";
 
-type Tab = "metrics" | "params" | "speakers" | "record";
+type Tab = "metrics" | "params" | "speakers" | "record" | "study";
 
 /** Hidden developer tools (Ctrl/Cmd+Shift+D): live metrics, parameter sliders, recordings. */
 export function DevPanel() {
@@ -26,6 +27,7 @@ export function DevPanel() {
             { value: "params", label: t("dev.params") },
             { value: "speakers", label: t("dev.speakers") },
             { value: "record", label: t("dev.record") },
+            { value: "study", label: t("dev.study") },
           ]} />
         )}
         <button className="icon-btn" onClick={() => setOpen(!open)} aria-label={open ? t("dev.collapse") : t("dev.expand")} aria-expanded={open}>
@@ -36,6 +38,7 @@ export function DevPanel() {
       {open && tab === "params" && <Params />}
       {open && tab === "speakers" && <Speakers />}
       {open && tab === "record" && <Recording />}
+      {open && tab === "study" && <Study />}
     </section>
   );
 }
@@ -217,4 +220,35 @@ export function RecBadge() {
   const recording = useDev((s) => s.recording);
   if (!recording) return null;
   return <span className="rec-badge" data-testid="rec-badge"><span className="rec-dot" />REC</span>;
+}
+
+/** Scripted test session: requested swipes, then free talking; report for the milestone. */
+function Study() {
+  const { t } = useTranslation();
+  const engine = useEngineInstance();
+  const running = useStudy((s) => s.phase !== null);
+  const start = useStudy((s) => s.start);
+  const resolution = useSettings((s) => s.camera.resolution);
+  const [per, setPer] = useState<"5" | "10" | "20">("10");
+  const [free, setFree] = useState<"60" | "120" | "180">("120");
+  const [distance, setDistance] = useState("");
+  const [note, setNote] = useState("");
+  return (
+    <div className="dev-body" data-testid="dev-study">
+      <p className="dev-note">{t("study.intro")}</p>
+      <div className="param study-row"><span className="param-name">{t("study.perDirection")}</span>
+        <Segmented label={t("study.perDirection")} value={per} onChange={setPer} options={[{ value: "5", label: "5" }, { value: "10", label: "10" }, { value: "20", label: "20" }]} />
+      </div>
+      <div className="param study-row"><span className="param-name">{t("study.freeTalkS")}</span>
+        <Segmented label={t("study.freeTalkS")} value={free} onChange={setFree} options={[{ value: "60", label: "60 s" }, { value: "120", label: "120 s" }, { value: "180", label: "180 s" }]} />
+      </div>
+      <input className="text-input" placeholder={t("study.distance")} value={distance} onChange={(e) => setDistance(e.target.value)} aria-label={t("study.distance")} />
+      <input className="text-input" placeholder={t("study.note")} value={note} onChange={(e) => setNote(e.target.value)} aria-label={t("study.note")} />
+      <button className="btn primary" disabled={running} data-testid="study-start"
+        onClick={() => start(engine, { ...DEFAULT_PLAN, perDirection: Number(per), freeTalk: Number(free) },
+          { distanz: distance, notiz: note, aufloesung: resolution, version: __APP_VERSION__ })}>
+        {t("study.start")}
+      </button>
+    </div>
+  );
 }

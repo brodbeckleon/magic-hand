@@ -5,6 +5,7 @@ import { Icon, type IconName } from "../design/Icon.tsx";
 import { spring } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { DevPanel, RecBadge } from "../debug/DevPanel.tsx";
+import { StudyOverlay } from "../debug/StudyOverlay.tsx";
 import "../debug/dev.css";
 import { HintHost } from "../hints/HintHost.tsx";
 import { ActionToast } from "../overlay/ActionToast.tsx";
@@ -41,6 +42,7 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       {live && showEvents && <EventList />}
       {devUnlocked && status.kind === "live" && <DevPanel />}
       <RecBadge />
+      {status.kind === "live" && <StudyOverlay />}
       {live && <SwipeBar />}
       {live && <ArrowFlash />}
       {live && <ActionToast />}
@@ -118,11 +120,13 @@ function PresentButton() {
 function PausedCard() {
   const { t } = useTranslation();
   const engine = useEngineInstance();
+  const reason = useEngine((s) => s.pausedReason);
+  const minutes = useSettings((s) => s.autoPauseMinutes);
   return (
     <div className="center-card glass" data-testid="paused">
       <Icon name="pause" size={40} />
       <h2>{t("main.paused")}</h2>
-      <p>{t("main.pausedBody")}</p>
+      <p>{reason === "idle" ? t("main.pausedIdle", { n: minutes }) : t("main.pausedBody")}</p>
       <div className="actions">
         <button className="btn primary" data-testid="resume" onClick={() => engine.setPaused(false)}>
           <Icon name="play" size={16} />{t("main.resume")}

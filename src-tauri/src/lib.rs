@@ -1,4 +1,5 @@
 mod export;
+mod frontmost;
 mod keys;
 mod permissions;
 mod shortcuts;
@@ -40,6 +41,7 @@ pub fn run() {
             window::yield_focus,
             tray::update_tray,
             shortcuts::set_pause_shortcut,
+            frontmost::frontmost_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

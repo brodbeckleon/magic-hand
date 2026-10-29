@@ -2,6 +2,7 @@
 // to harmless stand-ins so the UI can be developed and tested without the native shell.
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import type { FrontApp } from "../core/focus/classify.ts";
 import type { Command } from "../core/types.ts";
 
 export type KeyMapping = "arrows" | "page";
@@ -33,6 +34,8 @@ export interface Platform {
   updateTray(labels: TrayLabels): Promise<void>;
   /** Registers the global pause shortcut ("" disables it). Rejects if it is invalid or taken. */
   setPauseShortcut(accelerator: string): Promise<void>;
+  /** The app that currently receives keystrokes (null if unknown). */
+  frontmostApp(): Promise<FrontApp | null>;
   onTrayAction(fn: (action: TrayAction) => void): () => void;
   onPauseShortcut(fn: () => void): () => void;
 }
@@ -62,6 +65,7 @@ const native: Platform = {
   yieldFocus: () => invoke("yield_focus"),
   updateTray: (labels) => invoke("update_tray", { labels }),
   setPauseShortcut: (accelerator) => invoke("set_pause_shortcut", { accelerator }),
+  frontmostApp: () => invoke("frontmost_app"),
   onTrayAction: (fn) => subscribe<TrayAction>("tray-action", fn),
   onPauseShortcut: (fn) => subscribe<null>("shortcut-pause", () => fn()),
 };
@@ -96,6 +100,8 @@ const browser: Platform = {
   yieldFocus: async () => {},
   updateTray: async () => {},
   setPauseShortcut: async () => {},
+  // e2e tests set window.__frontmostApp to simulate another app in front.
+  frontmostApp: async () => (window as unknown as { __frontmostApp?: FrontApp }).__frontmostApp ?? null,
   onTrayAction: () => () => {},
   onPauseShortcut: () => () => {},
 };

@@ -20,6 +20,8 @@ export interface UiEvent {
   clock: string;
   swipe?: "left" | "right";
   reactionMs?: number;
+  /** Threshold frame captured -> key, ms. */
+  detectMs?: number;
   /** Person concerned (speaker changes, ignored swipes); null = nobody has control. */
   person?: number | null;
 }
@@ -27,6 +29,8 @@ export interface UiEvent {
 interface EngineStore {
   status: EngineStatus;
   paused: boolean;
+  /** Why the camera is off: the user paused, or nobody was in view for a while. */
+  pausedReason: "user" | "idle";
   calibrated: boolean;
   fps: number;
   inferenceMs: number;
@@ -42,6 +46,7 @@ interface EngineStore {
 export const useEngine = create<EngineStore>()((set) => ({
   status: { kind: "idle" },
   paused: false,
+  pausedReason: "user",
   calibrated: false,
   fps: 0,
   inferenceMs: 0,

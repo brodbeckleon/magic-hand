@@ -7,6 +7,7 @@ import { useEngineInstance } from "../engine/context.ts";
 import { RESOLUTIONS, type Resolution } from "../state/schema.ts";
 import { useSettings } from "../state/settings.ts";
 import { useUi } from "../state/ui.ts";
+import { unlockSound } from "../sound.ts";
 import { formatShortcut } from "./format.ts";
 import { DirectionIllustration } from "./illustrations.tsx";
 
@@ -176,6 +177,22 @@ function PresentationSection() {
           options={[
             { value: "arrows", label: t("prefs.keysArrows") },
             { value: "page", label: t("prefs.keysPage") },
+          ]}
+        />
+      </Row>
+      <Row label={t("prefs.sound")} hint={t("prefs.soundHint")} htmlFor="pref-sound">
+        <Switch id="pref-sound" label={t("prefs.sound")} checked={s.sound} onChange={(sound) => { if (sound) unlockSound(); s.update({ sound }); }} />
+      </Row>
+      <Row label={t("prefs.autoPause")} hint={t("prefs.autoPauseHint")}>
+        <Select
+          label={t("prefs.autoPause")}
+          value={String(s.autoPauseMinutes) as "0" | "5" | "10" | "20"}
+          onChange={(v) => s.update({ autoPauseMinutes: Number(v) as 0 | 5 | 10 | 20 })}
+          options={[
+            { value: "5", label: t("prefs.minutes", { n: 5 }) },
+            { value: "10", label: t("prefs.minutes", { n: 10 }) },
+            { value: "20", label: t("prefs.minutes", { n: 20 }) },
+            { value: "0", label: t("prefs.never") },
           ]}
         />
       </Row>
