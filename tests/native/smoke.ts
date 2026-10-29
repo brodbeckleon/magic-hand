@@ -97,6 +97,11 @@ try {
   await sleep(800);
   const pill = await wd<Rect>("GET", S("/window/rect"));
   check("window is pill-sized", Math.abs(pill.width - 300) < 40 && Math.abs(pill.height - 64) < 40, JSON.stringify(pill));
+  // Large floating camera (pillSize("large") for a 4:3 camera).
+  await invoke("set_pill_mode", { pill: true, width: 360, height: 338 });
+  await sleep(800);
+  const large = await wd<Rect>("GET", S("/window/rect"));
+  check("window resizes to the large floating camera", Math.abs(large.width - 360) < 40 && Math.abs(large.height - 338) < 40, JSON.stringify(large));
   await invoke("set_pill_mode", { pill: false, width: 0, height: 0 });
   await sleep(800);
   const after = await wd<Rect>("GET", S("/window/rect"));

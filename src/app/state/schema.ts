@@ -67,7 +67,8 @@ export const settingsSchema = z.object({
   zone: zoneSchema.nullable().catch(null),
 
   pauseShortcut: z.string().max(64).catch("CmdOrCtrl+Alt+P"),
-  pill: z.object({ thumbnail: z.boolean().catch(true) }).catch({ thumbnail: true }),
+  /** Live camera in the presenting bar: none, a small thumbnail, or a large view with the hand overlay. */
+  pill: z.object({ camera: z.enum(["off", "small", "large"]).catch("large") }).catch({ camera: "large" }),
   /** How often each hint was shown / completed (hint system). */
   hints: z.record(z.string(), z.number().int().min(0)).catch({}),
 

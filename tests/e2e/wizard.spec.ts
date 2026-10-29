@@ -29,7 +29,8 @@ test.describe("first-run wizard", () => {
     await expect(page.getByTestId("zone-mask")).toBeVisible();
     await page.getByTestId("zone-confirm").click();
 
-    // Arm: holding still completes it and moves on.
+    // Arm: holding still completes it and moves on (the step resets calibration when it appears).
+    await expect(page.getByTestId("wizard-firstRun")).toHaveAttribute("data-step", "arm");
     await expect(wizard).toContainText("Hold your hand still");
     await play(page, new TraceBuilder().hold(1.4));
     await expect(wizard).toContainText("All set");
@@ -83,6 +84,7 @@ test.describe("calibration wizard", () => {
     await play(page, new TraceBuilder().hold(3.4));
     await expect(wizard).toContainText("Nobody was in view");
     await page.getByTestId("zone-confirm").click();
+    await expect(wizard).toHaveAttribute("data-step", "arm");
 
     await play(page, new TraceBuilder().hold(1.4));
     await expect(wizard).toContainText("Practice round");
@@ -108,6 +110,7 @@ test.describe("calibration wizard", () => {
     await page.getByTestId("wizard-next").click(); // framing
     await play(page, new TraceBuilder().hold(3.4));
     await page.getByTestId("zone-confirm").click();
+    await expect(page.getByTestId("wizard-calibrate")).toHaveAttribute("data-step", "arm");
     await play(page, new TraceBuilder().hold(1.4));
     await expect(page.getByTestId("practice")).toBeVisible();
     await play(page, new TraceBuilder().hold(0.3).move(-150, 150, 0.3).hold(0.4));

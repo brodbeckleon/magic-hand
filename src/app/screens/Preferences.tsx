@@ -196,9 +196,21 @@ function PresentationSection() {
           ]}
         />
       </Row>
-      <Row label={t("prefs.thumbnail")} hint={t("prefs.thumbnailHint")} htmlFor="pref-thumb">
-        <Switch id="pref-thumb" label={t("prefs.thumbnail")} checked={s.pill.thumbnail} onChange={(thumbnail) => s.update({ pill: { thumbnail } })} />
-      </Row>
+      <div className="field">
+        <span className="field-label">{t("prefs.pillCamera")}</span>
+        <Segmented
+          label={t("prefs.pillCamera")}
+          testId="pref-pill-camera"
+          value={s.pill.camera}
+          onChange={(camera) => s.update({ pill: { camera } })}
+          options={[
+            { value: "off", label: t("prefs.pillCameraOff") },
+            { value: "small", label: t("prefs.pillCameraSmall") },
+            { value: "large", label: t("prefs.pillCameraLarge") },
+          ]}
+        />
+        <small className="field-hint">{t(`prefs.pillCameraHint.${s.pill.camera}`)}</small>
+      </div>
       <Row label={t("prefs.pauseShortcut")} hint={t("prefs.pauseShortcutHint")}>
         <kbd className="kbd">{shortcut}</kbd>
       </Row>

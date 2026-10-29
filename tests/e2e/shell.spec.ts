@@ -201,3 +201,18 @@ test("the browser preview says that keys and the floating bar need the installed
   await page.getByTestId("present").click();
   await expect(page.getByTestId("pill")).toContainText("Preview");
 });
+
+test("presenting shows a large floating camera with the hand overlay; smaller options in preferences", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("present").click();
+  await expect(page.getByTestId("pill-camera")).toBeVisible();
+  await expect(page.locator(".view-pill .hand-layer")).toBeVisible();
+  await page.getByTestId("pill-expand").click();
+  await page.getByTestId("open-preferences").click();
+  await page.getByTestId("pref-pill-camera").getByRole("radio", { name: "Small" }).click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("present").click();
+  await expect(page.getByTestId("pill-camera")).toHaveCount(0);
+  await expect(page.locator(".view-pill .hand-layer")).toBeHidden();
+});

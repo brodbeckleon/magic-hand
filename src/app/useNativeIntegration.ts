@@ -14,7 +14,7 @@ export function useNativeIntegration(engine: Engine): void {
   const { t } = useTranslation();
   const language = useSettings((s) => s.language);
   const shortcut = useSettings((s) => s.pauseShortcut);
-  const thumbnail = useSettings((s) => s.pill.thumbnail);
+  const pillCamera = useSettings((s) => s.pill.camera);
   const view = useUi((s) => s.view);
   const paused = useEngine((s) => s.paused);
   const calibrated = useEngine((s) => s.calibrated);
@@ -40,16 +40,19 @@ export function useNativeIntegration(engine: Engine): void {
 
   useEffect(() => {
     document.documentElement.dataset.view = view;
+    document.documentElement.dataset.pillCamera = pillCamera;
     if (view === "pill") {
       // Using presenting mode means the "present" hint is no longer needed.
       const { hints, update } = useSettings.getState();
       if (!hints[learnedKey("present")]) update({ hints: { [learnedKey("present")]: 1 } });
-      const { width, height } = pillSize(thumbnail);
+      const video = document.querySelector<HTMLVideoElement>("video.camera");
+      const aspect = video?.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 4 / 3;
+      const { width, height } = pillSize(pillCamera, aspect);
       void platform.setPillMode(true, width, height).then(() => platform.yieldFocus());
     } else {
       void platform.setPillMode(false, 0, 0);
     }
-  }, [view, thumbnail]);
+  }, [view, pillCamera]);
 
   useEffect(() => {
     void platform.updateTray({

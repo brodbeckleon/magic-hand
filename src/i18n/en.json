@@ -178,8 +178,6 @@
       "arrows": "Works in PowerPoint, Keynote, Google Slides and PDF viewers.",
       "page": "Like a presenter clicker."
     },
-    "thumbnail": "Camera in the bar",
-    "thumbnailHint": "Small preview while you present.",
     "pauseShortcut": "Pause shortcut",
     "pauseShortcutHint": "Works even while the presentation is in front.",
     "language": "Language",
@@ -198,7 +196,16 @@
     "autoPause": "Turn the camera off when nobody is there",
     "autoPauseHint": "Saves battery and protects privacy when you leave the room.",
     "minutes": "after {{n}} minutes",
-    "never": "never"
+    "never": "never",
+    "pillCamera": "Camera while presenting",
+    "pillCameraOff": "Off",
+    "pillCameraSmall": "Small",
+    "pillCameraLarge": "Large",
+    "pillCameraHint": {
+      "off": "Only the slim bar floats above the presentation.",
+      "small": "Small preview in the bar.",
+      "large": "A large camera view with your tracked hand floats above the presentation. Drag to move it."
+    }
   },
   "dev": {
     "title": "Developer",
