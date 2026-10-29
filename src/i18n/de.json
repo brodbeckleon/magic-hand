@@ -139,14 +139,14 @@
       "manual": "Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
       "auto": "Magic Hand erkennt, wer gerade spricht. Die offene Hand übersteuert das jederzeit."
     },
-    "autoSignal": "Erkennen an",
-    "signalMouth": "Mundbewegung",
-    "signalMovement": "Bewegung",
-    "signalBoth": "Beidem",
+    "autoSignal": "Wer darf wechseln?",
+    "signalMouth": "Sprechende Person",
+    "signalMovement": "Aktivste Person",
+    "signalBoth": "Beides",
     "autoSignalHint": {
-      "mouth": "Wer spricht, bewegt den Mund.",
-      "movement": "Wer sich am meisten bewegt, spricht meist.",
-      "both": "Kombiniert beides, am zuverlässigsten."
+      "mouth": "Wer gerade spricht (Mundbewegung), darf Folien wechseln.",
+      "movement": "Wer sich am meisten bewegt, darf Folien wechseln.",
+      "both": "Kombiniert Sprechen und Bewegung, am zuverlässigsten."
     },
     "camera": "Kamera",
     "cameraDevice": "Kamera",
@@ -258,5 +258,93 @@
   "toast": {
     "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
     "ignored_return": "Rückholbewegung ignoriert"
+  },
+  "wizard": {
+    "progress": "Schritt {{n}} von {{total}}",
+    "continueAnyway": "Trotzdem weiter",
+    "firstRun": {
+      "name": "Einrichtung"
+    },
+    "calibrate": {
+      "name": "Kalibrieren"
+    },
+    "welcome": {
+      "title": "Willkommen bei Magic Hand",
+      "lead": "Wechsle Folien mit einer Wischgeste, ohne zum Laptop zurückzugehen.",
+      "p1": "Zügig wischen: nächste oder vorherige Folie.",
+      "p2": "Hand kurz ruhig halten: Gesten werden aktiv. Vorher passiert nichts.",
+      "privacy": "Alles bleibt auf diesem Gerät. Es werden keine Bilder gespeichert oder gesendet.",
+      "start": "Los geht's",
+      "skip": "Einrichtung überspringen"
+    },
+    "direction": {
+      "title": "Welche Richtung fühlt sich natürlich an?",
+      "lead": "Probier beide Richtungen vor der Kamera aus und wähle, welche für «nächste Folie» stehen soll.",
+      "leftHint": "Wie Blättern am Handy",
+      "rightHint": "Wie eine Seite umschlagen",
+      "tried": "{{n}}× ausprobiert",
+      "note": "Du kannst das später in den Einstellungen ändern."
+    },
+    "framing": {
+      "title": "Gut im Bild?",
+      "lead": "Stell dich dorthin, wo du präsentieren wirst. Die Umrisse zeigen ungefähr, wo du stehen solltest.",
+      "light": "Licht",
+      "lightLow": "Zu dunkel: Licht von vorne hilft.",
+      "lightHigh": "Zu hell oder Gegenlicht: nicht vor ein Fenster stellen.",
+      "distance": "Abstand",
+      "tooFar": "Etwas zu weit weg. Näher kommen oder Auflösung «Hoch» wählen.",
+      "tooClose": "Zu nah: einen Schritt zurück.",
+      "noPerson": "Noch niemand zu sehen.",
+      "hand": "Hand",
+      "handSmall": "Hand ist sehr klein im Bild.",
+      "showHand": "Halte eine Hand in die Kamera."
+    },
+    "zone": {
+      "title": "Dein Präsentationsbereich",
+      "observing": "Bleib kurz so stehen, wie du präsentierst. Magic Hand schlägt einen Bereich vor …",
+      "fullFrameNote": "Nur jetzt wird das ganze Bild angeschaut, um dich zu finden.",
+      "lead": "Nur in diesem Bereich werden Gesten erkannt. Das Publikum ausserhalb wird nicht analysiert.",
+      "nobody": "Es war niemand zu sehen. Du kannst den Bereich von Hand festlegen oder das ganze Bild verwenden.",
+      "tipDrag": "Ziehe den Rahmen oder seine Punkte. Pfeiltasten verschieben, mit Shift ändern sie die Grösse.",
+      "tipPrivacy": "Der dunkle Teil wird ignoriert.",
+      "confirm": "Bereich übernehmen",
+      "again": "Neu erkennen",
+      "whole": "Ganzes Bild verwenden",
+      "limit": "Bereich festlegen"
+    },
+    "arm": {
+      "title": "Hand ruhig halten",
+      "lead": "Halte eine Hand ca. 1 Sekunde ruhig vor die Kamera, bis der Ring voll ist.",
+      "done": "Gesten sind aktiv.",
+      "why": "So weiss Magic Hand, dass du bereit bist. Vorher wird nie eine Folie gewechselt."
+    },
+    "practice": {
+      "title": "Übungsrunde",
+      "lead": "Wische {{n}}× in jede Richtung, so wie du es beim Präsentieren machen würdest. Magic Hand lernt dabei dein Tempo und deine Weite.",
+      "nextSlide": "nächste Folie",
+      "prevSlide": "vorherige Folie",
+      "ok": "Erkannt!",
+      "diagonal": "Zu schräg, eher waagrecht wischen",
+      "note": "Während der Übung werden keine Tasten gesendet."
+    },
+    "summary": {
+      "title": "Auf dich abgestimmt",
+      "lead": "Aus deinen {{n}} Übungsgesten:",
+      "now": "Bisher",
+      "new": "Neu",
+      "distance": "Mindestweite",
+      "window": "Max. Dauer",
+      "maxSlope": "Max. Neigung",
+      "handLengths": "{{v}} Handlängen",
+      "use": "Übernehmen",
+      "keep": "Bisherige behalten",
+      "notEnough": "Für eine Anpassung waren zu wenige Übungsgesten erkennbar. Die bisherigen Werte bleiben."
+    },
+    "done": {
+      "title": "Alles bereit",
+      "lead": "Klicke auf «Präsentieren»: Magic Hand wird zu einer kleinen Leiste und gibt den Fokus an deine Präsentation zurück.",
+      "stay": "Hier bleiben",
+      "calibrateLater": "Mit «Kalibrieren» passt du Magic Hand später genauer an deine Bewegungen an."
+    }
   }
 }

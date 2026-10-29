@@ -139,14 +139,14 @@
       "manual": "To take over, raise an open hand for about 1 second.",
       "auto": "Magic Hand detects who is speaking. An open hand overrides it at any time."
     },
-    "autoSignal": "Detect by",
-    "signalMouth": "Mouth movement",
-    "signalMovement": "Movement",
+    "autoSignal": "Who may change slides?",
+    "signalMouth": "Speaking person",
+    "signalMovement": "Most active person",
     "signalBoth": "Both",
     "autoSignalHint": {
-      "mouth": "Whoever speaks moves their mouth.",
-      "movement": "Whoever moves the most is usually speaking.",
-      "both": "Combines both, most reliable."
+      "mouth": "Whoever is speaking (mouth movement) may change slides.",
+      "movement": "Whoever moves the most may change slides.",
+      "both": "Combines speaking and movement, most reliable."
     },
     "camera": "Camera",
     "cameraDevice": "Camera",
@@ -258,5 +258,93 @@
   "toast": {
     "ignored_dir": "Not recognised: swipe more horizontally",
     "ignored_return": "Return movement ignored"
+  },
+  "wizard": {
+    "progress": "Step {{n}} of {{total}}",
+    "continueAnyway": "Continue anyway",
+    "firstRun": {
+      "name": "Setup"
+    },
+    "calibrate": {
+      "name": "Calibrate"
+    },
+    "welcome": {
+      "title": "Welcome to Magic Hand",
+      "lead": "Change slides with a swipe, without walking back to your laptop.",
+      "p1": "Swipe briskly: next or previous slide.",
+      "p2": "Hold your hand still for a moment: gestures become active. Nothing happens before that.",
+      "privacy": "Everything stays on this device. No images are stored or sent.",
+      "start": "Let's go",
+      "skip": "Skip setup"
+    },
+    "direction": {
+      "title": "Which direction feels natural?",
+      "lead": "Try both directions in front of the camera and pick which one means “next slide”.",
+      "leftHint": "Like scrolling on a phone",
+      "rightHint": "Like turning a page",
+      "tried": "tried {{n}}×",
+      "note": "You can change this later in Preferences."
+    },
+    "framing": {
+      "title": "Are you in the picture?",
+      "lead": "Stand where you will present. The outline shows roughly where to stand.",
+      "light": "Light",
+      "lightLow": "Too dark: light from the front helps.",
+      "lightHigh": "Too bright or backlit: do not stand in front of a window.",
+      "distance": "Distance",
+      "tooFar": "A bit far away. Come closer or choose the “High” resolution.",
+      "tooClose": "Too close: take a step back.",
+      "noPerson": "Nobody in view yet.",
+      "hand": "Hand",
+      "handSmall": "Your hand is very small in the picture.",
+      "showHand": "Hold a hand up to the camera."
+    },
+    "zone": {
+      "title": "Your presenting area",
+      "observing": "Stay where you present for a moment. Magic Hand is proposing an area …",
+      "fullFrameNote": "Only now is the whole picture looked at, to find you.",
+      "lead": "Gestures are only recognised inside this area. The audience outside is not analysed.",
+      "nobody": "Nobody was in view. You can set the area by hand or use the whole picture.",
+      "tipDrag": "Drag the frame or its handles. Arrow keys move it, with Shift they resize it.",
+      "tipPrivacy": "The dark part is ignored.",
+      "confirm": "Use this area",
+      "again": "Detect again",
+      "whole": "Use the whole picture",
+      "limit": "Set an area"
+    },
+    "arm": {
+      "title": "Hold your hand still",
+      "lead": "Hold one hand still in front of the camera for about a second until the ring is full.",
+      "done": "Gestures are active.",
+      "why": "This tells Magic Hand you are ready. No slide ever changes before that."
+    },
+    "practice": {
+      "title": "Practice round",
+      "lead": "Swipe {{n}}× in each direction, the way you would while presenting. Magic Hand learns your speed and reach.",
+      "nextSlide": "next slide",
+      "prevSlide": "previous slide",
+      "ok": "Got it!",
+      "diagonal": "Too diagonal, swipe more horizontally",
+      "note": "No keys are sent during practice."
+    },
+    "summary": {
+      "title": "Tuned to you",
+      "lead": "From your {{n}} practice swipes:",
+      "now": "Current",
+      "new": "New",
+      "distance": "Minimum reach",
+      "window": "Max. duration",
+      "maxSlope": "Max. tilt",
+      "handLengths": "{{v}} hand lengths",
+      "use": "Use these",
+      "keep": "Keep current",
+      "notEnough": "Not enough practice swipes were recognised to tune anything. The current values stay."
+    },
+    "done": {
+      "title": "All set",
+      "lead": "Click “Present”: Magic Hand turns into a small bar and hands the focus back to your presentation.",
+      "stay": "Stay here",
+      "calibrateLater": "Use “Calibrate” later to tune Magic Hand more closely to your movements."
+    }
   }
 }

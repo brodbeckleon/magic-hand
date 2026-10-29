@@ -102,18 +102,22 @@ function PresenterSection() {
       />
       <small className="field-hint">{t(`prefs.speakerHint.${speaker.mode}`)}</small>
       {speaker.mode === "auto" && (
-        <Row label={t("prefs.autoSignal")} hint={t(`prefs.autoSignalHint.${speaker.autoSignal}`)}>
-          <Select
+        <div className="field">
+          <span className="field-label">{t("prefs.autoSignal")}</span>
+          <Segmented
             label={t("prefs.autoSignal")}
+            testId="pref-signal"
+            large
             value={speaker.autoSignal}
             onChange={(autoSignal) => update({ speaker: { autoSignal } })}
             options={[
-              { value: "mouth", label: t("prefs.signalMouth") },
-              { value: "movement", label: t("prefs.signalMovement") },
-              { value: "both", label: t("prefs.signalBoth") },
+              { value: "mouth", label: t("prefs.signalMouth"), icon: <Icon name="mic" size={20} /> },
+              { value: "movement", label: t("prefs.signalMovement"), icon: <Icon name="move" size={20} /> },
+              { value: "both", label: t("prefs.signalBoth"), icon: <span className="two-hands"><Icon name="mic" size={18} /><Icon name="move" size={18} /></span> },
             ]}
           />
-        </Row>
+          <small className="field-hint">{t(`prefs.autoSignalHint.${speaker.autoSignal}`)}</small>
+        </div>
       )}
     </Section>
   );

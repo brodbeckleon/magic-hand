@@ -52,11 +52,11 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
 
 function Toolbar() {
   const { t } = useTranslation();
-  const engine = useEngineInstance();
   const sheet = useUi((s) => s.sheet);
   const openSheet = useUi((s) => s.openSheet);
   const closeSheet = useUi((s) => s.closeSheet);
-  const buttons: { id: Sheet; icon: IconName; label: string }[] = [
+  const openWizard = useUi((s) => s.openWizard);
+  const buttons: { id: Sheet | "calibrate"; icon: IconName; label: string }[] = [
     { id: "calibrate", icon: "calibrate", label: t("main.calibrate") },
     { id: "help", icon: "help", label: t("main.help") },
     { id: "preferences", icon: "preferences", label: t("main.preferences") },
@@ -70,7 +70,7 @@ function Toolbar() {
           aria-pressed={sheet === b.id}
           data-testid={`open-${b.id}`}
           onClick={() => {
-            if (b.id === "calibrate") return engine.recalibrate();
+            if (b.id === "calibrate") return openWizard("calibrate");
             if (sheet === b.id) closeSheet();
             else openSheet(b.id);
           }}

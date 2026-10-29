@@ -18,8 +18,11 @@ export interface TestHooks {
 
 /** Applied before the engine starts: `?delegate=CPU` forces the CPU delegate in tests. */
 export function applyTestParams(): void {
-  const delegate = new URLSearchParams(location.search).get("delegate");
+  const params = new URLSearchParams(location.search);
+  const delegate = params.get("delegate");
   if (delegate === "CPU" || delegate === "GPU") useSettings.getState().update({ dev: { delegate } });
+  // Most tests start from a configured app; ?firstRun=1 keeps the first-run wizard.
+  if (params.get("firstRun") !== "1" && !useSettings.getState().firstRunDone) useSettings.getState().update({ firstRunDone: true });
 }
 
 export function installTestHooks(engine: Engine): void {

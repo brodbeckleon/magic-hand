@@ -26,9 +26,9 @@ export class Engine {
   readonly pipeline = new GesturePipeline();
   readonly frames = new FrameBus<PipelineSnapshot>();
   /** Fires for every event that should be visualised (arrow flash, toasts). */
-  readonly events = new FrameBus<UiEvent>();
+  readonly events = new FrameBus<UiEvent>({ replay: false });
   /** Raw observations of every frame (wizards read poses from here). */
-  readonly observations = new FrameBus<FrameObs>();
+  readonly observations = new FrameBus<FrameObs>({ replay: false });
   readonly log: LogEntry[] = [];
   /** Worker timings (developer metrics); null when running on the main thread. */
   workerStats: WorkerStats | null = null;
@@ -39,6 +39,7 @@ export class Engine {
   private worker: { handle: VisionWorker; ready: Promise<Delegate> } | null = null;
   private workerFailed = false;
   private poseRequests = 0;
+  private keySuppressions = 0;
   private fullFrameRequests = 0;
   private source: LandmarkSource | null = null;
   private nextEventId = 1;
@@ -143,6 +144,18 @@ export class Engine {
       released = true;
       this.poseRequests--;
       if (opts.fullFrame) this.fullFrameRequests--;
+    };
+  }
+
+  /** No keystrokes until the returned function is called (wizards: practice swipes). */
+  suppressKeys(): () => void {
+    this.keySuppressions++;
+    let released = false;
+    return () => {
+      if (!released) {
+        released = true;
+        this.keySuppressions--;
+      }
     };
   }
 
@@ -267,7 +280,7 @@ export class Engine {
         reaktionMs: reactionMs, verarbeitungMs: (tKey - meta.captureTime) * 1000, hand: e.side,
       });
     };
-    if (dev.dryRun) return finish();
+    if (dev.dryRun || this.keySuppressions > 0) return finish();
     platform.sendKey(e.command, keyMapping).then(finish, (err) => {
       console.error("send_key failed", err);
       finish();

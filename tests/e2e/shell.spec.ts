@@ -129,3 +129,23 @@ test.describe("app shell", () => {
     await done;
   });
 });
+
+test.describe("multiple presenters", () => {
+  test.use({ locale: "de-CH" });
+
+  test("automatic mode switches between speaking person, most active person or both", async ({ page }) => {
+    await open(page);
+    await waitLive(page);
+    await page.getByTestId("open-preferences").click();
+    await expect(page.getByTestId("pref-signal")).toHaveCount(0);
+    await page.getByTestId("pref-speaker").getByRole("radio", { name: "Automatisch" }).click();
+    const signal = page.getByTestId("pref-signal");
+    await expect(signal.getByRole("radio")).toHaveText(["Sprechende Person", "Aktivste Person", "Beides"]);
+    await signal.getByRole("radio", { name: "Aktivste Person" }).click();
+    await expect(page.getByTestId("preferences")).toContainText("Wer sich am meisten bewegt");
+    await page.reload();
+    await waitLive(page);
+    await page.getByTestId("open-preferences").click();
+    await expect(page.getByTestId("pref-signal").getByRole("radio", { name: "Aktivste Person" })).toHaveAttribute("aria-checked", "true");
+  });
+});
