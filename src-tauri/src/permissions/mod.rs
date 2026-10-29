@@ -7,7 +7,8 @@ use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+// Not every variant is constructed on every OS.
+#[allow(dead_code)]
 pub enum PermissionState {
     Granted,
     Denied,

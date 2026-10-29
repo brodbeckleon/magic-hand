@@ -14,10 +14,11 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "check-bundle": "tsx scripts/check-bundle.ts"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "^1.2.0",
+    "@mediapipe/tasks-vision": "^0.10.35",
     "@tauri-apps/api": "^2.12.4",
     "i18next": "^26.5.11",
     "motion": "^14.7.1",

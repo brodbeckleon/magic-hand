@@ -1,7 +1,11 @@
 import { test as base, expect } from "@playwright/test";
 
-/** Records every request that does not go to the app itself (MHR08: there must be none). */
-export const test = base.extend<{ externalRequests: string[] }>({
+/**
+ * MHR08 checks for every test:
+ *  - `externalRequests` records every request that left the app (must be none),
+ *  - after each test, the in-app network guard must not have blocked anything either.
+ */
+export const test = base.extend<{ externalRequests: string[]; privacyGuard: void }>({
   externalRequests: async ({ page, baseURL }, use) => {
     const external: string[] = [];
     page.on("request", (r) => {
@@ -10,6 +14,16 @@ export const test = base.extend<{ externalRequests: string[] }>({
     });
     await use(external);
   },
+  privacyGuard: [
+    async ({ page }, use) => {
+      await use();
+      const blocked = await page
+        .evaluate(() => (window as unknown as { __magicHand?: { blocked(): string[] } }).__magicHand?.blocked() ?? [])
+        .catch(() => []);
+      expect(blocked, "requests blocked by the privacy guard").toEqual([]);
+    },
+    { auto: true },
+  ],
 });
 
 export { expect };

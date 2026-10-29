@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import { App } from "./app/App.tsx";
 import "./app/global.css";
 import "./i18n/index.ts";
+import { installNetworkGuard } from "./platform/networkGuard.ts";
+
+installNetworkGuard();
 
 if (import.meta.env.MODE === "e2e") (await import("./app/testHooks.ts")).applyTestParams();
 
