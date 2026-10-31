@@ -1,0 +1,454 @@
+{
+  "app": {
+    "name": "Magic Hand"
+  },
+  "status": {
+    "loading": "Loading hand tracking …",
+    "starting": "Starting camera …",
+    "calibrating": "Calibrating",
+    "active": "Active",
+    "paused": "Paused",
+    "dryRun": "Dry run: no keys",
+    "handNone": "No hand detected",
+    "handSeen": "Hand detected",
+    "blocked": "Briefly locked",
+    "returning": "Return time {{s}} s",
+    "fps": "{{fps}} fps"
+  },
+  "hint": {
+    "holdStill": "Hold your hand still for about 1 s",
+    "next": "next",
+    "prev": "back"
+  },
+  "event": {
+    "calibrated": "Calibrated, gestures active",
+    "next": "Next slide",
+    "prev": "Previous slide",
+    "ignored_dir": "Ignored: not horizontal",
+    "ignored_return": "Ignored: return time",
+    "missed": "Missed (logged)",
+    "false": "False trigger (logged)",
+    "ignored_not_speaker": "Ignored: person {{n}} is not the speaker",
+    "speaker": "Speaker: person {{n}}"
+  },
+  "flash": {
+    "next": "Next slide",
+    "prev": "Previous slide"
+  },
+  "error": {
+    "denied": "Magic Hand is not allowed to use the camera.",
+    "deniedHelp": "Allow camera access in System Settings and restart the app.",
+    "not-found": "No camera found.",
+    "not-foundHelp": "Connect a camera or choose another one in Preferences.",
+    "busy": "The camera is being used by another app.",
+    "busyHelp": "Quit the other app (e.g. Teams or Zoom) and try again.",
+    "unknown": "The camera cannot be opened.",
+    "unknownHelp": "Try again or choose another camera in Preferences.",
+    "model": "Hand tracking could not be loaded.",
+    "modelHelp": "Restart the app. If that does not help, reinstall it.",
+    "retry": "Try again",
+    "openSettings": "Open System Settings"
+  },
+  "accessibility": {
+    "title": "One more permission and you're ready",
+    "body": "To change slides, Magic Hand needs the Accessibility permission on macOS.",
+    "grant": "Grant permission",
+    "later": "Later",
+    "waiting": "Waiting for permission …"
+  },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "recalibrate": "Recalibrate",
+    "markMissed": "Report missed gesture",
+    "markFalse": "Report false trigger",
+    "exportLog": "Export log"
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "done": "Done"
+  },
+  "main": {
+    "calibrate": "Calibrate",
+    "help": "Help",
+    "preferences": "Preferences",
+    "present": "Present",
+    "presentHint": "Shrinks Magic Hand into a small bar that floats above your presentation.",
+    "paused": "Gesture control paused",
+    "pausedBody": "The camera is off. Nothing is being analysed.",
+    "resume": "Resume",
+    "pause": "Pause",
+    "devUnlocked": "Developer tools unlocked",
+    "devLocked": "Developer tools hidden",
+    "pausedIdle": "Nobody was in view for {{n}} minutes. The camera was turned off.",
+    "browserPreview": "Browser preview: gestures are recognised, but no keys are sent to PowerPoint and the bar cannot float above the presentation. Use the installed app for that.",
+    "preview": "Preview"
+  },
+  "pill": {
+    "expand": "Open window",
+    "pause": "Pause",
+    "resume": "Resume",
+    "ready": "Ready",
+    "waiting": "Hold your hand still",
+    "paused": "Paused",
+    "noHand": "No hand",
+    "focusOther": "Keys go to: {{app}}",
+    "focusOtherHint": "Click into your presentation so the slides change."
+  },
+  "tray": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "show": "Show Magic Hand",
+    "recalibrate": "Recalibrate",
+    "quit": "Quit",
+    "tooltipActive": "Magic Hand: active",
+    "tooltipPaused": "Magic Hand: paused",
+    "tooltipCalibrating": "Magic Hand: hold your hand still"
+  },
+  "prefs": {
+    "title": "Preferences",
+    "gestures": "Gestures",
+    "hand": "Preferred hand",
+    "handLeft": "Left",
+    "handRight": "Right",
+    "handEither": "Either",
+    "handHint": {
+      "left": "Only your left hand changes slides. Gesture freely with your right.",
+      "right": "Only your right hand changes slides. Gesture freely with your left.",
+      "either": "Both hands can swipe. Per gesture, only the hand that clearly swipes first counts."
+    },
+    "direction": "Swipe direction for “next slide”",
+    "directionLeft": "To the left",
+    "directionRight": "To the right",
+    "sensitivity": "Sensitivity",
+    "sensLow": "Calm",
+    "sensNormal": "Normal",
+    "sensHigh": "Sensitive",
+    "sensCustom": "Custom",
+    "sensLowHint": "Needs a longer, faster swipe",
+    "sensHighHint": "A shorter swipe is enough",
+    "sensHint": {
+      "low": "Good if you gesture a lot while talking.",
+      "normal": "Balanced for most presenters.",
+      "high": "Good for small movements or standing far from the camera.",
+      "custom": "Values from your calibration."
+    },
+    "presenters": "Multiple presenters",
+    "presentersHint": "Who may change slides when several people are in view?",
+    "speakerMode": "Speaker selection",
+    "speakerManual": "By hand sign",
+    "speakerAuto": "Automatic",
+    "speakerHint": {
+      "manual": "To take over, raise an open hand for about 1 second.",
+      "auto": "Magic Hand detects who is speaking. An open hand overrides it at any time."
+    },
+    "autoSignal": "Who may change slides?",
+    "signalMouth": "Speaking person",
+    "signalMovement": "Most active person",
+    "signalBoth": "Both",
+    "autoSignalHint": {
+      "mouth": "Whoever is speaking (mouth movement) may change slides.",
+      "movement": "Whoever moves the most may change slides.",
+      "both": "Combines speaking and movement, most reliable."
+    },
+    "camera": "Camera",
+    "cameraDevice": "Camera",
+    "cameraDefault": "Default camera",
+    "cameraN": "Camera {{n}}",
+    "resolution": "Resolution",
+    "resolutionName": {
+      "320x240": "Low (320×240)",
+      "640x480": "Standard (640×480)",
+      "1280x720": "High (1280×720)"
+    },
+    "resolutionHint": {
+      "320x240": "For slower laptops.",
+      "640x480": "Recommended.",
+      "1280x720": "For large rooms, needs more power."
+    },
+    "presentation": "Presentation",
+    "keys": "Keys sent",
+    "keysArrows": "Arrow keys",
+    "keysPage": "Page up/down",
+    "keysHint": {
+      "arrows": "Works in PowerPoint, Keynote, Google Slides and PDF viewers.",
+      "page": "Like a presenter clicker."
+    },
+    "pauseShortcut": "Pause shortcut",
+    "pauseShortcutHint": "Works even while the presentation is in front.",
+    "language": "Language",
+    "languageSystem": "System",
+    "privacy": "Privacy",
+    "privacyHint": "Camera images are processed in memory only, never stored and never sent. Only your preferences and calibration are saved.",
+    "privacyMore": "More about privacy",
+    "delete": "Delete all saved data",
+    "deleteConfirm": "Delete preferences and calibration?",
+    "deleteYes": "Delete",
+    "deleted": "Deleted. No data is stored anymore.",
+    "farAssist": "Help at a distance",
+    "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement.",
+    "sound": "Sound on slide change",
+    "soundHint": "A short, quiet tone so you know it worked without looking.",
+    "autoPause": "Turn the camera off when nobody is there",
+    "autoPauseHint": "Saves battery and protects privacy when you leave the room.",
+    "minutes": "after {{n}} minutes",
+    "never": "never",
+    "pillCamera": "Camera while presenting",
+    "pillCameraOff": "Off",
+    "pillCameraSmall": "Small",
+    "pillCameraLarge": "Large",
+    "pillCameraHint": {
+      "off": "Only the slim bar floats above the presentation.",
+      "small": "Small preview in the bar.",
+      "large": "A large camera view with your tracked hand floats above the presentation. Drag to move it."
+    }
+  },
+  "dev": {
+    "title": "Developer",
+    "hint": "For testing only. Show/hide with Ctrl/⌘ + Shift + D.",
+    "dryRun": "Dry run",
+    "dryRunHint": "Recognise gestures but do not send keys.",
+    "events": "Show event list",
+    "delegate": "Compute backend",
+    "delegateHint": "Applied the next time detection starts.",
+    "delegateAuto": "Automatic",
+    "exportExtended": "Export extended",
+    "lock": "Hide developer tools",
+    "metrics": "Metrics",
+    "params": "Parameters",
+    "record": "Recording",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "handMs": "Hand model",
+    "pipelineMs": "Frame→result",
+    "latency": "Latency",
+    "reaction": "reaction",
+    "detectHint": "Threshold frame captured until key sent",
+    "reactionHint": "Start of the movement until key sent (includes the gesture itself, target < 500 ms)",
+    "dropped": "{{n}} dropped",
+    "resetParams": "Defaults",
+    "recordPrivacy": "Only hand points (coordinates) are recorded, never images. Only with the consent of everyone in view.",
+    "recordConsent": "Everyone in view has agreed.",
+    "startRecording": "Start recording",
+    "recordingFor": "Recording: {{s}} s, {{n}} frames",
+    "stopSave": "Stop and save …",
+    "discard": "Discard",
+    "loadReplay": "Play a recording …",
+    "speed": "Speed",
+    "replayDiff": "{{n}} differences from the live session",
+    "replaySame": "Same events as live",
+    "backToCamera": "Back to the camera",
+    "speakers": "Speakers",
+    "speakerNow": "speaker: {{n}}",
+    "noPersons": "No people tracked (the pose model runs every few frames).",
+    "age": "age",
+    "hands": "hands",
+    "study": "Study"
+  },
+  "help": {
+    "title": "Help",
+    "tabs": {
+      "start": "Getting started",
+      "trouble": "Troubleshooting",
+      "privacy": "Privacy",
+      "about": "About"
+    },
+    "step1Title": "Hold your hand still",
+    "step1": "Hold one hand still in front of the camera for about a second. The ring fills up, then gestures are active. No slide changes before that.",
+    "step2Title": "Click into your presentation",
+    "step2": "Click “Present” or into your presentation so the keys arrive there.",
+    "step3Title": "Swipe",
+    "step3Next": "Swipe briskly to the {{dir}}: next slide.",
+    "step3Prev": "Swipe back: previous slide.",
+    "step3Return": "Then simply bring your hand back. That does not trigger anything.",
+    "dirLeft": "left",
+    "dirRight": "right",
+    "tipsTitle": "Good to know",
+    "tip1": "Slow or diagonal movements while explaining are ignored.",
+    "tip2": "Hand shape does not matter.",
+    "tip3": "Press {{shortcut}} to pause at any time, even during the presentation.",
+    "replayOnboarding": "Show the introduction again",
+    "trouble": {
+      "noSlideTitle": "The slide does not change",
+      "noSlide": "The presentation must be in front: click into it once. On macOS, Magic Hand needs the Accessibility permission. Also check that dry run is off in the developer settings.",
+      "cameraTitle": "The camera does not start",
+      "camera": "Allow camera access in System Settings. Close other apps using the camera (Teams, Zoom). On Windows: Settings → Privacy → Camera → “Let desktop apps access your camera”.",
+      "tooOftenTitle": "It changes too often",
+      "tooOften": "Set sensitivity to “Calm” or choose a preferred hand. The other hand can then gesture freely.",
+      "notRecognizedTitle": "Swipes are not recognised",
+      "notRecognized": "Swipe faster and further, about two to three hand lengths. Make sure there is light from the front and stay in view. At a large distance, the “High” resolution helps.",
+      "slowTitle": "The app is slow",
+      "slow": "Set the resolution to “Low”. Close demanding programs.",
+      "permissionTitle": "Permissions (macOS)",
+      "permission": "System Settings → Privacy & Security → Camera and Accessibility: enable Magic Hand. Then restart the app.",
+      "openCamera": "Open camera settings",
+      "openAccessibility": "Open Accessibility"
+    },
+    "privacyBody": [
+      "All camera images are processed on this device only. They stay in memory and are discarded immediately.",
+      "No images, videos or hand data are stored or transmitted. Magic Hand makes no internet connection.",
+      "Only your preferences and calibration (e.g. the area where you present) are saved. You can delete them in Preferences at any time.",
+      "The camera is only on while gesture control runs. It is off while paused.",
+      "Only the calibrated area is analysed, not the audience."
+    ],
+    "aboutBody": "Magic Hand is a project in the Natural User Interfaces module at ZHAW.",
+    "team": "Team",
+    "version": "Version {{v}}",
+    "shortcuts": "Keyboard shortcuts",
+    "shortcutList": {
+      "p": "Pause / resume",
+      "k": "Recalibrate",
+      "m": "Report missed gesture",
+      "f": "Report false trigger",
+      "esc": "Close panel"
+    },
+    "try": {
+      "start": "Try it now",
+      "title": "Try it",
+      "stop": "Stop",
+      "lead": "Swipe briskly to the {{dir}} or back. No key is sent.",
+      "armFirst": "First hold a hand still for about a second until the ring is full.",
+      "result": {
+        "next": "Recognised: next slide",
+        "prev": "Recognised: previous slide",
+        "ignored_dir": "Too diagonal: swipe more horizontally",
+        "ignored_return": "Return movement: ignored on purpose",
+        "ignored_not_speaker": "Someone else is the speaker"
+      },
+      "count_one": "{{count}} swipe recognised",
+      "count_other": "{{count}} swipes recognised"
+    }
+  },
+  "toast": {
+    "ignored_dir": "Not recognised: swipe more horizontally",
+    "ignored_return": "Return movement ignored",
+    "ignored_not_speaker": "Person {{n}} is not the speaker. Raise an open hand for 1 s to take over.",
+    "speaker": "Person {{n}} now changes the slides"
+  },
+  "wizard": {
+    "progress": "Step {{n}} of {{total}}",
+    "continueAnyway": "Continue anyway",
+    "firstRun": {
+      "name": "Setup"
+    },
+    "calibrate": {
+      "name": "Calibrate"
+    },
+    "welcome": {
+      "title": "Welcome to Magic Hand",
+      "lead": "Change slides with a swipe, without walking back to your laptop.",
+      "p1": "Swipe briskly: next or previous slide.",
+      "p2": "Hold your hand still for a moment: gestures become active. Nothing happens before that.",
+      "privacy": "Everything stays on this device. No images are stored or sent.",
+      "start": "Let's go",
+      "skip": "Skip setup"
+    },
+    "direction": {
+      "title": "Which direction feels natural?",
+      "lead": "Try both directions in front of the camera and pick which one means “next slide”.",
+      "leftHint": "Like scrolling on a phone",
+      "rightHint": "Like turning a page",
+      "tried": "tried {{n}}×",
+      "note": "You can change this later in Preferences."
+    },
+    "framing": {
+      "title": "Are you in the picture?",
+      "lead": "Stand where you will present. The outline shows roughly where to stand.",
+      "light": "Light",
+      "lightLow": "Too dark: light from the front helps.",
+      "lightHigh": "Too bright or backlit: do not stand in front of a window.",
+      "distance": "Distance",
+      "tooFar": "A bit far away. Come closer or choose the “High” resolution.",
+      "tooClose": "Too close: take a step back.",
+      "noPerson": "Nobody in view yet.",
+      "hand": "Hand",
+      "handSmall": "Your hand is very small in the picture.",
+      "showHand": "Hold a hand up to the camera."
+    },
+    "zone": {
+      "title": "Your presenting area",
+      "observing": "Stay where you present for a moment. Magic Hand is proposing an area …",
+      "fullFrameNote": "Only now is the whole picture looked at, to find you.",
+      "lead": "Gestures are only recognised inside this area. The audience outside is not analysed.",
+      "nobody": "Nobody was in view. You can set the area by hand or use the whole picture.",
+      "tipDrag": "Drag the frame or its handles. Arrow keys move it, with Shift they resize it.",
+      "tipPrivacy": "The dark part is ignored.",
+      "confirm": "Use this area",
+      "again": "Detect again",
+      "whole": "Use the whole picture",
+      "limit": "Set an area"
+    },
+    "arm": {
+      "title": "Hold your hand still",
+      "lead": "Hold one hand still in front of the camera for about a second until the ring is full.",
+      "done": "Gestures are active.",
+      "why": "This tells Magic Hand you are ready. No slide ever changes before that."
+    },
+    "practice": {
+      "title": "Practice round",
+      "lead": "Swipe {{n}}× in each direction, the way you would while presenting. Magic Hand learns your speed and reach.",
+      "nextSlide": "next slide",
+      "prevSlide": "previous slide",
+      "ok": "Got it!",
+      "diagonal": "Too diagonal, swipe more horizontally",
+      "note": "No keys are sent during practice."
+    },
+    "summary": {
+      "title": "Tuned to you",
+      "lead": "From your {{n}} practice swipes:",
+      "now": "Current",
+      "new": "New",
+      "distance": "Minimum reach",
+      "window": "Max. duration",
+      "maxSlope": "Max. tilt",
+      "handLengths": "{{v}} hand lengths",
+      "use": "Use these",
+      "keep": "Keep current",
+      "notEnough": "Not enough practice swipes were recognised to tune anything. The current values stay."
+    },
+    "done": {
+      "title": "All set",
+      "lead": "Click “Present”: Magic Hand turns into a small bar and hands the focus back to your presentation.",
+      "stay": "Stay here",
+      "calibrateLater": "Use “Calibrate” later to tune Magic Hand more closely to your movements."
+    }
+  },
+  "hints": {
+    "ok": "Got it",
+    "noHand": "Hold a hand up to the camera and keep it still for a moment to start.",
+    "focus": "The key went to Magic Hand itself. Click into your presentation or on “Present”.",
+    "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
+    "takeover": "Several people in view: to take over, raise an open hand for about a second.",
+    "far": "You are far away: swipe with big, clear arm movements."
+  },
+  "study": {
+    "intro": "Test session: Magic Hand asks for swipes in alternating directions, then measures false triggers while you talk freely. No keys are sent.",
+    "perDirection": "per direction",
+    "freeTalkS": "free talk",
+    "distance": "Distance (e.g. 3 m)",
+    "note": "Note (person, room, light)",
+    "start": "Start study",
+    "promptNext": "Now: swipe to the next slide",
+    "promptPrev": "Now: swipe to the previous slide",
+    "freeTalk": "Talk freely and gesture as usual. Do not swipe.",
+    "wait": "Get ready …",
+    "progress": "Trial {{n}} of {{total}}",
+    "stop": "Cancel",
+    "endFreeTalk": "End free talk",
+    "outcome": {
+      "hit": "✓ recognised",
+      "miss": "✗ not recognised",
+      "wrong": "✗ wrong direction"
+    },
+    "resultTitle": "Study result",
+    "hitRate": "Hit rate",
+    "hitsMisses": "Hits / missed / wrong",
+    "falseTriggers": "False triggers",
+    "reaction": "Reaction p50 / p95",
+    "export": "Save as CSV"
+  }
+}

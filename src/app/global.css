@@ -1,19 +1,46 @@
-:root {
-  color-scheme: dark;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: #0f1115;
-  color: #f2f2f2;
-}
+@import "./design/tokens.css";
 
 html, body, #root { margin: 0; height: 100%; overflow: hidden; }
 
-.stage { position: relative; width: 100%; height: 100%; background: #0f1115; }
-
-/* Mirrored like a mirror; the pixels themselves are never flipped (handedness, see plan). */
-.camera { width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
-
-.notice {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  padding: 16px 20px; border-radius: 14px; max-width: 420px; text-align: center;
-  background: rgb(30 26 29 / 0.7); backdrop-filter: blur(16px);
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
+
+button { font: inherit; color: inherit; }
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+/* The camera and its SVG overlay share one box with the camera's aspect ratio, so source pixels
+   map 1:1 onto the overlay's viewBox. */
+.stage {
+  position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg);
+  transition: padding 260ms cubic-bezier(.2, .8, .2, 1);
+}
+/* An open side panel (sheet, wizard) moves the camera into the free space next to it. */
+.stage.with-panel { padding: 12px min(444px, 55%) 12px 12px; }
+.stage.with-panel.wide-panel { padding-right: min(584px, 60%); }
+.frame {
+  position: relative;
+  aspect-ratio: var(--ar, 4 / 3);
+  width: min(100%, calc(100vh * var(--ar-num, 1.3333)));
+  transition: width 260ms cubic-bezier(.2, .8, .2, 1);
+  max-height: 100%;
+  overflow: hidden;
+}
+.camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; transform: scaleX(-1); }
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+/* Pill: the window itself becomes transparent and only the bar is drawn. */
+html[data-view="pill"], html[data-view="pill"] body, html[data-view="pill"] .stage { background: transparent; }

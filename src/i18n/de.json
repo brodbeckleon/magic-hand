@@ -1,0 +1,454 @@
+{
+  "app": {
+    "name": "Magic Hand"
+  },
+  "status": {
+    "loading": "Handerkennung wird geladen …",
+    "starting": "Kamera wird gestartet …",
+    "calibrating": "Kalibrieren",
+    "active": "Aktiv",
+    "paused": "Pausiert",
+    "dryRun": "Probelauf: keine Tasten",
+    "handNone": "Keine Hand erkannt",
+    "handSeen": "Hand erkannt",
+    "blocked": "Kurz gesperrt",
+    "returning": "Rückholzeit {{s}} s",
+    "fps": "{{fps}} fps"
+  },
+  "hint": {
+    "holdStill": "Hand ca. 1 s ruhig halten",
+    "next": "weiter",
+    "prev": "zurück"
+  },
+  "event": {
+    "calibrated": "Kalibriert, Gesten aktiv",
+    "next": "Nächste Folie",
+    "prev": "Vorherige Folie",
+    "ignored_dir": "Ignoriert: nicht waagrecht",
+    "ignored_return": "Ignoriert: Rückholzeit",
+    "missed": "Verpasst (protokolliert)",
+    "false": "Fehlauslösung (protokolliert)",
+    "ignored_not_speaker": "Ignoriert: Person {{n}} ist nicht am Wort",
+    "speaker": "Am Wort: Person {{n}}"
+  },
+  "flash": {
+    "next": "Nächste Folie",
+    "prev": "Vorherige Folie"
+  },
+  "error": {
+    "denied": "Magic Hand darf die Kamera nicht verwenden.",
+    "deniedHelp": "Erlaube den Kamerazugriff in den Systemeinstellungen und starte die App neu.",
+    "not-found": "Keine Kamera gefunden.",
+    "not-foundHelp": "Schliesse eine Kamera an oder wähle in den Einstellungen eine andere.",
+    "busy": "Die Kamera wird gerade von einer anderen App verwendet.",
+    "busyHelp": "Beende die andere App (z. B. Teams oder Zoom) und versuche es erneut.",
+    "unknown": "Die Kamera lässt sich nicht öffnen.",
+    "unknownHelp": "Versuche es erneut oder wähle in den Einstellungen eine andere Kamera.",
+    "model": "Die Handerkennung konnte nicht geladen werden.",
+    "modelHelp": "Starte die App neu. Falls das nicht hilft, installiere sie neu.",
+    "retry": "Erneut versuchen",
+    "openSettings": "Systemeinstellungen öffnen"
+  },
+  "accessibility": {
+    "title": "Noch eine Berechtigung, dann geht's los",
+    "body": "Damit Magic Hand die Folien wechseln kann, braucht es unter macOS die Berechtigung «Bedienungshilfen».",
+    "grant": "Berechtigung erteilen",
+    "later": "Später",
+    "waiting": "Warte auf die Freigabe …"
+  },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "recalibrate": "Neu kalibrieren",
+    "markMissed": "Verpasste Geste melden",
+    "markFalse": "Fehlauslösung melden",
+    "exportLog": "Protokoll exportieren"
+  },
+  "common": {
+    "close": "Schliessen",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "done": "Fertig"
+  },
+  "main": {
+    "calibrate": "Kalibrieren",
+    "help": "Hilfe",
+    "preferences": "Einstellungen",
+    "present": "Präsentieren",
+    "presentHint": "Verkleinert Magic Hand zu einer kleinen Leiste, die über der Präsentation schwebt.",
+    "paused": "Gestensteuerung pausiert",
+    "pausedBody": "Die Kamera ist aus. Es wird nichts erkannt.",
+    "resume": "Fortsetzen",
+    "pause": "Pausieren",
+    "devUnlocked": "Entwicklerwerkzeuge freigeschaltet",
+    "devLocked": "Entwicklerwerkzeuge ausgeblendet",
+    "pausedIdle": "Seit {{n}} Minuten war niemand im Bild. Die Kamera wurde ausgeschaltet.",
+    "browserPreview": "Browser-Vorschau: Gesten werden erkannt, aber keine Tasten an PowerPoint gesendet, und die Leiste kann nicht über der Präsentation schweben. Dafür die installierte App verwenden.",
+    "preview": "Vorschau"
+  },
+  "pill": {
+    "expand": "Fenster öffnen",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "ready": "Bereit",
+    "waiting": "Hand ruhig halten",
+    "paused": "Pausiert",
+    "noHand": "Keine Hand",
+    "focusOther": "Tasten gehen an: {{app}}",
+    "focusOtherHint": "Klicke in deine Präsentation, damit die Folien wechseln."
+  },
+  "tray": {
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "show": "Magic Hand anzeigen",
+    "recalibrate": "Neu kalibrieren",
+    "quit": "Beenden",
+    "tooltipActive": "Magic Hand: aktiv",
+    "tooltipPaused": "Magic Hand: pausiert",
+    "tooltipCalibrating": "Magic Hand: Hand ruhig halten"
+  },
+  "prefs": {
+    "title": "Einstellungen",
+    "gestures": "Gesten",
+    "hand": "Bevorzugte Hand",
+    "handLeft": "Links",
+    "handRight": "Rechts",
+    "handEither": "Beide",
+    "handHint": {
+      "left": "Nur die linke Hand wechselt Folien. Mit der rechten kannst du frei gestikulieren.",
+      "right": "Nur die rechte Hand wechselt Folien. Mit der linken kannst du frei gestikulieren.",
+      "either": "Beide Hände können wischen. Pro Geste zählt nur die Hand, die zuerst deutlich wischt."
+    },
+    "direction": "Wischrichtung für «nächste Folie»",
+    "directionLeft": "Nach links",
+    "directionRight": "Nach rechts",
+    "sensitivity": "Empfindlichkeit",
+    "sensLow": "Ruhig",
+    "sensNormal": "Normal",
+    "sensHigh": "Empfindlich",
+    "sensCustom": "Eigene",
+    "sensLowHint": "Längere, schnellere Wischgeste nötig",
+    "sensHighHint": "Kürzere Wischgeste reicht",
+    "sensHint": {
+      "low": "Gut, wenn du beim Reden viel gestikulierst.",
+      "normal": "Ausgewogen für die meisten Vortragenden.",
+      "high": "Gut für kleine Bewegungen oder grossen Abstand zur Kamera.",
+      "custom": "Werte aus deiner Kalibrierung."
+    },
+    "presenters": "Mehrere Vortragende",
+    "presentersHint": "Wer darf Folien wechseln, wenn mehrere Personen im Bild sind?",
+    "speakerMode": "Sprecherwahl",
+    "speakerManual": "Per Handzeichen",
+    "speakerAuto": "Automatisch",
+    "speakerHint": {
+      "manual": "Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
+      "auto": "Magic Hand erkennt, wer gerade spricht. Die offene Hand übersteuert das jederzeit."
+    },
+    "autoSignal": "Wer darf wechseln?",
+    "signalMouth": "Sprechende Person",
+    "signalMovement": "Aktivste Person",
+    "signalBoth": "Beides",
+    "autoSignalHint": {
+      "mouth": "Wer gerade spricht (Mundbewegung), darf Folien wechseln.",
+      "movement": "Wer sich am meisten bewegt, darf Folien wechseln.",
+      "both": "Kombiniert Sprechen und Bewegung, am zuverlässigsten."
+    },
+    "camera": "Kamera",
+    "cameraDevice": "Kamera",
+    "cameraDefault": "Standardkamera",
+    "cameraN": "Kamera {{n}}",
+    "resolution": "Auflösung",
+    "resolutionName": {
+      "320x240": "Niedrig (320×240)",
+      "640x480": "Standard (640×480)",
+      "1280x720": "Hoch (1280×720)"
+    },
+    "resolutionHint": {
+      "320x240": "Für schwächere Laptops.",
+      "640x480": "Empfohlen.",
+      "1280x720": "Für grosse Räume, braucht mehr Leistung."
+    },
+    "presentation": "Präsentation",
+    "keys": "Gesendete Tasten",
+    "keysArrows": "Pfeiltasten",
+    "keysPage": "Bild auf/ab",
+    "keysHint": {
+      "arrows": "Funktioniert in PowerPoint, Keynote, Google Slides und PDF-Viewern.",
+      "page": "Wie ein Presenter-Klicker."
+    },
+    "pauseShortcut": "Pause-Kurzbefehl",
+    "pauseShortcutHint": "Funktioniert auch, wenn die Präsentation im Vordergrund ist.",
+    "language": "Sprache",
+    "languageSystem": "System",
+    "privacy": "Datenschutz",
+    "privacyHint": "Kamerabilder werden nur im Arbeitsspeicher verarbeitet, nie gespeichert und nie gesendet. Gespeichert werden nur deine Einstellungen und die Kalibrierung.",
+    "privacyMore": "Mehr zum Datenschutz",
+    "delete": "Alle gespeicherten Daten löschen",
+    "deleteConfirm": "Einstellungen und Kalibrierung löschen?",
+    "deleteYes": "Löschen",
+    "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert.",
+    "farAssist": "Hilfe auf Distanz",
+    "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung.",
+    "sound": "Ton beim Folienwechsel",
+    "soundHint": "Kurzer, leiser Ton, damit du ohne Hinsehen weisst, dass es geklappt hat.",
+    "autoPause": "Kamera ausschalten, wenn niemand da ist",
+    "autoPauseHint": "Spart Akku und schützt die Privatsphäre, wenn du den Raum verlässt.",
+    "minutes": "nach {{n}} Minuten",
+    "never": "nie",
+    "pillCamera": "Kamerabild beim Präsentieren",
+    "pillCameraOff": "Aus",
+    "pillCameraSmall": "Klein",
+    "pillCameraLarge": "Gross",
+    "pillCameraHint": {
+      "off": "Nur die schmale Leiste schwebt über der Präsentation.",
+      "small": "Kleines Vorschaubild in der Leiste.",
+      "large": "Grosses Kamerabild mit erkannter Hand schwebt über der Präsentation. Ziehen zum Verschieben."
+    }
+  },
+  "dev": {
+    "title": "Entwickler",
+    "hint": "Nur für Tests. Ein-/ausblenden mit Ctrl/⌘ + Shift + D.",
+    "dryRun": "Probelauf",
+    "dryRunHint": "Gesten erkennen, aber keine Tasten senden.",
+    "events": "Ereignisliste anzeigen",
+    "delegate": "Rechenwerk",
+    "delegateHint": "Wird beim nächsten Start der Erkennung übernommen.",
+    "delegateAuto": "Automatisch",
+    "exportExtended": "Erweitert exportieren",
+    "lock": "Entwicklerwerkzeuge ausblenden",
+    "metrics": "Messwerte",
+    "params": "Parameter",
+    "record": "Aufnahme",
+    "collapse": "Einklappen",
+    "expand": "Ausklappen",
+    "handMs": "Hand-Modell",
+    "pipelineMs": "Bild→Ergebnis",
+    "latency": "Verzögerung",
+    "reaction": "reaktion",
+    "detectHint": "Schwellen-Bild aufgenommen bis Taste gesendet",
+    "reactionHint": "Beginn der Bewegung bis Taste gesendet (enthält die Geste selbst, Ziel < 500 ms)",
+    "dropped": "{{n}} ausgelassen",
+    "resetParams": "Standardwerte",
+    "recordPrivacy": "Aufgezeichnet werden nur Handpunkte (Koordinaten), keine Bilder. Nur mit Einverständnis aller Personen im Bild.",
+    "recordConsent": "Alle Personen im Bild sind einverstanden.",
+    "startRecording": "Aufnahme starten",
+    "recordingFor": "Aufnahme läuft: {{s}} s, {{n}} Bilder",
+    "stopSave": "Stoppen und speichern …",
+    "discard": "Verwerfen",
+    "loadReplay": "Aufnahme abspielen …",
+    "speed": "Tempo",
+    "replayDiff": "{{n}} Abweichungen gegenüber der Live-Sitzung",
+    "replaySame": "Gleiche Ereignisse wie live",
+    "backToCamera": "Zurück zur Kamera",
+    "speakers": "Sprecher",
+    "speakerNow": "am Wort: {{n}}",
+    "noPersons": "Keine Personen erkannt (Pose-Modell läuft nur alle paar Bilder).",
+    "age": "seit",
+    "hands": "Hände",
+    "study": "Studie"
+  },
+  "help": {
+    "title": "Hilfe",
+    "tabs": {
+      "start": "Erste Schritte",
+      "trouble": "Probleme lösen",
+      "privacy": "Datenschutz",
+      "about": "Über"
+    },
+    "step1Title": "Hand ruhig halten",
+    "step1": "Halte eine Hand ca. 1 Sekunde ruhig vor die Kamera. Der Ring füllt sich, dann sind die Gesten aktiv. Vorher wechselt keine Folie.",
+    "step2Title": "In die Präsentation klicken",
+    "step2": "Klicke auf «Präsentieren» oder in deine Präsentation, damit die Tasten dort ankommen.",
+    "step3Title": "Wischen",
+    "step3Next": "Zügig nach {{dir}} wischen: nächste Folie.",
+    "step3Prev": "Zurück wischen: vorherige Folie.",
+    "step3Return": "Die Hand danach einfach zurückführen. Das löst nichts aus.",
+    "dirLeft": "links",
+    "dirRight": "rechts",
+    "tipsTitle": "Gut zu wissen",
+    "tip1": "Langsame oder schräge Bewegungen beim Erklären werden ignoriert.",
+    "tip2": "Die Handform spielt keine Rolle.",
+    "tip3": "Mit {{shortcut}} pausierst du jederzeit, auch während der Präsentation.",
+    "replayOnboarding": "Einführung erneut zeigen",
+    "trouble": {
+      "noSlideTitle": "Die Folie wechselt nicht",
+      "noSlide": "Die Präsentation muss im Vordergrund sein: einmal hineinklicken. Unter macOS braucht Magic Hand die Berechtigung «Bedienungshilfen». Prüfe auch, ob der Probelauf in den Entwicklereinstellungen aus ist.",
+      "cameraTitle": "Die Kamera startet nicht",
+      "camera": "Erlaube den Kamerazugriff in den Systemeinstellungen. Schliesse andere Apps, die die Kamera nutzen (Teams, Zoom). Unter Windows: Einstellungen → Datenschutz → Kamera → «Desktop-Apps den Zugriff erlauben».",
+      "tooOftenTitle": "Es wechselt zu oft",
+      "tooOften": "Stelle die Empfindlichkeit auf «Ruhig» oder wähle eine bevorzugte Hand. Die andere Hand kann dann frei gestikulieren.",
+      "notRecognizedTitle": "Wischen wird nicht erkannt",
+      "notRecognized": "Wische zügiger und weiter, etwa zwei bis drei Handlängen. Sorge für Licht von vorne und bleib im Bild. Auf grosse Distanz hilft die Auflösung «Hoch».",
+      "slowTitle": "Die App ist langsam",
+      "slow": "Stelle die Auflösung auf «Niedrig». Schliesse rechenintensive Programme.",
+      "permissionTitle": "Berechtigungen (macOS)",
+      "permission": "Systemeinstellungen → Datenschutz & Sicherheit → Kamera und Bedienungshilfen: Magic Hand aktivieren. Danach die App neu starten.",
+      "openCamera": "Kamera-Einstellungen öffnen",
+      "openAccessibility": "Bedienungshilfen öffnen"
+    },
+    "privacyBody": [
+      "Alle Kamerabilder werden ausschliesslich auf diesem Gerät verarbeitet. Sie bleiben nur im Arbeitsspeicher und werden sofort verworfen.",
+      "Es werden keine Bilder, Videos oder Handdaten gespeichert oder übertragen. Magic Hand baut keine Internetverbindung auf.",
+      "Gespeichert werden nur deine Einstellungen und die Kalibrierung (z. B. der Bereich, in dem du präsentierst). Du kannst sie jederzeit in den Einstellungen löschen.",
+      "Die Kamera ist nur aktiv, solange die Gestensteuerung läuft. In der Pause ist sie aus.",
+      "Analysiert wird nur der kalibrierte Bereich, nicht das Publikum."
+    ],
+    "aboutBody": "Magic Hand ist ein Projekt im Modul Natural User Interfaces an der ZHAW.",
+    "team": "Team",
+    "version": "Version {{v}}",
+    "shortcuts": "Tastenkürzel",
+    "shortcutList": {
+      "p": "Pause / Fortsetzen",
+      "k": "Neu kalibrieren",
+      "m": "Verpasste Geste melden",
+      "f": "Fehlauslösung melden",
+      "esc": "Fenster schliessen"
+    },
+    "try": {
+      "start": "Jetzt ausprobieren",
+      "title": "Ausprobieren",
+      "stop": "Beenden",
+      "lead": "Wische zügig nach {{dir}} oder zurück. Es wird keine Taste gesendet.",
+      "armFirst": "Halte zuerst eine Hand ca. 1 Sekunde ruhig, bis der Ring voll ist.",
+      "result": {
+        "next": "Erkannt: nächste Folie",
+        "prev": "Erkannt: vorherige Folie",
+        "ignored_dir": "Zu schräg: eher waagrecht wischen",
+        "ignored_return": "Rückholbewegung: wird bewusst ignoriert",
+        "ignored_not_speaker": "Eine andere Person ist am Wort"
+      },
+      "count_one": "{{count}} Wischgeste erkannt",
+      "count_other": "{{count}} Wischgesten erkannt"
+    }
+  },
+  "toast": {
+    "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
+    "ignored_return": "Rückholbewegung ignoriert",
+    "ignored_not_speaker": "Person {{n}} ist nicht am Wort. Offene Hand 1 s heben, um zu übernehmen.",
+    "speaker": "Person {{n}} wechselt jetzt die Folien"
+  },
+  "wizard": {
+    "progress": "Schritt {{n}} von {{total}}",
+    "continueAnyway": "Trotzdem weiter",
+    "firstRun": {
+      "name": "Einrichtung"
+    },
+    "calibrate": {
+      "name": "Kalibrieren"
+    },
+    "welcome": {
+      "title": "Willkommen bei Magic Hand",
+      "lead": "Wechsle Folien mit einer Wischgeste, ohne zum Laptop zurückzugehen.",
+      "p1": "Zügig wischen: nächste oder vorherige Folie.",
+      "p2": "Hand kurz ruhig halten: Gesten werden aktiv. Vorher passiert nichts.",
+      "privacy": "Alles bleibt auf diesem Gerät. Es werden keine Bilder gespeichert oder gesendet.",
+      "start": "Los geht's",
+      "skip": "Einrichtung überspringen"
+    },
+    "direction": {
+      "title": "Welche Richtung fühlt sich natürlich an?",
+      "lead": "Probier beide Richtungen vor der Kamera aus und wähle, welche für «nächste Folie» stehen soll.",
+      "leftHint": "Wie Blättern am Handy",
+      "rightHint": "Wie eine Seite umschlagen",
+      "tried": "{{n}}× ausprobiert",
+      "note": "Du kannst das später in den Einstellungen ändern."
+    },
+    "framing": {
+      "title": "Gut im Bild?",
+      "lead": "Stell dich dorthin, wo du präsentieren wirst. Die Umrisse zeigen ungefähr, wo du stehen solltest.",
+      "light": "Licht",
+      "lightLow": "Zu dunkel: Licht von vorne hilft.",
+      "lightHigh": "Zu hell oder Gegenlicht: nicht vor ein Fenster stellen.",
+      "distance": "Abstand",
+      "tooFar": "Etwas zu weit weg. Näher kommen oder Auflösung «Hoch» wählen.",
+      "tooClose": "Zu nah: einen Schritt zurück.",
+      "noPerson": "Noch niemand zu sehen.",
+      "hand": "Hand",
+      "handSmall": "Hand ist sehr klein im Bild.",
+      "showHand": "Halte eine Hand in die Kamera."
+    },
+    "zone": {
+      "title": "Dein Präsentationsbereich",
+      "observing": "Bleib kurz so stehen, wie du präsentierst. Magic Hand schlägt einen Bereich vor …",
+      "fullFrameNote": "Nur jetzt wird das ganze Bild angeschaut, um dich zu finden.",
+      "lead": "Nur in diesem Bereich werden Gesten erkannt. Das Publikum ausserhalb wird nicht analysiert.",
+      "nobody": "Es war niemand zu sehen. Du kannst den Bereich von Hand festlegen oder das ganze Bild verwenden.",
+      "tipDrag": "Ziehe den Rahmen oder seine Punkte. Pfeiltasten verschieben, mit Shift ändern sie die Grösse.",
+      "tipPrivacy": "Der dunkle Teil wird ignoriert.",
+      "confirm": "Bereich übernehmen",
+      "again": "Neu erkennen",
+      "whole": "Ganzes Bild verwenden",
+      "limit": "Bereich festlegen"
+    },
+    "arm": {
+      "title": "Hand ruhig halten",
+      "lead": "Halte eine Hand ca. 1 Sekunde ruhig vor die Kamera, bis der Ring voll ist.",
+      "done": "Gesten sind aktiv.",
+      "why": "So weiss Magic Hand, dass du bereit bist. Vorher wird nie eine Folie gewechselt."
+    },
+    "practice": {
+      "title": "Übungsrunde",
+      "lead": "Wische {{n}}× in jede Richtung, so wie du es beim Präsentieren machen würdest. Magic Hand lernt dabei dein Tempo und deine Weite.",
+      "nextSlide": "nächste Folie",
+      "prevSlide": "vorherige Folie",
+      "ok": "Erkannt!",
+      "diagonal": "Zu schräg, eher waagrecht wischen",
+      "note": "Während der Übung werden keine Tasten gesendet."
+    },
+    "summary": {
+      "title": "Auf dich abgestimmt",
+      "lead": "Aus deinen {{n}} Übungsgesten:",
+      "now": "Bisher",
+      "new": "Neu",
+      "distance": "Mindestweite",
+      "window": "Max. Dauer",
+      "maxSlope": "Max. Neigung",
+      "handLengths": "{{v}} Handlängen",
+      "use": "Übernehmen",
+      "keep": "Bisherige behalten",
+      "notEnough": "Für eine Anpassung waren zu wenige Übungsgesten erkennbar. Die bisherigen Werte bleiben."
+    },
+    "done": {
+      "title": "Alles bereit",
+      "lead": "Klicke auf «Präsentieren»: Magic Hand wird zu einer kleinen Leiste und gibt den Fokus an deine Präsentation zurück.",
+      "stay": "Hier bleiben",
+      "calibrateLater": "Mit «Kalibrieren» passt du Magic Hand später genauer an deine Bewegungen an."
+    }
+  },
+  "hints": {
+    "ok": "Verstanden",
+    "noHand": "Halte eine Hand in die Kamera und kurz ruhig, um zu starten.",
+    "focus": "Die Taste ging an Magic Hand selbst. Klicke in deine Präsentation oder auf «Präsentieren».",
+    "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
+    "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
+    "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
+  },
+  "study": {
+    "intro": "Testsitzung: Magic Hand fordert abwechselnd Wischgesten an und misst danach Fehlauslösungen beim freien Reden. Es werden keine Tasten gesendet.",
+    "perDirection": "pro Richtung",
+    "freeTalkS": "freies Reden",
+    "distance": "Abstand (z. B. 3 m)",
+    "note": "Notiz (Person, Raum, Licht)",
+    "start": "Studie starten",
+    "promptNext": "Jetzt: nächste Folie wischen",
+    "promptPrev": "Jetzt: vorherige Folie wischen",
+    "freeTalk": "Rede frei und gestikuliere normal. Nicht wischen.",
+    "wait": "Bereit machen …",
+    "progress": "Versuch {{n}} von {{total}}",
+    "stop": "Abbrechen",
+    "endFreeTalk": "Freies Reden beenden",
+    "outcome": {
+      "hit": "✓ erkannt",
+      "miss": "✗ nicht erkannt",
+      "wrong": "✗ falsche Richtung"
+    },
+    "resultTitle": "Ergebnis der Studie",
+    "hitRate": "Trefferquote",
+    "hitsMisses": "Treffer / verpasst / falsch",
+    "falseTriggers": "Fehlauslösungen",
+    "reaction": "Reaktion p50 / p95",
+    "export": "Als CSV speichern"
+  }
+}

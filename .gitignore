@@ -234,3 +234,4 @@ public/mediapipe/
 # Playwright
 test-results/
 playwright-report/
+dist-e2e/

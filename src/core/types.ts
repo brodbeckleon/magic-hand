@@ -13,3 +13,41 @@ export interface Hand {
   cy: number;
   scale: number;
 }
+
+/** Anatomical side of a hand (already corrected for MediaPipe's mirrored-input assumption). */
+export type Side = "left" | "right";
+
+export interface HandObs {
+  /** 21 landmarks, normalised to the full source frame. */
+  landmarks: Landmark[];
+  side: Side;
+  /** Confidence of the side classification, 0..1. */
+  sideScore: number;
+}
+
+export interface PoseObs {
+  /** 33 pose landmarks, normalised to the full source frame. */
+  landmarks: (Landmark & { visibility?: number })[];
+}
+
+export interface FaceObs {
+  /** Blendshape jawOpen 0..1, if the model ran with blendshapes. */
+  jawOpen: number | null;
+  /** Upper lip, lower lip, forehead, chin (face mesh 13, 14, 10, 152). */
+  lip: [Landmark, Landmark, Landmark, Landmark] | null;
+}
+
+/** Everything the vision layer saw in one camera frame. `null` = model did not run on this frame. */
+export interface FrameObs {
+  t: number;
+  /** Source frame size in pixels. */
+  width: number;
+  height: number;
+  hands: HandObs[];
+  poses?: PoseObs[] | null;
+  /** Aligned with `poses` (null entries: no face found for that person). */
+  faces?: (FaceObs | null)[] | null;
+}
+
+export type Command = "next" | "prev";
+export type PreferredHand = Side | "either";
