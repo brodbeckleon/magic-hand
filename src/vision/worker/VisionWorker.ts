@@ -1,5 +1,5 @@
 import type { VisionBackend } from "../backend.ts";
-import type { DelegatePreference, Delegate } from "../landmarkers.ts";
+import type { Delegate } from "../landmarkers.ts";
 import type { DetectRequest, DetectResult } from "../runner.ts";
 import type { FromWorker, ToWorker } from "./protocol.ts";
 
@@ -24,14 +24,8 @@ export class VisionWorker implements VisionBackend {
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => {
       const m = e.data;
       if (m.type === "ready") this.onReady?.(m.delegate);
-      else if (m.type === "error") {
-        this.lastError = m.message;
-        if (this.onInitError) this.onInitError(new Error(m.message));
-        else console.error("vision worker:", m.message);
-        // A failed frame must not block the pipeline forever.
-        for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0 });
-        this.pending.clear();
-      } else if (m.type === "result") {
+      else if (m.type === "error") this.fail(m.message);
+      else if (m.type === "result") {
         this.pending.get(m.id)?.(m);
         this.pending.delete(m.id);
       }
@@ -47,7 +41,7 @@ export class VisionWorker implements VisionBackend {
     this.pending.clear();
   }
 
-  init(delegate: DelegatePreference, numHands: number): Promise<Delegate> {
+  init(delegate: Delegate, numHands: number): Promise<Delegate> {
     return new Promise((resolve, reject) => {
       this.onReady = (d) => {
         this.onReady = this.onInitError = null;

@@ -1,8 +1,8 @@
-import type { Delegate, DelegatePreference } from "../landmarkers.ts";
+import type { Delegate } from "../landmarkers.ts";
 import type { DetectRequest, DetectResult } from "../runner.ts";
 
 export type ToWorker =
-  | { type: "init"; delegate: DelegatePreference; numHands: number }
+  | { type: "init"; delegate: Delegate; numHands: number }
   | ({ type: "frame"; id: number } & DetectRequest)
   | { type: "reset" }
   | { type: "options"; numHands: number };

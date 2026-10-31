@@ -1,10 +1,10 @@
-import type { Delegate, DelegatePreference } from "./landmarkers.ts";
+import type { Delegate } from "./landmarkers.ts";
 import { VisionRunner, type DetectRequest, type DetectResult } from "./runner.ts";
 
 /** Where frames are analysed: the vision worker, or the main thread as a fallback. */
 export interface VisionBackend {
   readonly inWorker: boolean;
-  init(delegate: DelegatePreference, numHands: number): Promise<Delegate>;
+  init(delegate: Delegate, numHands: number): Promise<Delegate>;
   detect(req: DetectRequest): Promise<DetectResult>;
   reset(): void;
   setNumHands(n: number): void;
@@ -16,7 +16,7 @@ export class MainThreadVision implements VisionBackend {
   readonly inWorker = false;
   private readonly runner = new VisionRunner();
 
-  init(delegate: DelegatePreference, numHands: number): Promise<Delegate> {
+  init(delegate: Delegate, numHands: number): Promise<Delegate> {
     return this.runner.init(delegate, numHands);
   }
 

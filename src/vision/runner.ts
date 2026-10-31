@@ -4,7 +4,7 @@
 import { FaceLandmarker, FilesetResolver, HandLandmarker, PoseLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { FaceObs, HandObs, PoseObs } from "../core/types.ts";
 import { cropToFull, fullToCrop, type Rect } from "../core/zone/Zone.ts";
-import { MODEL_PATHS, toHandObs, WASM_PATH, type Delegate, type DelegatePreference } from "./landmarkers.ts";
+import { assertHardwareGpu, MODEL_PATHS, toHandObs, WASM_PATH, type Delegate } from "./landmarkers.ts";
 
 // MediaPipe loads its wasm loader with a dynamic import (preferring self.import if present) and
 // reads globalThis.ModuleFactory, which it clears after creating each model. A module is only
@@ -57,34 +57,31 @@ export class VisionRunner {
   private numHands = 2;
   delegate: Delegate = "GPU";
 
-  async init(pref: DelegatePreference, numHands: number): Promise<Delegate> {
+  /** Loads the hand model on `delegate` (GPU in the app, see chosenDelegate); no fallback. */
+  async init(delegate: Delegate, numHands: number): Promise<Delegate> {
     this.numHands = numHands;
+    if (delegate === "GPU") assertHardwareGpu();
     // In workers MediaPipe imports its wasm loader (needs the ES-module build); on the main thread
     // it adds a classic <script> tag (needs the classic build).
     const inWorker = typeof (globalThis as { importScripts?: unknown }).importScripts === "function";
     this.fileset ??= await FilesetResolver.forVisionTasks(WASM_PATH, inWorker);
-    const order: Delegate[] = pref === "auto" ? ["GPU", "CPU"] : [pref];
-    let lastErr: unknown;
-    for (const d of order) {
-      try {
-        this.hands = await HandLandmarker.createFromOptions(this.fileset, {
-          baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate: d },
-          runningMode: "VIDEO",
-          numHands,
-          minHandDetectionConfidence: 0.6,
-          minHandPresenceConfidence: 0.6,
-          minTrackingConfidence: 0.5,
-        });
-        this.delegate = d;
-        this.warmUp();
-        return d;
-      } catch (err) {
-        lastErr = err;
-        this.hands?.close();
-        this.hands = null;
-      }
+    try {
+      this.hands = await HandLandmarker.createFromOptions(this.fileset, {
+        baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate },
+        runningMode: "VIDEO",
+        numHands,
+        minHandDetectionConfidence: 0.6,
+        minHandPresenceConfidence: 0.6,
+        minTrackingConfidence: 0.5,
+      });
+      this.delegate = delegate;
+      this.warmUp();
+      return delegate;
+    } catch (err) {
+      this.hands?.close();
+      this.hands = null;
+      throw err;
     }
-    throw lastErr;
   }
 
   async setNumHands(n: number): Promise<void> {

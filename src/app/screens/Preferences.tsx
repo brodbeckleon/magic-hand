@@ -287,18 +287,6 @@ function DeveloperSection() {
         <Row label={t("dev.events")} htmlFor="dev-events">
           <Switch id="dev-events" label={t("dev.events")} checked={dev.showEvents} onChange={(showEvents) => update({ dev: { showEvents } })} />
         </Row>
-        <Row label={t("dev.delegate")} hint={t("dev.delegateHint")}>
-          <Select
-            label={t("dev.delegate")}
-            value={dev.delegate}
-            onChange={(delegate) => update({ dev: { delegate } })}
-            options={[
-              { value: "auto", label: t("dev.delegateAuto") },
-              { value: "GPU", label: "GPU" },
-              { value: "CPU", label: "CPU" },
-            ]}
-          />
-        </Row>
         <div className="button-row">
           <button className="btn" onClick={() => void engine.exportCsv()}><Icon name="download" size={16} />{t("actions.exportLog")}</button>
           <button className="btn" onClick={() => void engine.exportCsv(true)}><Icon name="download" size={16} />{t("dev.exportExtended")}</button>

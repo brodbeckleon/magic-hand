@@ -8,7 +8,7 @@ export type EngineStatus =
   /** Camera runs, hand model still loading. */
   | { kind: "loading" }
   | { kind: "live" }
-  | { kind: "error"; error: CameraError | "model" };
+  | { kind: "error"; error: CameraError | "model" | "gpu" };
 
 export type UiEventKind =
   | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "speaker" | "missed" | "false";

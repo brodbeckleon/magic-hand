@@ -4,7 +4,7 @@ import type { FrameObs } from "../../core/types.ts";
 import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
 import { MainThreadVision, type VisionBackend } from "../../vision/backend.ts";
-import { HANDEDNESS_SWAP, type Delegate } from "../../vision/landmarkers.ts";
+import { chosenDelegate, HANDEDNESS_SWAP, isNoGpuError, type Delegate } from "../../vision/landmarkers.ts";
 import { schedule } from "../../core/pipeline/scheduler.ts";
 import type { Rect } from "../../core/zone/Zone.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
@@ -74,7 +74,7 @@ export class Engine {
     useEngine.getState().set({ status: { kind: "starting" }, paused: false });
     try {
       // Load the model while the camera starts; the preview shows as soon as the camera is ready.
-      const vision = this.loadVision(settings.dev.delegate);
+      const vision = this.loadVision(chosenDelegate());
       const stream = await openCamera({
         deviceId: settings.camera.deviceId ?? undefined,
         ...parseResolution(settings.camera.resolution),
@@ -93,16 +93,17 @@ export class Engine {
       if (gen !== this.generation) return;
       if (!(err instanceof DOMException)) this.dropVision(); // let a retry load the model again
       const isCamera = err instanceof DOMException;
-      useEngine.getState().set({ status: { kind: "error", error: isCamera ? classifyCameraError(err) : "model" } });
+      const error = isCamera ? classifyCameraError(err) : isNoGpuError(err) ? "gpu" : "model";
+      useEngine.getState().set({ status: { kind: "error", error } });
       console.error(err);
     }
   }
 
   /**
    * Prefers the vision worker (inference off the UI thread, zone crop); falls back to the main
-   * thread if workers or the model cannot start there.
+   * thread (still on the GPU) if workers or the model cannot start there.
    */
-  private loadVision(pref: Settings["dev"]["delegate"]): (video: HTMLVideoElement) => Promise<LandmarkSource> {
+  private loadVision(pref: Delegate): (video: HTMLVideoElement) => Promise<LandmarkSource> {
     if (!this.vision) {
       const backend: VisionBackend = !this.workerFailed && typeof Worker !== "undefined" ? new VisionWorker() : new MainThreadVision();
       this.vision = { backend, ready: backend.init(pref, 2) };
@@ -116,6 +117,7 @@ export class Engine {
       } catch (err) {
         if (!v.backend.inWorker) throw err;
         // E.g. WebKit before Safari 17 cannot use WebGL in workers: same analysis on the main thread.
+        // Missing GPU errors land here too: the main thread may still have WebGL (it checks again).
         console.warn("vision worker unavailable, using the main thread", err);
         this.workerFailed = true;
         if (this.vision === v) this.dropVision();
