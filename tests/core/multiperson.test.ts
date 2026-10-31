@@ -103,6 +103,17 @@ describe("HandAssociator", () => {
     a.update([], persons, 4 / 3);
     expect(a.binding(1)).toBeUndefined();
   });
+
+  it("keeps the binding of a hand the detector missed on one frame (track still alive)", () => {
+    const tr = new PersonTracker();
+    const a = new HandAssociator();
+    const persons = tr.update(0, [withWrists(person(0.5, 0.3, 0.1), [0.55, 0.5], [0.45, 0.5])]);
+    a.update([hand(1, 0.45, 0.5)], persons, 4 / 3);
+    a.update([], persons, 4 / 3, (id) => id === 1);
+    expect(a.binding(1)).toMatchObject({ side: "right" });
+    a.update([], persons, 4 / 3, () => false);
+    expect(a.binding(1)).toBeUndefined();
+  });
 });
 
 describe("ClaimDetector", () => {
