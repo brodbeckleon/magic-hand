@@ -216,3 +216,13 @@ test("presenting shows a large floating camera with the hand overlay; smaller op
   await expect(page.getByTestId("pill-camera")).toHaveCount(0);
   await expect(page.locator(".view-pill .hand-layer")).toBeHidden();
 });
+
+test("the orange trail only appears while the hand moves, not as a dot on a resting hand", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await play(page, new TraceBuilder().calibrated().hold(0.4));
+  await expect(page.locator(".trail")).toHaveAttribute("d", "");
+  const moving = play(page, new TraceBuilder(30, 20).hold(0.1).move(-60, 0, 0.3).hold(0.05));
+  await expect(page.locator(".trail")).toHaveAttribute("d", /L/);
+  await moving;
+});

@@ -56,7 +56,9 @@ export function PersonLayer() {
         }
         for (let i = 0; i < MAX; i++) {
           const g = claims.current[i];
-          const h = s.hands.filter((x) => x.claim > 0.05)[i];
+          // Taking over only means something with several people in view; alone, the ring would
+          // just compete with the calibration ring.
+          const h = multi ? s.hands.filter((x) => x.claim > 0.05)[i] : undefined;
           if (!g) continue;
           if (!h) {
             g.setAttribute("visibility", "hidden");
