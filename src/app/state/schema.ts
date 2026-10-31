@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 const swipeShape = Object.fromEntries(
   (Object.keys(DEFAULT_SWIPE_PARAMS) as (keyof SwipeParams)[]).map((k) => [
@@ -24,10 +24,11 @@ export type Zone = z.infer<typeof zoneSchema>;
 export const RESOLUTIONS = ["320x240", "640x480", "1280x720"] as const;
 export type Resolution = (typeof RESOLUTIONS)[number];
 
+/** maxSlope 0.75 ≈ 37°, 1.0 = 45°, 1.3 ≈ 52° of tilt allowed. */
 export const SENSITIVITY_PRESETS = {
-  low: { distance: 3.0, window: 0.45 },
-  normal: { distance: 2.5, window: 0.5 },
-  high: { distance: 2.0, window: 0.6 },
+  low: { distance: 3.0, window: 0.45, maxSlope: 0.75 },
+  normal: { distance: 2.5, window: 0.5, maxSlope: 1.0 },
+  high: { distance: 2.0, window: 0.6, maxSlope: 1.3 },
 } as const;
 export type Sensitivity = keyof typeof SENSITIVITY_PRESETS | "custom";
 
@@ -86,16 +87,28 @@ export type Settings = z.infer<typeof settingsSchema>;
 
 export const DEFAULT_SETTINGS: Settings = settingsSchema.parse({});
 
+/**
+ * Version 1 stored the prototype's ~31° swipe angle with every preset; version 2 allows more tilt.
+ * Presets get their new angle; custom (calibrated) values are left alone.
+ */
+function migrate(raw: Record<string, unknown>): Record<string, unknown> {
+  if ((raw.version ?? 1) !== 1) return raw;
+  const swipe = raw.swipe as Record<string, unknown> | undefined;
+  const preset = SENSITIVITY_PRESETS[raw.sensitivity as keyof typeof SENSITIVITY_PRESETS];
+  if (swipe && preset && swipe.maxSlope === 0.6) return { ...raw, swipe: { ...swipe, maxSlope: preset.maxSlope }, version: 2 };
+  return { ...raw, version: 2 };
+}
+
 /** Parses stored data; anything unusable becomes the default. */
 export function parseSettings(raw: unknown): Settings {
-  const r = settingsSchema.safeParse(raw && typeof raw === "object" ? raw : {});
+  const r = settingsSchema.safeParse(raw && typeof raw === "object" ? migrate(raw as Record<string, unknown>) : {});
   return r.success ? r.data : DEFAULT_SETTINGS;
 }
 
 /** Which preset the current swipe parameters correspond to. */
 export function sensitivityOf(swipe: SwipeParams): Sensitivity {
   for (const [name, p] of Object.entries(SENSITIVITY_PRESETS)) {
-    if (swipe.distance === p.distance && swipe.window === p.window) return name as Sensitivity;
+    if (swipe.distance === p.distance && swipe.window === p.window && swipe.maxSlope === p.maxSlope) return name as Sensitivity;
   }
   return "custom";
 }

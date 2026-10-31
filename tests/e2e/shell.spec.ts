@@ -116,10 +116,10 @@ test.describe("app shell", () => {
   });
 
   test("explains an ignored diagonal swipe a few times, then stops", async ({ page }) => {
-    await play(page, new TraceBuilder().calibrated().move(-120, 100, 0.25).hold(0.5));
+    await play(page, new TraceBuilder().calibrated().move(-90, 160, 0.25).hold(0.5));
     await expect(page.getByTestId("toast")).toContainText("swipe more horizontally");
     await updateSettings(page, { hints: { "toast.ignored_dir": 5 } });
-    await play(page, new TraceBuilder().hold(0.6).move(-120, 100, 0.25).hold(0.3));
+    await play(page, new TraceBuilder().hold(0.6).move(-90, 160, 0.25).hold(0.3));
     await expect(page.getByTestId("toast")).toHaveCount(0);
   });
 
@@ -156,7 +156,7 @@ test("Help > Try it now: shows what was recognised without sending keys", async 
   await page.getByTestId("open-help").click();
   await page.getByTestId("try-it").click();
   await expect(page.getByTestId("try-panel")).toContainText("hold a hand still");
-  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(1.2).move(-120, 100, 0.25).hold(0.3));
+  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(1.2).move(-90, 160, 0.25).hold(0.3));
   await expect(page.getByTestId("try-result")).toContainText("Too diagonal");
   await expect(page.getByTestId("try-panel")).toContainText("1 swipe recognised");
   expect(await sentKeys(page)).toEqual([]);
@@ -215,4 +215,14 @@ test("presenting shows a large floating camera with the hand overlay; smaller op
   await page.getByTestId("present").click();
   await expect(page.getByTestId("pill-camera")).toHaveCount(0);
   await expect(page.locator(".view-pill .hand-layer")).toBeHidden();
+});
+
+test("the orange trail only appears while the hand moves, not as a dot on a resting hand", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await play(page, new TraceBuilder().calibrated().hold(0.4));
+  await expect(page.locator(".trail")).toHaveAttribute("d", "");
+  const moving = play(page, new TraceBuilder(30, 20).hold(0.1).move(-60, 0, 0.3).hold(0.05));
+  await expect(page.locator(".trail")).toHaveAttribute("d", /L/);
+  await moving;
 });

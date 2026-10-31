@@ -3,6 +3,11 @@ import { TraceBuilder } from "../support/traces.ts";
 import { expect, test } from "./fixtures.ts";
 import { open, play, sentKeys, waitLive } from "./helpers.ts";
 
+/** Waits until a wizard step is mounted (its heading is shown), not just selected: steps start
+ *  listening to the camera when they mount, so frames played earlier would be missed. */
+const stepShown = (page: import("@playwright/test").Page, heading: string) =>
+  expect(page.locator(".wizard .step-title")).toHaveText(heading);
+
 type Hooks = { __magicHand: { settings: { getState(): Record<string, unknown> } } };
 const settings = (page: import("@playwright/test").Page) =>
   page.evaluate(() => JSON.parse(JSON.stringify((window as never as Hooks).__magicHand.settings.getState())));
@@ -23,14 +28,14 @@ test.describe("first-run wizard", () => {
     await page.getByTestId("wizard-next").click();
 
     // Zone: a presenter is "seen" (synthetic pose) -> proposed zone with handles.
-    await expect(wizard).toContainText("Your presenting area");
+    await stepShown(page, "Your presenting area");
     await play(page, new TraceBuilder().hold(3.4), { poses: [person(0.5, 0.25, 0.12)] });
     await expect(page.getByTestId("zone-editor")).toBeVisible();
     await expect(page.getByTestId("zone-mask")).toBeVisible();
     await page.getByTestId("zone-confirm").click();
 
     // Arm: holding still completes it and moves on (the step resets calibration when it appears).
-    await expect(page.getByTestId("wizard-firstRun")).toHaveAttribute("data-step", "arm");
+    await stepShown(page, "Hold your hand still");
     await expect(wizard).toContainText("Hold your hand still");
     await play(page, new TraceBuilder().hold(1.4));
     await expect(wizard).toContainText("All set");
@@ -79,12 +84,13 @@ test.describe("calibration wizard", () => {
     await expect(page.getByTestId("silhouette")).toBeVisible();
     await expect(page.getByTestId("framing-checks")).toContainText("Light");
     await page.getByTestId("wizard-next").click();
+    await stepShown(page, "Your presenting area");
 
     // Nobody in view: the user is told and can still confirm (whole picture).
     await play(page, new TraceBuilder().hold(3.4));
     await expect(wizard).toContainText("Nobody was in view");
     await page.getByTestId("zone-confirm").click();
-    await expect(wizard).toHaveAttribute("data-step", "arm");
+    await stepShown(page, "Hold your hand still");
 
     await play(page, new TraceBuilder().hold(1.4));
     await expect(wizard).toContainText("Practice round");
@@ -108,12 +114,13 @@ test.describe("calibration wizard", () => {
 
   test("diagonal practice swipes are explained and not counted", async ({ page }) => {
     await page.getByTestId("wizard-next").click(); // framing
+    await stepShown(page, "Your presenting area");
     await play(page, new TraceBuilder().hold(3.4));
     await page.getByTestId("zone-confirm").click();
-    await expect(page.getByTestId("wizard-calibrate")).toHaveAttribute("data-step", "arm");
+    await stepShown(page, "Hold your hand still");
     await play(page, new TraceBuilder().hold(1.4));
     await expect(page.getByTestId("practice")).toBeVisible();
-    await play(page, new TraceBuilder().hold(0.3).move(-150, 150, 0.3).hold(0.4));
+    await play(page, new TraceBuilder().hold(0.3).move(-90, 170, 0.3).hold(0.4));
     await expect(page.getByText("Too diagonal")).toBeVisible();
     await expect(page.locator(".pip[data-on='true']")).toHaveCount(0);
   });
@@ -131,6 +138,7 @@ test("zone editor: keyboard moves the zone", async ({ page }) => {
   await waitLive(page);
   await page.getByTestId("open-calibrate").click();
   await page.getByTestId("wizard-next").click();
+  await stepShown(page, "Your presenting area");
   await play(page, new TraceBuilder().hold(3.4), { poses: [person(0.5, 0.25, 0.1)] });
   const rect = page.locator(".zone-rect");
   const before = Number(await rect.getAttribute("x"));

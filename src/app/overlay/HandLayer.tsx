@@ -90,7 +90,11 @@ export function HandLayer() {
           (g.children[0] as SVGPathElement).setAttribute("stroke-width", String(3 * unit));
           (g.children[1] as SVGPathElement).setAttribute("d", jointsPath(view.obs.landmarks, s.width, s.height, 3.5 * unit));
         }
-        const pts = s.trail.map((e) => `${e.hand.cx.toFixed(1)} ${e.hand.cy.toFixed(1)}`);
+        // The trail shows a movement; a hand at rest would only leave an orange dot on the palm.
+        const first = s.trail[0]?.hand;
+        const lastPt = s.trail[s.trail.length - 1]?.hand;
+        const moving = !!first && !!lastPt && Math.hypot(lastPt.cx - first.cx, lastPt.cy - first.cy) > 0.5 * lastPt.scale;
+        const pts = moving ? s.trail.map((e) => `${e.hand.cx.toFixed(1)} ${e.hand.cy.toFixed(1)}`) : [];
         trail.current?.setAttribute("d", pts.length > 1 ? `M${pts.join("L")}` : "");
         trail.current?.setAttribute("stroke-width", String(6 * unit));
         updateArmRing(ring.current, s, unit);

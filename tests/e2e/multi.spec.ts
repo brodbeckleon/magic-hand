@@ -48,3 +48,17 @@ test.describe("several presenters", () => {
     await expect(page.getByTestId("dev-speakers")).toContainText("★");
   });
 });
+
+test("alone in view, an open raised hand shows no take-over ring (only the calibration ring)", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  const { openHand } = await import("../support/multi.ts");
+  const { person } = await import("../support/poses.ts");
+  const frames = Array.from({ length: 30 }, (_, i) => ({
+    t: 10 + i / 30, width: 640, height: 480, hands: [openHand(0.5, 0.3)], poses: [person(0.5, 0.25, 0.1)],
+  }));
+  const playing = playFrames(page, frames);
+  await expect(page.locator(".arm-ring")).toHaveAttribute("visibility", "visible");
+  await expect(page.locator(".claim-ring[visibility='visible']")).toHaveCount(0);
+  await playing;
+});

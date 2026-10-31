@@ -5,7 +5,7 @@ import type { Movement } from "./practice.ts";
 export const AUTOTUNE_BOUNDS = {
   distance: [1.8, 4.0],
   window: [0.35, 0.8],
-  maxSlope: [0.4, 0.8],
+  maxSlope: [0.6, 1.4],
 } as const;
 
 const median = (v: number[]) => {
@@ -28,12 +28,13 @@ export interface AutotuneResult {
  * Each value stays within safe bounds; with fewer than 2 swipes the defaults are kept.
  */
 export function autotune(swipes: readonly Movement[]): AutotuneResult {
-  const usable = swipes.filter((s) => Math.abs(s.dx) > 0 && Math.abs(s.dy) < Math.abs(s.dx));
+  const B = AUTOTUNE_BOUNDS;
+  // Same limit as the practice step: anything steeper is not a swipe.
+  const usable = swipes.filter((s) => Math.abs(s.dx) > 0 && Math.abs(s.dy) <= B.maxSlope[1] * Math.abs(s.dx));
   if (usable.length < 2) {
     const { distance, window, maxSlope } = DEFAULT_SWIPE_PARAMS;
     return { params: { distance, window, maxSlope }, used: usable.length };
   }
-  const B = AUTOTUNE_BOUNDS;
   const distance = clamp(round(0.6 * median(usable.map((s) => Math.abs(s.dx))), 0.1), B.distance[0], B.distance[1]);
   const times = usable.map((s) => s.timeTo(distance)).filter((t): t is number => t !== null);
   const window = clamp(round(1.3 * (times.length ? median(times) : DEFAULT_SWIPE_PARAMS.window), 0.05), B.window[0], B.window[1]);

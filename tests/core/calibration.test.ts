@@ -43,7 +43,7 @@ describe("autotune", () => {
 
   it("keeps the defaults with fewer than two usable swipes", () => {
     expect(autotune([mv(4, 0.5, 0.3)]).params.distance).toBe(DEFAULT_SWIPE_PARAMS.distance);
-    expect(autotune([mv(1, 3, 0.3), mv(1, 3, 0.3)]).used).toBe(0);
+    expect(autotune([mv(1, 3, 0.3), mv(1, 3, 0.3)]).used).toBe(0); // steeper than any allowed angle
   });
 
   it("derives thresholds from the presenter's own swipes", () => {
@@ -55,7 +55,7 @@ describe("autotune", () => {
   });
 
   it("clamps to safe bounds", () => {
-    const tiny = autotune([mv(-1.2, 0.9, 0.9), mv(1.1, 0.9, 1.0)]);
+    const tiny = autotune([mv(-1.2, 1.3, 0.9), mv(1.1, 1.2, 1.0)]);
     expect(tiny.params.distance).toBe(AUTOTUNE_BOUNDS.distance[0]);
     expect(tiny.params.maxSlope).toBe(AUTOTUNE_BOUNDS.maxSlope[1]);
     const huge = autotune([mv(-12, 0, 0.1), mv(12, 0, 0.1)]);
