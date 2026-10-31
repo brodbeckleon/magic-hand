@@ -45,7 +45,7 @@ fn enter_pill<R: Runtime>(
     }
     w.set_decorations(false)?;
     w.set_shadow(false)?;
-    w.set_resizable(false)?;
+    // Size first, then lock it (GTK ignores programmatic resizes of non-resizable windows).
     w.set_min_size(None::<Size>)?;
     w.set_size(LogicalSize::new(width, height))?;
     if let Some(monitor) = w.current_monitor()? {
@@ -56,6 +56,9 @@ fn enter_pill<R: Runtime>(
         let y = mpos.y + (PILL_TOP * scale) as i32;
         w.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
     }
+    // On GTK a non-resizable window snaps back to its natural size request, undoing the shrink.
+    #[cfg(not(target_os = "linux"))]
+    w.set_resizable(false)?;
     w.set_always_on_top(true)?;
     w.set_visible_on_all_workspaces(true)?;
     w.set_skip_taskbar(true)?;

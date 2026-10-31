@@ -12,6 +12,19 @@
 `E2E_PROD=1 pnpm e2e` führt dieselben Tests gegen einen Produktions-Build aus (Worker, wasm-Laden wie
 ausgeliefert).
 
+Die Oberflächentests laufen in **Chromium und WebKit** (WebKit ist die Engine der macOS-App). In
+WebKit ersetzt ein Canvas-Stream die Kamera.
+
+**Native App (Linux)**: `tests/native/smoke.ts` startet die echte App unter Xvfb und steuert sie
+über `tauri-driver`: Rust-Befehle, `settings.json` auf der Festplatte, Präsentationsleiste und echte
+Tastendrücke (enigo → X11). Läuft in CI (Job `native-linux`). Lokal:
+
+```bash
+pnpm tauri build --debug --no-bundle
+Xvfb :99 & DISPLAY=:99 tauri-driver &
+DISPLAY=:99 pnpm exec tsx tests/native/smoke.ts src-tauri/target/debug/magic-hand
+```
+
 Die e2e-Tests starten Vite im Modus `e2e`. Nur in diesem Modus gibt es `window.__magicHand`
 (Testzugriff). Produktionsbuilds enthalten diesen Code nicht.
 

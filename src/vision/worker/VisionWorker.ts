@@ -1,10 +1,13 @@
+import type { VisionBackend } from "../backend.ts";
 import type { DelegatePreference, Delegate } from "../landmarkers.ts";
+import type { DetectRequest, DetectResult } from "../runner.ts";
 import type { FromWorker, ToWorker } from "./protocol.ts";
 
 type Result = Extract<FromWorker, { type: "result" }>;
 
 /** Promise-based handle to the vision worker. */
-export class VisionWorker {
+export class VisionWorker implements VisionBackend {
+  readonly inWorker = true;
   private readonly worker: Worker;
   private pending = new Map<number, (r: Result) => void>();
   private onReady: ((d: Delegate) => void) | null = null;
@@ -14,6 +17,10 @@ export class VisionWorker {
 
   constructor() {
     this.worker = new Worker(new URL("./vision.worker.ts", import.meta.url), { type: "module" });
+    // The script itself failed to load or evaluate (bundle error, unsupported engine): only an
+    // error event fires, no message. Treat it like a failed init so the main-thread fallback runs.
+    this.worker.onerror = (e) => this.fail(e.message || "vision worker failed to load");
+    this.worker.onmessageerror = () => this.fail("vision worker message could not be read");
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => {
       const m = e.data;
       if (m.type === "ready") this.onReady?.(m.delegate);
@@ -31,6 +38,15 @@ export class VisionWorker {
     };
   }
 
+  private fail(message: string): void {
+    this.lastError = message;
+    if (this.onInitError) this.onInitError(new Error(message));
+    else console.error("vision worker:", message);
+    // A failed frame must not block the pipeline forever.
+    for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0 });
+    this.pending.clear();
+  }
+
   init(delegate: DelegatePreference, numHands: number): Promise<Delegate> {
     return new Promise((resolve, reject) => {
       this.onReady = (d) => {
@@ -45,7 +61,7 @@ export class VisionWorker {
     });
   }
 
-  detect(frame: Omit<Extract<ToWorker, { type: "frame" }>, "type" | "id">): Promise<Result> {
+  detect(frame: DetectRequest): Promise<DetectResult> {
     const id = this.nextId++;
     return new Promise((resolve) => {
       this.pending.set(id, resolve);

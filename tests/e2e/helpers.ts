@@ -1,16 +1,17 @@
-import type { Page } from "@playwright/test";
+import { test, type Page } from "@playwright/test";
 import type { FrameObs } from "../../src/core/types.ts";
 import { toFrames } from "../support/landmarks.ts";
 import type { TraceBuilder } from "../support/traces.ts";
 
 /** Opens the app. Headless Chromium only has software WebGL, where the CPU delegate is ~10x faster. */
 export async function open(page: Page, path = "/", query = ""): Promise<void> {
-  await page.goto(`${path}?delegate=CPU${query}`);
+  const fakeCamera = test.info().project.name === "webkit" ? "&camera=fake" : "";
+  await page.goto(`${path}?delegate=CPU${fakeCamera}${query}`);
 }
 
 /** Waits until the camera and the hand model are running. */
 export async function waitLive(page: Page): Promise<void> {
-  await page.getByTestId("status").waitFor({ timeout: 30_000 });
+  await page.getByTestId("status").waitFor({ timeout: test.info().project.name === "webkit" ? 50_000 : 30_000 });
 }
 
 /** Plays a synthetic hand trace through the real engine (replacing the camera's detections). */

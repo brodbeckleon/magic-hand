@@ -84,7 +84,9 @@
     "pause": "Pause",
     "devUnlocked": "Developer tools unlocked",
     "devLocked": "Developer tools hidden",
-    "pausedIdle": "Nobody was in view for {{n}} minutes. The camera was turned off."
+    "pausedIdle": "Nobody was in view for {{n}} minutes. The camera was turned off.",
+    "browserPreview": "Browser preview: gestures are recognised, but no keys are sent to PowerPoint and the bar cannot float above the presentation. Use the installed app for that.",
+    "preview": "Preview"
   },
   "pill": {
     "expand": "Open window",

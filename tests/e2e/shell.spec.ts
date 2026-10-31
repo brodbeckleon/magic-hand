@@ -193,3 +193,11 @@ test("sound option can be turned on (off by default)", async ({ page }) => {
   await sw.click();
   await expect(sw).toHaveAttribute("aria-checked", "true");
 });
+
+test("the browser preview says that keys and the floating bar need the installed app", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await expect(page.getByTestId("preview-notice")).toContainText("no keys are sent to PowerPoint");
+  await page.getByTestId("present").click();
+  await expect(page.getByTestId("pill")).toContainText("Preview");
+});

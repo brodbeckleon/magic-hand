@@ -70,3 +70,14 @@ it("keeps one track through a very fast swipe at 15 fps", () => {
   for (let i = 0; i < 6; i++) ids.add(step(tr, i / 15, [[{ cx: 500 - i * 100, cy: 300, scale: 40 }, "right"]])[0]!.id); // 37 hand lengths/s
   expect(ids.size).toBe(1);
 });
+
+it("a settled side never changes when a second hand with the same label appears", () => {
+  const tr = new HandTracker();
+  let first = step(tr, 0, [[{ cx: 150, cy: 200, scale: 40 }, "right"]])[0]!;
+  for (let i = 1; i < 20; i++) first = step(tr, i / 30, [[{ cx: 150, cy: 200, scale: 40 }, "right"]])[0]!;
+  expect(first.frozen).toBe(true);
+  for (let i = 20; i < 40; i++) {
+    const out = step(tr, i / 30, [[{ cx: 150, cy: 200, scale: 40 }, "right"], [{ cx: 500, cy: 200, scale: 40 }, "right"]]);
+    expect(out.find((h) => h.id === first.id)!.side).toBe("right");
+  }
+});

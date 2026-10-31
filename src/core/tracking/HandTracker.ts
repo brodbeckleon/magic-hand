@@ -90,12 +90,18 @@ export class HandTracker {
       seen.push(tr);
     });
 
-    // Two hands of one frame cannot be on the same side: the older/clearer track keeps it.
+    // Two hands of one person cannot be on the same side: the older/clearer track keeps it. Only an
+    // undecided (not frozen) track is flipped, so two people's right hands never get a sticky wrong
+    // side (with people in view, the pose wrists decide the side anyway).
     if (seen.length === 2 && seen[0]!.side === seen[1]!.side) {
       const [a, b] = seen as [Internal, Internal];
       const keep = a.frozen !== b.frozen ? (a.frozen ? a : b) : a.firstSeen <= b.firstSeen ? a : b;
       const flip = keep === a ? b : a;
-      flip.side = flip.side === "left" ? "right" : "left";
+      if (!flip.frozen) {
+        // Record the correction as its vote too, so the track settles on the corrected side.
+        flip.side = flip.side === "left" ? "right" : "left";
+        flip.votes[flip.votes.length - 1] = flip.side;
+      }
     }
     return seen.map(({ votes: _votes, ...pub }) => pub);
   }

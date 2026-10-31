@@ -1,6 +1,6 @@
 import type { FrameObs } from "../../core/types.ts";
 import { cropRect, FULL_FRAME, pixelCrop, type Rect } from "../../core/zone/Zone.ts";
-import type { VisionWorker } from "../worker/VisionWorker.ts";
+import type { VisionBackend } from "../backend.ts";
 import type { FrameMeta, LandmarkSource } from "./types.ts";
 
 export interface WorkerSourceNeeds {
@@ -27,7 +27,7 @@ export interface WorkerStats {
 }
 
 /**
- * Feeds camera frames to the vision worker: crops the presenter zone straight from the <video>
+ * Feeds camera frames to the vision backend (worker, or main thread as fallback): crops the presenter zone straight from the <video>
  * (only that part is ever analysed, MHR08), keeps at most one frame in flight and drops the rest.
  */
 export class WorkerSource implements LandmarkSource {
@@ -38,10 +38,10 @@ export class WorkerSource implements LandmarkSource {
   private lastCrop = "";
   readonly stats: WorkerStats = { dropped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0 };
   private readonly video: HTMLVideoElement;
-  private readonly worker: VisionWorker;
+  private readonly worker: VisionBackend;
   private readonly needs: () => WorkerSourceNeeds;
 
-  constructor(video: HTMLVideoElement, worker: VisionWorker, needs: () => WorkerSourceNeeds) {
+  constructor(video: HTMLVideoElement, worker: VisionBackend, needs: () => WorkerSourceNeeds) {
     this.video = video;
     this.worker = worker;
     this.needs = needs;

@@ -40,7 +40,8 @@ export function ActionToast() {
 
   return (
     <div className="toast-slot" aria-live="polite">
-      <AnimatePresence>
+      {/* One toast at a time: the next waits until the previous has faded out. */}
+      <AnimatePresence mode="wait">
         {toast && (
           <motion.div
             key={toast.id}

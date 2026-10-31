@@ -6,6 +6,11 @@ import { open, play, unlockDev, waitLive } from "./helpers.ts";
 
 /** WCAG 2.1 AA; the live camera image itself is decorative. */
 async function audit(page: Page, what: string) {
+  // Measure the settled UI: elements fading in have partial opacity, which axe would report as
+  // low contrast. Infinite animations (spinners, the breathing silhouette) are ignored.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity));
+  await page.waitForTimeout(300); // JS-driven (motion) transitions
   const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("video").analyze();
   const serious = r.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(serious.map((v) => `${what}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.target.join(" ")} - ${v.help}`)).toEqual([]);
