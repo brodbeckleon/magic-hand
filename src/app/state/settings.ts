@@ -24,7 +24,8 @@ const pick = (s: SettingsStore): Settings => parseSettings(s);
 export const useSettings = create<SettingsStore>()((set, get) => ({
   ...DEFAULT_SETTINGS,
   loaded: false,
-  update: (patch) =>
+  update: (patch) => {
+    if (patch.firstRunDone) afterDelete = false; // the setup wizard ran again
     set((s) => {
       const next: Partial<Settings> = {};
       for (const [k, v] of Object.entries(patch) as [keyof Settings, unknown][]) {
@@ -33,7 +34,8 @@ export const useSettings = create<SettingsStore>()((set, get) => ({
           v && typeof v === "object" && !Array.isArray(v) && cur && typeof cur === "object" ? { ...cur, ...v } : v;
       }
       return next;
-    }),
+    });
+  },
   updateSwipe: (patch) =>
     set((s) => {
       const swipe = { ...s.swipe, ...patch };
@@ -48,6 +50,7 @@ export const useSettings = create<SettingsStore>()((set, get) => ({
       await saving;
       await deleteSettings();
       skipNextSave = true; // stay deleted until the user changes something again
+      afterDelete = true;
       // The file is gone; keep the session usable (the setup wizard comes back at the next launch).
       set({ ...DEFAULT_SETTINGS, firstRunDone: get().firstRunDone, dev: { ...DEFAULT_SETTINGS.dev, unlocked: get().dev.unlocked } });
     } finally {
@@ -58,6 +61,12 @@ export const useSettings = create<SettingsStore>()((set, get) => ({
 }));
 
 let skipNextSave = false;
+/**
+ * Since "Delete data": hint counters (written automatically) are not saved, so the file stays
+ * deleted until the user changes something. Saves then store firstRunDone = false, so the setup
+ * wizard still comes back at the next launch unless it ran again in this session.
+ */
+let afterDelete = false;
 /** While deleting, changes must not write the old settings back. */
 let resetting = false;
 let saving: Promise<void> | null = null;
@@ -71,7 +80,8 @@ function scheduleSave(): void {
   saving = (async () => {
     while (dirty) {
       dirty = false;
-      await saveSettings(pick(useSettings.getState())).catch((err) => console.error("saving settings failed", err));
+      const s = pick(useSettings.getState());
+      await saveSettings(afterDelete ? { ...s, firstRunDone: false } : s).catch((err) => console.error("saving settings failed", err));
     }
     saving = null;
   })();
@@ -80,12 +90,16 @@ function scheduleSave(): void {
 export async function initSettings(): Promise<void> {
   const loaded = await loadSettings();
   useSettings.setState({ ...loaded, loaded: true });
-  useSettings.subscribe((s) => {
+  useSettings.subscribe((s, prev) => {
     if (!s.loaded) return;
     if (skipNextSave) {
       skipNextSave = false;
       return;
     }
+    if (afterDelete && onlyHintsChanged(s, prev)) return;
     scheduleSave();
   });
 }
+
+const onlyHintsChanged = (s: Settings, prev: Settings): boolean =>
+  (Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]).every((k) => k === "hints" || s[k] === prev[k]);
