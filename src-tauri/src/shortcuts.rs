@@ -39,11 +39,18 @@ pub fn set_pause_shortcut<R: Runtime>(
     if new == *current {
         return Ok(());
     }
-    if let Some(old) = current.take() {
-        let _ = gs.unregister(old);
+    let old = current.take();
+    if let Some(o) = old {
+        let _ = gs.unregister(o);
     }
     if let Some(s) = new {
         if let Err(e) = gs.register(s) {
+            // Keep the previous shortcut working.
+            if let Some(o) = old {
+                if gs.register(o).is_ok() {
+                    *current = Some(o);
+                }
+            }
             return Err(e.to_string());
         }
         *current = Some(s);

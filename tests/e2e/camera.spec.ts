@@ -20,6 +20,18 @@ test("hand tracking runs in the vision worker where the engine allows it", async
   expect(state).toEqual({ worker: testInfo.project.name !== "webkit", delegate: "CPU" });
 });
 
+test("refuses to run hand tracking without a hardware GPU (no CPU fallback)", async ({ page }, testInfo) => {
+  // WebKit always names its renderer "Apple GPU" (every Mac has one); only Chromium (WebView2 on
+  // Windows) reveals software WebGL, which headless Chromium has.
+  test.skip(testInfo.project.name === "webkit", "WebKit masks the WebGL renderer");
+  testInfo.annotations.push({ type: "vision-errors-expected" });
+  await page.goto("/"); // no ?delegate=CPU: the app's real choice
+  const error = page.getByTestId("camera-error");
+  await expect(error).toBeVisible({ timeout: 30_000 });
+  await expect(error.getByRole("heading")).toHaveText(/graphics card/);
+  expect(await page.evaluate(() => (window as unknown as { __magicHand: { engine: { getState(): { delegate: string | null } } } }).__magicHand.engine.getState().delegate)).toBeNull();
+});
+
 test("the pose model loads next to the hand model (zone step)", async ({ page }) => {
   await open(page);
   await waitLive(page);

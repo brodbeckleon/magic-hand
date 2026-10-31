@@ -30,7 +30,13 @@ pub fn key_for(command: SlideCommand, mapping: KeyMapping) -> Key {
 }
 
 fn press(key: Key) -> Result<(), String> {
-    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+    // The Accessibility prompt is shown by request_accessibility; asking again on every swipe
+    // would pop up the system dialog mid-presentation.
+    let settings = Settings {
+        open_prompt_to_get_permissions: false,
+        ..Settings::default()
+    };
+    let mut enigo = Enigo::new(&settings).map_err(|e| e.to_string())?;
     enigo.key(key, Direction::Click).map_err(|e| e.to_string())
 }
 

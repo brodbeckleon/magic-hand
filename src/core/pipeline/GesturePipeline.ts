@@ -350,7 +350,9 @@ export class GesturePipeline {
     const out: Rect[] = [];
     for (const side of ["left", "right"] as const) {
       const real = assigned.find((a) => a.person === target.id && a.side === side);
-      if (real && real.tr.hand.scale >= SMALL_HAND_PX) continue;
+      // A hand the crop itself found keeps its crop: the full-frame pass would lose it again, and
+      // switching between crop and pose hands every frame clears the swipe history.
+      if (real && !real.tr.obs.fromCrop && real.tr.hand.scale >= SMALL_HAND_PX) continue;
       const crop = wristCrop(target.pose, side, width, height, ratio);
       if (crop) out.push(crop);
     }
