@@ -161,6 +161,10 @@ describe("activity signals", () => {
     expect(talking.score(1.8)!).toBeGreaterThan(0.2);
     expect(open.score(1.8)!).toBeLessThan(0.01);
     expect(new MouthActivity().score(0)).toBeNull();
+    // Sparse samples (every 0.55 s, faces under load) still score.
+    const sparse = new MouthActivity();
+    for (let i = 0; i < 6; i++) sparse.update(i * 0.55, { jawOpen: i % 2 ? 0.5 : 0.05, lip: null });
+    expect(sparse.score(5 * 0.55)!).toBeGreaterThan(0.2);
   });
 
   it("movement energy grows with gesturing and decays when still", () => {

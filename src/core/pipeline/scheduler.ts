@@ -17,18 +17,27 @@ export interface ScheduleInput {
   forcePose: boolean;
   /** A presenter is far away: hands may come from pose wrists, so pose runs more often. */
   far?: boolean;
+  /** Seconds since the face model last ran (Infinity = never). */
+  sinceFace?: number;
 }
 
 /** Above this per-frame model time the extra models run less often; hand tracking never degrades. */
 export const LOAD_BUDGET_MS = 30;
+/**
+ * Seconds between face runs (~5 Hz, ~2.5 Hz under load). By time, not frames: with dropped frames a
+ * frame period spread the samples so far that mouth activity (3 samples per second) never scored.
+ */
+export const FACE_INTERVAL_S = 0.2;
+export const FACE_INTERVAL_BUSY_S = 0.4;
 
 export function schedule(i: ScheduleInput): Schedule {
   const busy = i.loadMs > LOAD_BUDGET_MS;
   // With several people, poses keep hands bound to the right person; with one, they only count people.
   const posePeriod = (i.persons >= 2 || i.far ? 2 : 4) + (busy ? 2 : 0);
-  const facePeriod = busy ? 12 : 6; // ~5 Hz at 30 fps
   const pose = i.forcePose || i.frame % posePeriod === 0;
-  // Faces are found from pose head positions, so they run on pose frames only.
-  const face = pose && i.wantFace && i.persons >= 2 && i.frame % facePeriod === 0;
+  // Faces are found from pose head positions, so they run on pose frames only. Slightly early is
+  // fine (pose frames do not line up with the interval).
+  const due = (i.sinceFace ?? Infinity) >= (busy ? FACE_INTERVAL_BUSY_S : FACE_INTERVAL_S) - 0.02;
+  const face = pose && i.wantFace && i.persons >= 2 && due;
   return { pose, face };
 }

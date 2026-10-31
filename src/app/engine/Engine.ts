@@ -172,6 +172,7 @@ export class Engine {
   }
 
   private scheduleFrame = 0;
+  private lastFaceAt = -Infinity;
   private loadMs = 0;
   private personCount = 0;
 
@@ -180,6 +181,7 @@ export class Engine {
     const s = useSettings.getState();
     const st = this.workerStats;
     if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs + st.cropMs);
+    const now = performance.now() / 1000;
     const plan = schedule({
       frame: this.scheduleFrame++,
       persons: this.personCount,
@@ -187,7 +189,9 @@ export class Engine {
       loadMs: this.loadMs,
       forcePose: this.poseRequests > 0,
       far: this.anyFar,
+      sinceFace: now - this.lastFaceAt,
     });
+    if (plan.face) this.lastFaceAt = now;
     return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, wristCrops: this.wristCrops, ...plan };
   }
 
