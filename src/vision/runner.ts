@@ -219,7 +219,8 @@ export class VisionRunner {
     const ctx = canvas.getContext("2d")!;
     const out: HandObs[] = [];
     for (const c of crops) {
-      if (found.some((h) => { const w = h.landmarks[0]!; return w.x >= c.x && w.x <= c.x + c.w && w.y >= c.y && w.y <= c.y + c.h; })) continue;
+      // Also skips hands an earlier crop found: the crops of hands held close together overlap.
+      if ([...found, ...out].some((h) => { const w = h.landmarks[0]!; return w.x >= c.x && w.x <= c.x + c.w && w.y >= c.y && w.y <= c.y + c.h; })) continue;
       // The crop in bitmap pixels (the bitmap shows `frameCrop` of the full frame).
       const tl = fullToCrop({ x: c.x, y: c.y, z: 0 }, frameCrop);
       const br = fullToCrop({ x: c.x + c.w, y: c.y + c.h, z: 0 }, frameCrop);
@@ -230,6 +231,7 @@ export class VisionRunner {
       ctx.drawImage(bitmap, tl.x * bitmap.width, tl.y * bitmap.height, sw, sh, 0, 0, CROP_PX, CROP_PX);
       for (const h of toHandObs(hl.detect(canvas))) {
         h.landmarks = h.landmarks.map((l) => ({ x: c.x + l.x * c.w, y: c.y + l.y * c.h, z: l.z }));
+        h.fromCrop = true;
         out.push(h);
       }
     }

@@ -37,6 +37,10 @@ export class VisionWorker implements VisionBackend {
     if (this.onInitError) this.onInitError(new Error(message));
     else console.error("vision worker:", message);
     // A failed frame must not block the pipeline forever.
+    this.resolvePending();
+  }
+
+  private resolvePending(): void {
     for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0 });
     this.pending.clear();
   }
@@ -73,6 +77,8 @@ export class VisionWorker implements VisionBackend {
 
   terminate(): void {
     this.worker.terminate();
+    // A terminated worker never answers: callers awaiting detect() must not hang.
+    this.resolvePending();
   }
 
   private send(m: ToWorker): void {

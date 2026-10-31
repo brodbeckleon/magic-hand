@@ -23,6 +23,8 @@ export interface HandObs {
   side: Side;
   /** Confidence of the side classification, 0..1. */
   sideScore: number;
+  /** Found in a wrist crop (far assist), not by the full-frame pass. */
+  fromCrop?: boolean;
 }
 
 export interface PoseObs {
