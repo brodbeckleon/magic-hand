@@ -36,6 +36,8 @@ export class WorkerSource implements LandmarkSource {
   private handle = 0;
   private lastTs = -1;
   private lastCrop = "";
+  /** Main-thread fallback: no new frame before this time, so the UI gets a turn. */
+  private nextAllowed = 0;
   readonly stats: WorkerStats = { dropped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionBackend;
@@ -54,7 +56,7 @@ export class WorkerSource implements LandmarkSource {
       this.schedule(tick);
       const v = this.video;
       if (v.readyState < 2 || !v.videoWidth) return;
-      if (this.busy) {
+      if (this.busy || performance.now() < this.nextAllowed) {
         this.stats.dropped++;
         return;
       }
@@ -89,7 +91,12 @@ export class WorkerSource implements LandmarkSource {
           );
         })
         .catch((err) => console.error("frame failed", err))
-        .finally(() => (this.busy = false));
+        .finally(() => {
+          this.busy = false;
+          // On the main thread (Safari < 17 fallback) inference competes with the interface:
+          // pause for half the time the frame took, so the UI stays responsive.
+          if (!this.worker.inWorker) this.nextAllowed = performance.now() + 0.5 * (performance.now() - tCap);
+        });
     };
     this.schedule(tick);
   }

@@ -178,8 +178,6 @@
       "arrows": "Funktioniert in PowerPoint, Keynote, Google Slides und PDF-Viewern.",
       "page": "Wie ein Presenter-Klicker."
     },
-    "thumbnail": "Kamerabild in der Leiste",
-    "thumbnailHint": "Kleines Vorschaubild, während du präsentierst.",
     "pauseShortcut": "Pause-Kurzbefehl",
     "pauseShortcutHint": "Funktioniert auch, wenn die Präsentation im Vordergrund ist.",
     "language": "Sprache",
@@ -198,7 +196,16 @@
     "autoPause": "Kamera ausschalten, wenn niemand da ist",
     "autoPauseHint": "Spart Akku und schützt die Privatsphäre, wenn du den Raum verlässt.",
     "minutes": "nach {{n}} Minuten",
-    "never": "nie"
+    "never": "nie",
+    "pillCamera": "Kamerabild beim Präsentieren",
+    "pillCameraOff": "Aus",
+    "pillCameraSmall": "Klein",
+    "pillCameraLarge": "Gross",
+    "pillCameraHint": {
+      "off": "Nur die schmale Leiste schwebt über der Präsentation.",
+      "small": "Kleines Vorschaubild in der Leiste.",
+      "large": "Grosses Kamerabild mit erkannter Hand schwebt über der Präsentation. Ziehen zum Verschieben."
+    }
   },
   "dev": {
     "title": "Entwickler",
