@@ -170,7 +170,7 @@ export class GesturePipeline {
     if (frame.poses) {
       const hadPersons = this.lastPersons.length > 0;
       this.lastPersons = this.persons.update(t, frame.poses);
-      this.associator.update(tracks, this.lastPersons, aspect);
+      this.associator.update(tracks, this.lastPersons, aspect, (id) => this.tracker.has(id));
       if (!hadPersons && this.lastPersons.length) this.handOverSolo(tracks, aspect);
       for (const p of this.lastPersons) {
         const st = this.state(p.id);
@@ -222,7 +222,8 @@ export class GesturePipeline {
 
     // Palm claims ("raise an open hand to take over").
     const claimed = new Map<number, number>(); // person -> claim start
-    for (const id of [...this.claims.keys()]) if (!tracks.some((tr) => tr.id === id)) this.claims.delete(id);
+    // Only for hands that are gone: one missed frame must not restart a claim.
+    for (const id of [...this.claims.keys()]) if (!this.tracker.has(id)) this.claims.delete(id);
     const claimProgress = new Map<number, number>();
     for (const a of assigned) {
       const c = this.claims.get(a.tr.id) ?? new ClaimDetector();

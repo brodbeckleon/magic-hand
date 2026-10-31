@@ -45,6 +45,25 @@ describe("recording", () => {
     expect(replay(parseRecording(text)).filter((e) => e.event === "trigger").map((e) => e.command)).toEqual(["prev"]);
   });
 
+  it("applies a change recorded at a frame's time from the next frame on (as live)", () => {
+    const text = recordSession(session());
+    const first = replay(parseRecording(text)).find((e) => e.event === "trigger")!;
+    expect(first.command).toBe("next");
+    // Live, the change came after the frame at `first.t` had triggered.
+    const rec = parseRecording(text + encodeLine({ type: "settings", t: first.t, patch: { reverse: true } }));
+    expect(replay(rec).find((e) => e.event === "trigger")!.command).toBe("next");
+  });
+
+  it("a swipe override keeps the other fields of a recorded swipe change", () => {
+    let text = recordSession(new TraceBuilder().calibrated());
+    const trace = new TraceBuilder(30, 11.8).move(-160, 0, 0.25).hold(0.3);
+    text += encodeLine({ type: "settings", t: 11.7, patch: { swipe: { ...DEFAULT_PIPELINE_SETTINGS.swipe, distance: 50 } } });
+    toFrames(trace.frames).forEach((f, i) => (text += encodeLine(encodeFrame(1000 + i, f))));
+    // As the replay CLI passes it (pnpm replay --settings '{"swipe":{"window":0.5}}'): only some fields.
+    const override = { swipe: { window: DEFAULT_PIPELINE_SETTINGS.swipe.window } } as Parameters<typeof replay>[1];
+    expect(replay(parseRecording(text), override).some((e) => e.event === "trigger")).toBe(false); // distance 50 kept
+  });
+
   it("rejects files that are not recordings", () => {
     expect(() => parseRecording('{"type":"frame"}')).toThrow(/recording/);
   });
