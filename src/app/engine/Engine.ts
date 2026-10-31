@@ -75,14 +75,12 @@ export class Engine {
     try {
       // Load the model while the camera starts; the preview shows as soon as the camera is ready.
       const vision = this.loadVision(chosenDelegate());
-      const stream = await openCamera({
-        deviceId: settings.camera.deviceId ?? undefined,
-        ...parseResolution(settings.camera.resolution),
-      });
+      const stream = await openPreferredCamera(settings);
       if (gen !== this.generation) return closeCamera(stream);
       this.stream = stream;
       video.srcObject = stream;
       await video.play().catch(() => undefined);
+      if (gen !== this.generation) return;
       useEngine.getState().set({ status: { kind: "loading" } });
       const source = await vision(video);
       if (gen !== this.generation) return;
@@ -91,6 +89,8 @@ export class Engine {
       useEngine.getState().set({ status: { kind: "live" } });
     } catch (err) {
       if (gen !== this.generation) return;
+      // Nothing is analysed on the error screen, so the camera must not stay on (MHR08).
+      this.stopCamera();
       if (!(err instanceof DOMException)) this.dropVision(); // let a retry load the model again
       const isCamera = err instanceof DOMException;
       const error = isCamera ? classifyCameraError(err) : isNoGpuError(err) ? "gpu" : "model";
@@ -452,10 +452,13 @@ export class Engine {
         person: e.person || undefined, detectMs: (tKey - meta.captureTime) * 1000,
       });
     };
-    if (dev.dryRun || this.keySuppressions > 0) return finish();
+    // With our own window focused the key would land in our UI (e.g. flip a segmented control);
+    // the "focus" hint tells the user to click the presentation.
+    if (dev.dryRun || this.keySuppressions > 0 || (platform.native && document.hasFocus())) return finish();
     platform.sendKey(e.command, keyMapping).then(finish, (err) => {
+      // E.g. no Accessibility permission on macOS: not a slide change, so not counted as one.
       console.error("send_key failed", err);
-      finish();
+      this.addLog({ ereignis: "taste_fehlgeschlagen", richtung: e.command, wischrichtung, hand: e.side, person: e.person || undefined });
     });
   }
 
@@ -480,6 +483,22 @@ export class Engine {
       const w = this.workerStats;
       useDev.getState().addSample({ fps: this.fps, handMs: w ? w.handMs : meta.inferenceMs, pipelineMs: w ? w.pipelineMs : meta.inferenceMs }, w?.dropped ?? 0);
     }
+  }
+}
+
+/**
+ * Opens the chosen camera, or the default one if it is gone (unplugged): otherwise the app would be
+ * stuck on "not found", with no picker when only one camera is left. The choice stays stored.
+ */
+async function openPreferredCamera(s: Settings): Promise<MediaStream> {
+  const size = parseResolution(s.camera.resolution);
+  if (!s.camera.deviceId) return openCamera(size);
+  try {
+    return await openCamera({ deviceId: s.camera.deviceId, ...size });
+  } catch (err) {
+    if (classifyCameraError(err) !== "not-found") throw err;
+    console.warn("chosen camera not available, using the default one", err);
+    return openCamera(size);
   }
 }
 

@@ -135,7 +135,8 @@ function CameraSection() {
   }, []);
   return (
     <Section title={t("prefs.camera")} icon="camera">
-      {devices.length > 1 && (
+      {/* Also with one camera left when another one is stored, so the choice can be cleared. */}
+      {(devices.length > 1 || camera.deviceId) && (
         <Row label={t("prefs.cameraDevice")} htmlFor="pref-camera">
           <Select
             id="pref-camera"
@@ -258,7 +259,7 @@ function PrivacySection() {
           <button
             className="btn danger"
             data-testid="delete-confirm"
-            onClick={() => void reset().then(() => { engine.recalibrate(); setConfirm(false); setDone(true); })}
+            onClick={() => void reset().then(() => { engine.recalibrate(); setConfirm(false); setDone(true); }, (err) => { console.error("settings could not be deleted", err); setConfirm(false); })}
           >
             {t("prefs.deleteYes")}
           </button>
