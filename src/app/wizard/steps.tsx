@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useEffectEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { autotune } from "../../core/calibration/autotune.ts";
+import { autotune, AUTOTUNE_BOUNDS } from "../../core/calibration/autotune.ts";
 import { checkFraming, meanLuma, type Check } from "../../core/calibration/framingCheck.ts";
 import { MovementSegmenter, type Movement } from "../../core/calibration/practice.ts";
 import type { PoseObs } from "../../core/types.ts";
@@ -264,7 +264,8 @@ export function PracticeStep({ nav, onDone }: { nav: StepNav; onDone: (m: Moveme
   };
   useMovements((m) => {
     const dir = m.dx < 0 ? "left" : "right";
-    if (Math.abs(m.dy) > 0.8 * Math.abs(m.dx)) {
+    // As generous as calibration may tune the angle; steeper movements are not swipes.
+    if (Math.abs(m.dy) > AUTOTUNE_BOUNDS.maxSlope[1] * Math.abs(m.dx)) {
       setFeedback({ id: Date.now(), kind: "diagonal", dir });
       return;
     }

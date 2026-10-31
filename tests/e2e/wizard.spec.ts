@@ -120,7 +120,7 @@ test.describe("calibration wizard", () => {
     await stepShown(page, "Hold your hand still");
     await play(page, new TraceBuilder().hold(1.4));
     await expect(page.getByTestId("practice")).toBeVisible();
-    await play(page, new TraceBuilder().hold(0.3).move(-150, 150, 0.3).hold(0.4));
+    await play(page, new TraceBuilder().hold(0.3).move(-90, 170, 0.3).hold(0.4));
     await expect(page.getByText("Too diagonal")).toBeVisible();
     await expect(page.locator(".pip[data-on='true']")).toHaveCount(0);
   });

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { GesturePipeline, DEFAULT_PIPELINE_SETTINGS } from "../../src/core/pipeline/GesturePipeline.ts";
+import { PROTOTYPE_SWIPE_PARAMS } from "../../src/core/swipe/params.ts";
 import type { Hand, Side } from "../../src/core/types.ts";
 import { toFrames } from "../support/landmarks.ts";
 import { TraceBuilder } from "../support/traces.ts";
@@ -15,7 +16,7 @@ const typeOf = (e: { type: string; command?: string }) => (e.type === "trigger" 
 describe("GesturePipeline", () => {
   // Hands far outside the frame give non-physical landmarks but the pipeline must still match.
   it.each(golden.map((g) => [g.name, g] as const))("single hand reproduces golden %s", (_n, g) => {
-    const p = new GesturePipeline();
+    const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, swipe: { ...PROTOTYPE_SWIPE_PARAMS } });
     const frames = toFrames(g.frames);
     const got = frames.flatMap((f) => p.step(f).events.map(typeOf));
     const want = g.expected.map((e) => e.event).filter((e): e is string => e !== null);
@@ -62,5 +63,21 @@ describe("GesturePipeline", () => {
     const snap = frames.map((f) => p.step(f).snapshot).at(-1)!;
     expect(snap.calibrated).toBe(false);
     expect(snap.calibProgress).toBeGreaterThan(0.4);
+  });
+});
+
+describe("swipe angle (app defaults)", () => {
+  const run = (dx: number, dy: number) => {
+    const p = new GesturePipeline();
+    const frames = toFrames(new TraceBuilder().calibrated().move(dx, dy, 0.3).hold(0.3).frames);
+    return frames.flatMap((f) => p.step(f).events).map((e) => (e.type === "trigger" ? e.command : e.type));
+  };
+
+  it("accepts a natural, arc-like swipe tilted by 40 degrees", () => {
+    expect(run(-160, 134)).toContain("next");
+  });
+
+  it("still rejects movements steeper than 45 degrees", () => {
+    expect(run(-120, 208)).toContain("ignored_dir"); // 60 degrees
   });
 });

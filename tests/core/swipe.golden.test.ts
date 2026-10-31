@@ -2,6 +2,7 @@
 // frame with what the original Python SwipeDetector produced.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { PROTOTYPE_SWIPE_PARAMS } from "../../src/core/swipe/params.ts";
 import { SwipeDetector } from "../../src/core/swipe/SwipeDetector.ts";
 import type { Hand } from "../../src/core/types.ts";
 
@@ -34,7 +35,7 @@ it("has golden fixtures", () => {
 
 describe.each(fixtures.map((f) => [f.name, f] as const))("golden %s", (_name, fx) => {
   it("matches the Python prototype frame by frame", () => {
-    const det = new SwipeDetector();
+    const det = new SwipeDetector(PROTOTYPE_SWIPE_PARAMS);
     fx.frames.forEach(({ t, hand }, i) => {
       const exp = fx.expected[i]!;
       const where = `frame ${i} (t=${t})`;

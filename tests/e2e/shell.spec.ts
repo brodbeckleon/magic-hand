@@ -116,10 +116,10 @@ test.describe("app shell", () => {
   });
 
   test("explains an ignored diagonal swipe a few times, then stops", async ({ page }) => {
-    await play(page, new TraceBuilder().calibrated().move(-120, 100, 0.25).hold(0.5));
+    await play(page, new TraceBuilder().calibrated().move(-90, 160, 0.25).hold(0.5));
     await expect(page.getByTestId("toast")).toContainText("swipe more horizontally");
     await updateSettings(page, { hints: { "toast.ignored_dir": 5 } });
-    await play(page, new TraceBuilder().hold(0.6).move(-120, 100, 0.25).hold(0.3));
+    await play(page, new TraceBuilder().hold(0.6).move(-90, 160, 0.25).hold(0.3));
     await expect(page.getByTestId("toast")).toHaveCount(0);
   });
 
@@ -156,7 +156,7 @@ test("Help > Try it now: shows what was recognised without sending keys", async 
   await page.getByTestId("open-help").click();
   await page.getByTestId("try-it").click();
   await expect(page.getByTestId("try-panel")).toContainText("hold a hand still");
-  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(1.2).move(-120, 100, 0.25).hold(0.3));
+  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(1.2).move(-90, 160, 0.25).hold(0.3));
   await expect(page.getByTestId("try-result")).toContainText("Too diagonal");
   await expect(page.getByTestId("try-panel")).toContainText("1 swipe recognised");
   expect(await sentKeys(page)).toEqual([]);
