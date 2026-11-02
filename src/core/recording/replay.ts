@@ -34,7 +34,15 @@ export function replay(rec: Recording, override: Partial<PipelineSettings> = {})
 /** Differences between two event lists (same events at the same frame times). */
 export function diffEvents(expected: readonly ReplayEvent[], actual: readonly ReplayEvent[]): string[] {
   const key = (e: ReplayEvent) => `${e.t.toFixed(4)} ${e.event}${e.command ? `:${e.command}` : ""}`;
-  const a = new Set(actual.map(key));
-  const b = new Set(expected.map(key));
-  return [...expected.filter((e) => !a.has(key(e))).map((e) => `- ${key(e)}`), ...actual.filter((e) => !b.has(key(e))).map((e) => `+ ${key(e)}`)];
+  // Counted, not a set: two equal events in one frame (two people ignored at once) must both match.
+  const left = new Map<string, number>();
+  for (const e of actual) left.set(key(e), (left.get(key(e)) ?? 0) + 1);
+  const missing: string[] = [];
+  for (const e of expected) {
+    const n = left.get(key(e)) ?? 0;
+    if (n > 0) left.set(key(e), n - 1);
+    else missing.push(`- ${key(e)}`);
+  }
+  const extra = [...left].flatMap(([k, n]) => Array.from({ length: n }, () => `+ ${k}`));
+  return [...missing, ...extra];
 }

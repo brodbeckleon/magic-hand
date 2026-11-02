@@ -330,7 +330,7 @@ export class GesturePipeline {
         calibrated: this.armed || shown.calibrated,
         calibProgress: this.armed ? 0 : Math.max(...[...this.people.values()].map((p) => p.lock.primary.calibProgress(t)), det.calibProgress(t)),
         progress: det.progress,
-        trail: det.history,
+        trail: det.history.slice(), // the detector changes its history in place
         blocked: det.isBlocked(t),
         returnRemaining: det.returnRemaining(t),
         activeSide: det === shown.detectors.left ? "left" : "right",

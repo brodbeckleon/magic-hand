@@ -385,11 +385,16 @@ export class Engine {
     progress(false, null);
     this.eventTap = (e) => live.push(toReplayEvent(e));
     this.frameTap = () => ++done % 10 === 0 && progress(false, null);
+    // Parameter changes made during the recording apply from the next frame on, as in replay().
+    const changes = [...rec.settings];
+    this.preFrameTap = (f) => {
+      while (changes.length && changes[0]!.t < f.t) this.pipeline.updateSettings(changes.shift()!.patch);
+    };
     try {
       // Also settles when the replay is stopped early (pause, stop): ReplaySource calls onDone.
       await new Promise<void>((resolve) => this.replaceSource(new ReplaySource(rec.frames, { speed, onDone: resolve }), false));
     } finally {
-      this.eventTap = this.frameTap = null;
+      this.eventTap = this.frameTap = this.preFrameTap = null;
       release();
     }
     progress(true, done < total ? null : diffEvents(rec.events, live).length);
@@ -405,6 +410,7 @@ export class Engine {
 
   private eventTap: ((e: PipelineEvent) => void) | null = null;
   private frameTap: (() => void) | null = null;
+  private preFrameTap: ((frame: FrameObs) => void) | null = null;
 
   private stopCamera(): void {
     this.source?.stop();
@@ -440,6 +446,7 @@ export class Engine {
     this.observations.publish(frame);
     this.recorder?.write(encodeFrame(this.frameIndex++, frame));
     const { paused } = useEngine.getState();
+    this.preFrameTap?.(frame);
     const { events, snapshot } = this.pipeline.step(frame, paused);
     for (const e of events) {
       this.recorder?.write({ type: "event", ...toReplayEvent(e) });

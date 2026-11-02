@@ -1,3 +1,4 @@
+import { csvCell } from "../log/csv.ts";
 import type { Command } from "../types.ts";
 
 /**
@@ -173,5 +174,6 @@ export function reportCsv(r: StudyReport, meta: Record<string, string>): string 
     ["detect_p95_ms", f(r.detectP95)],
     ...Object.entries(meta).map(([k, v]) => [k, v]),
   ];
-  return rows.map((r) => r.join(",")).join("\r\n") + "\r\n";
+  // The meta values are typed by the tester (e.g. "Raum 2, Licht schlecht"): quote like the log CSV.
+  return rows.map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
