@@ -72,6 +72,10 @@ fn leave_pill<R: Runtime>(w: &WebviewWindow<R>, state: &WindowState) -> tauri::R
     w.set_visible_on_all_workspaces(false)?;
     w.set_skip_taskbar(false)?;
     w.set_decorations(true)?;
+    // tao rebuilds the style mask without FullSizeContentView: restore the overlay title bar of
+    // tauri.conf.json, or the content no longer extends under the traffic lights.
+    #[cfg(target_os = "macos")]
+    w.set_title_bar_style(tauri::TitleBarStyle::Overlay)?;
     w.set_shadow(true)?;
     w.set_resizable(true)?;
     w.set_min_size(Some(Size::Logical(MIN_SIZE)))?;
