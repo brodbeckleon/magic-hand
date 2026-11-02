@@ -27,7 +27,9 @@ export function HintHost() {
   };
 
   useEffect(() => {
+    let alive = true;
     let hideTimer = 0;
+    let queueTimer = 0;
     let triggers = 0;
     let noHandSince: number | null = null;
     let seenMulti = false;
@@ -38,9 +40,10 @@ export function HintHost() {
       current = null;
       setHint(null);
       const id = queue.shift();
-      if (id) window.setTimeout(() => show(id), 400);
+      if (id) queueTimer = window.setTimeout(() => show(id), 400);
     };
     const show = (id: HintId) => {
+      if (!alive) return;
       // One hint at a time; others wait their turn instead of replacing it.
       if (current) {
         if (current !== id && !queue.includes(id)) queue.push(id);
@@ -66,7 +69,7 @@ export function HintHost() {
     const offEvents = engine.events.subscribe((e) => {
       if (e.kind !== "next" && e.kind !== "prev") return;
       triggers++;
-      // Keys were sent while our own window had the focus: they did not reach the presentation.
+      // A swipe while our own window had the focus: no key was sent (see Engine.handle).
       if (document.hasFocus() && useUi.getState().view === "main") show("focus");
       else if (triggers >= 3) show("present");
     });
@@ -89,7 +92,9 @@ export function HintHost() {
     return () => {
       offEvents();
       offFrames();
+      alive = false;
       clearTimeout(hideTimer);
+      clearTimeout(queueTimer);
     };
   }, [engine]);
 

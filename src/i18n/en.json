@@ -46,6 +46,8 @@
     "unknownHelp": "Try again or choose another camera in Preferences.",
     "model": "Hand tracking could not be loaded.",
     "modelHelp": "Restart the app. If that does not help, reinstall it.",
+    "gpu": "This computer's graphics card cannot be used.",
+    "gpuHelp": "Magic Hand runs hand tracking on the graphics card only. Update the graphics driver, turn on hardware acceleration, or use another computer (virtual machines and remote desktops often have no GPU).",
     "retry": "Try again",
     "openSettings": "Open System Settings"
   },
@@ -213,9 +215,6 @@
     "dryRun": "Dry run",
     "dryRunHint": "Recognise gestures but do not send keys.",
     "events": "Show event list",
-    "delegate": "Compute backend",
-    "delegateHint": "Applied the next time detection starts.",
-    "delegateAuto": "Automatic",
     "exportExtended": "Export extended",
     "lock": "Hide developer tools",
     "metrics": "Metrics",

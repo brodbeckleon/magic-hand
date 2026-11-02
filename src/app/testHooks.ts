@@ -19,7 +19,6 @@ export interface TestHooks {
   workerStats(): Engine["workerStats"];
 }
 
-/** Applied before the engine starts: `?delegate=CPU` forces the CPU delegate in tests. */
 /**
  * WebKit (the engine of the macOS app) has no fake-camera switch in Playwright: in e2e mode
  * ?camera=fake replaces the camera with an animated canvas stream.
@@ -43,8 +42,6 @@ function installFakeCamera(): void {
 export function applyTestParams(): void {
   const params = new URLSearchParams(location.search);
   if (params.get("camera") === "fake") installFakeCamera();
-  const delegate = params.get("delegate");
-  if (delegate === "CPU" || delegate === "GPU") useSettings.getState().update({ dev: { delegate } });
   // Most tests start from a configured app; ?firstRun=1 keeps the first-run wizard.
   if (params.get("firstRun") !== "1" && !useSettings.getState().firstRunDone) useSettings.getState().update({ firstRunDone: true });
 }

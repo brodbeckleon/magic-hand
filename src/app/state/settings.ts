@@ -43,13 +43,17 @@ export const useSettings = create<SettingsStore>()((set, get) => ({
     set((s) => ({ sensitivity, swipe: { ...s.swipe, ...SENSITIVITY_PRESETS[sensitivity] } })),
   reset: async () => {
     resetting = true;
-    dirty = false;
-    await saving;
-    await deleteSettings();
-    skipNextSave = true; // stay deleted until the user changes something again
-    // The file is gone; keep the session usable (the setup wizard comes back at the next launch).
-    set({ ...DEFAULT_SETTINGS, firstRunDone: get().firstRunDone, dev: { ...DEFAULT_SETTINGS.dev, unlocked: get().dev.unlocked } });
-    resetting = false;
+    try {
+      dirty = false;
+      await saving;
+      await deleteSettings();
+      skipNextSave = true; // stay deleted until the user changes something again
+      // The file is gone; keep the session usable (the setup wizard comes back at the next launch).
+      set({ ...DEFAULT_SETTINGS, firstRunDone: get().firstRunDone, dev: { ...DEFAULT_SETTINGS.dev, unlocked: get().dev.unlocked } });
+    } finally {
+      // A failed delete must not stop all later saves.
+      resetting = false;
+    }
   },
 }));
 

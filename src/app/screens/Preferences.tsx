@@ -135,7 +135,8 @@ function CameraSection() {
   }, []);
   return (
     <Section title={t("prefs.camera")} icon="camera">
-      {devices.length > 1 && (
+      {/* Also with one camera left when another one is stored, so the choice can be cleared. */}
+      {(devices.length > 1 || camera.deviceId) && (
         <Row label={t("prefs.cameraDevice")} htmlFor="pref-camera">
           <Select
             id="pref-camera"
@@ -258,7 +259,7 @@ function PrivacySection() {
           <button
             className="btn danger"
             data-testid="delete-confirm"
-            onClick={() => void reset().then(() => { engine.recalibrate(); setConfirm(false); setDone(true); })}
+            onClick={() => void reset().then(() => { engine.recalibrate(); setConfirm(false); setDone(true); }, (err) => { console.error("settings could not be deleted", err); setConfirm(false); })}
           >
             {t("prefs.deleteYes")}
           </button>
@@ -286,18 +287,6 @@ function DeveloperSection() {
         </Row>
         <Row label={t("dev.events")} htmlFor="dev-events">
           <Switch id="dev-events" label={t("dev.events")} checked={dev.showEvents} onChange={(showEvents) => update({ dev: { showEvents } })} />
-        </Row>
-        <Row label={t("dev.delegate")} hint={t("dev.delegateHint")}>
-          <Select
-            label={t("dev.delegate")}
-            value={dev.delegate}
-            onChange={(delegate) => update({ dev: { delegate } })}
-            options={[
-              { value: "auto", label: t("dev.delegateAuto") },
-              { value: "GPU", label: "GPU" },
-              { value: "CPU", label: "CPU" },
-            ]}
-          />
         </Row>
         <div className="button-row">
           <button className="btn" onClick={() => void engine.exportCsv()}><Icon name="download" size={16} />{t("actions.exportLog")}</button>

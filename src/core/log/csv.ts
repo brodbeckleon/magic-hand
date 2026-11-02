@@ -17,6 +17,7 @@ export const EXTENDED_FIELDS = ["person", "hand", "detect_ms"] as const;
 export type LogEvent =
   | "calibrated"
   | "ausgeloest"
+  | "taste_fehlgeschlagen"
   | "ignored_dir"
   | "ignored_return"
   | "ignored_not_speaker"

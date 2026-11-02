@@ -46,6 +46,8 @@
     "unknownHelp": "Versuche es erneut oder wähle in den Einstellungen eine andere Kamera.",
     "model": "Die Handerkennung konnte nicht geladen werden.",
     "modelHelp": "Starte die App neu. Falls das nicht hilft, installiere sie neu.",
+    "gpu": "Die Grafikkarte dieses Computers lässt sich nicht verwenden.",
+    "gpuHelp": "Magic Hand berechnet die Handerkennung nur auf der Grafikkarte. Aktualisiere den Grafiktreiber, schalte die Hardwarebeschleunigung ein oder verwende einen anderen Computer (virtuelle Maschinen und Remote-Desktops haben oft keine GPU).",
     "retry": "Erneut versuchen",
     "openSettings": "Systemeinstellungen öffnen"
   },
@@ -213,9 +215,6 @@
     "dryRun": "Probelauf",
     "dryRunHint": "Gesten erkennen, aber keine Tasten senden.",
     "events": "Ereignisliste anzeigen",
-    "delegate": "Rechenwerk",
-    "delegateHint": "Wird beim nächsten Start der Erkennung übernommen.",
-    "delegateAuto": "Automatisch",
     "exportExtended": "Erweitert exportieren",
     "lock": "Entwicklerwerkzeuge ausblenden",
     "metrics": "Messwerte",

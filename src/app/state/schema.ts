@@ -77,10 +77,9 @@ export const settingsSchema = z.object({
     .object({
       unlocked: z.boolean().catch(false),
       dryRun: z.boolean().catch(false),
-      delegate: z.enum(["auto", "GPU", "CPU"]).catch("auto"),
       showEvents: z.boolean().catch(true),
     })
-    .catch({ unlocked: false, dryRun: false, delegate: "auto", showEvents: true }),
+    .catch({ unlocked: false, dryRun: false, showEvents: true }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

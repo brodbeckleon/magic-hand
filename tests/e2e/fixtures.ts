@@ -24,7 +24,7 @@ export const test = base.extend<{ externalRequests: string[]; privacyGuard: void
     },
     { auto: true },
   ],
-  /** The vision worker must never report errors (e.g. a model that fails to load). */
+  /** The vision worker must never report errors (e.g. a model that fails to load), unless a test expects them. */
   visionErrors: [
     async ({ page }, use, testInfo) => {
       // Playwright's WebKit has no WebGL in workers (like Safari < 17): falling back to the main
@@ -37,7 +37,7 @@ export const test = base.extend<{ externalRequests: string[]; privacyGuard: void
         if (/vision worker|frame failed|unavailable, using the main thread/.test(text)) errors.push(text);
       });
       await use();
-      expect(errors, "vision worker errors").toEqual([]);
+      if (!testInfo.annotations.some((a) => a.type === "vision-errors-expected")) expect(errors, "vision worker errors").toEqual([]);
     },
     { auto: true },
   ],
