@@ -1,3 +1,4 @@
+import { MotionConfig } from "motion/react";
 import { useEffect, useState } from "react";
 import { Engine } from "./engine/Engine.ts";
 import { EngineContext } from "./engine/context.ts";
@@ -23,7 +24,10 @@ export function App() {
   }, [engine]);
   return (
     <EngineContext.Provider value={engine}>
-      <Root engine={engine} />
+      {/* Slides and springs become fades for people who asked their system for less motion. */}
+      <MotionConfig reducedMotion="user">
+        <Root engine={engine} />
+      </MotionConfig>
     </EngineContext.Provider>
   );
 }
