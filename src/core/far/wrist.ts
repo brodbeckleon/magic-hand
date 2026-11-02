@@ -11,6 +11,13 @@ export const ARM: Record<Side, { shoulder: number; elbow: number; wrist: number 
 export const FAR_SHOULDER_PX = 100;
 /** Hands smaller than this (wrist -> middle MCP, pixels) are hard for the hand model. */
 export const SMALL_HAND_PX = 18;
+/**
+ * The two thresholds above were tuned at 640 px wide. The hand model sees how big a hand is
+ * relative to the frame, so at 320 or 1280 px they scale with the width: otherwise at 320×240
+ * almost everyone counts as far, and at 1280×720 nobody does.
+ */
+export const atWidth = (px640: number, width: number): number => (px640 * width) / 640;
+
 /** Typical hand length (wrist -> middle finger MCP) relative to the shoulder width. */
 export const DEFAULT_HAND_RATIO = 0.24;
 

@@ -121,7 +121,7 @@ export function FramingStep({ nav }: { nav: StepNav }) {
     return () => window.clearInterval(id);
   }, [video]);
 
-  const r = checkFraming(luma, poses, handPx);
+  const r = checkFraming(luma, poses, handPx, video?.videoWidth || 640);
   const allOk = r.light === "ok" && r.distance === "ok" && r.hand === "ok";
   return (
     <StepFrame title={t("wizard.framing.title")} onBack={nav.back}
