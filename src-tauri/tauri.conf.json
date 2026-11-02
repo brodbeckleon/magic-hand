@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Magic Hand",
-  "version": "0.1.0",
+  "version": "../package.json",
   "identifier": "ch.zhaw.magichand",
   "build": {
     "frontendDist": "../dist",
