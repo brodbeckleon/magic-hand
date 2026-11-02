@@ -46,10 +46,10 @@ pub fn set_pause_shortcut<R: Runtime>(
     if let Some(s) = new {
         if let Err(e) = gs.register(s) {
             // Keep the previous shortcut working.
-            if let Some(o) = old {
-                if gs.register(o).is_ok() {
-                    *current = Some(o);
-                }
+            if let Some(o) = old
+                && gs.register(o).is_ok()
+            {
+                *current = Some(o);
             }
             return Err(e.to_string());
         }
