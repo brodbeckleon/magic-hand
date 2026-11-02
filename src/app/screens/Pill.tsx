@@ -59,6 +59,8 @@ export function Pill() {
     };
   }, [engine, t]);
 
+  useYieldFocusAfterDrag();
+
   // Clicking the pill activates our window on macOS; give the focus back to the presentation.
   const act = (fn: () => void) => () => {
     fn();
@@ -101,6 +103,44 @@ export function Pill() {
     </div>
     </>
   );
+}
+
+/**
+ * Dragging the pill (or clicking anywhere on it) activates our window on macOS. Swipes then send
+ * no keys (they would land in our own UI), so once the mouse is released the focus goes back to
+ * the presentation. Windows never activates the pill (WS_EX_NOACTIVATE).
+ */
+function useYieldFocusAfterDrag() {
+  useEffect(() => {
+    if (!platform.native) return;
+    let pressed = false;
+    let timer = 0;
+    const check = () => {
+      window.clearTimeout(timer);
+      if (!document.hasFocus()) return;
+      // A native window drag swallows the pointerup: keep checking until the button is up.
+      if (pressed) timer = window.setTimeout(check, 300);
+      else void platform.yieldFocus();
+    };
+    const onFocus = () => (timer = window.setTimeout(check, 300));
+    const onDown = () => (pressed = true);
+    const onUp = () => {
+      pressed = false;
+      if (document.hasFocus()) timer = window.setTimeout(check, 150);
+    };
+    const onMove = (e: PointerEvent) => e.buttons === 0 && (pressed = false);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointermove", onMove, true);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointermove", onMove, true);
+    };
+  }, []);
 }
 
 export type PillCamera = "off" | "small" | "large";
