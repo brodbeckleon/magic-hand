@@ -376,6 +376,7 @@
       "nobody": "Nobody was in view. You can set the area by hand or use the whole picture.",
       "tipDrag": "Drag the frame or its handles. Arrow keys move it, with Shift they resize it.",
       "tipPrivacy": "The dark part is ignored.",
+      "editorLabel": "Presenting area",
       "confirm": "Use this area",
       "again": "Detect again",
       "whole": "Use the whole picture",

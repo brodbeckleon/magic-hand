@@ -376,6 +376,7 @@
       "nobody": "Es war niemand zu sehen. Du kannst den Bereich von Hand festlegen oder das ganze Bild verwenden.",
       "tipDrag": "Ziehe den Rahmen oder seine Punkte. Pfeiltasten verschieben, mit Shift ändern sie die Grösse.",
       "tipPrivacy": "Der dunkle Teil wird ignoriert.",
+      "editorLabel": "Präsentationsbereich",
       "confirm": "Bereich übernehmen",
       "again": "Neu erkennen",
       "whole": "Ganzes Bild verwenden",

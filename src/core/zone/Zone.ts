@@ -27,8 +27,11 @@ export function fullToCrop<T extends Landmark>(lm: T, crop: Rect): T {
   return { ...lm, x: (lm.x - crop.x) / crop.w, y: (lm.y - crop.y) / crop.h };
 }
 
-/** Mirrors a source-space rect into the mirrored view (and back: mirroring twice is identity). */
-export const mirrorRect = (r: Rect): Rect => ({ ...r, x: 1 - r.x - r.w });
+/**
+ * Mirrors a source-space rect into the mirrored view (and back: mirroring twice is identity).
+ * A rect at the edge stays inside the frame: 1 - (1 - w) - w is not always exactly 0 in floating point.
+ */
+export const mirrorRect = (r: Rect): Rect => ({ ...r, x: Math.min(1 - r.w, Math.max(0, 1 - r.x - r.w)) });
 
 export const contains = (r: Rect, x: number, y: number): boolean =>
   x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;

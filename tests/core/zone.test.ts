@@ -36,6 +36,14 @@ describe("zone transforms", () => {
     }));
   });
 
+  it("a zone at the edge stays inside the frame when mirrored (no -1e-17 from rounding)", () => {
+    for (let w = 0.1; w <= 1; w += 0.01) {
+      const m = mirrorRect(clampRect({ x: 2, y: 0, w, h: 0.5 }));
+      expect(m.x).toBeGreaterThanOrEqual(0);
+      expect(m.x + m.w).toBeLessThanOrEqual(1);
+    }
+  });
+
   it("clampRect keeps zones inside the frame with a minimum size", () => {
     expect(clampRect({ x: -0.2, y: 0.95, w: 0.02, h: 0.5 })).toEqual({ x: 0, y: 0.5, w: 0.1, h: 0.5 });
   });

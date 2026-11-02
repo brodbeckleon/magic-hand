@@ -1,6 +1,7 @@
 // Persisted settings. Every field falls back to its default on its own when the stored value is
 // missing or invalid, so an old or hand-edited settings.json never breaks the app.
 import { z } from "zod";
+import { clampRect } from "../../core/zone/Zone.ts";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 
 export const SETTINGS_VERSION = 2;
@@ -12,13 +13,11 @@ const swipeShape = Object.fromEntries(
   ]),
 ) as { [K in keyof SwipeParams]: z.ZodCatch<z.ZodNumber> };
 
-/** Normalised rectangle in source-frame coordinates (unmirrored), 0..1. */
-export const zoneSchema = z.object({
-  x: z.number().min(0).max(1),
-  y: z.number().min(0).max(1),
-  w: z.number().min(0.05).max(1),
-  h: z.number().min(0.05).max(1),
-});
+/**
+ * Normalised rectangle in source-frame coordinates (unmirrored), 0..1. Values slightly outside
+ * (rounding, hand edits) are pulled back into the frame instead of dropping the whole zone.
+ */
+export const zoneSchema = z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }).transform(clampRect);
 export type Zone = z.infer<typeof zoneSchema>;
 
 export const RESOLUTIONS = ["320x240", "640x480", "1280x720"] as const;

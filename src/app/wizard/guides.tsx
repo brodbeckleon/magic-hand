@@ -1,4 +1,5 @@
 import { useRef, type PointerEvent as RPointerEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { clampRect, mirrorRect, type Rect } from "../../core/zone/Zone.ts";
 import { useFrame } from "../engine/frameContext.ts";
@@ -44,6 +45,7 @@ const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
  * Shift+arrow keys resize it. `zone` is in source coordinates; everything is drawn mirrored.
  */
 export function ZoneEditor({ zone, onChange }: { zone: Rect; onChange: (z: Rect) => void }) {
+  const { t } = useTranslation();
   const { width: W, height: H } = useFrame();
   const drag = useRef<{ handle: Handle; x: number; y: number; start: Rect } | null>(null);
   const svgPoint = (e: RPointerEvent<SVGElement>) => {
@@ -104,7 +106,7 @@ export function ZoneEditor({ zone, onChange }: { zone: Rect; onChange: (z: Rect)
     <FrameOverlay interactive testId="zone-editor">
       <g onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         <rect x={x} y={y} width={w} height={h} className="zone-rect" tabIndex={0} role="slider"
-          aria-label="Presenter zone" aria-valuetext={`${Math.round(zone.w * 100)} × ${Math.round(zone.h * 100)} %`}
+          aria-label={t("wizard.zone.editorLabel")} aria-valuetext={`${Math.round(zone.w * 100)} × ${Math.round(zone.h * 100)} %`}
           data-handle="move" onPointerDown={onDown} onKeyDown={onKey} strokeWidth={r / 4} />
         {HANDLES.map((hd) => (
           <circle key={hd} cx={pos[hd][0]} cy={pos[hd][1]} r={r} className={`zone-handle h-${hd}`} data-handle={hd} onPointerDown={onDown} strokeWidth={r / 4} />
