@@ -103,8 +103,9 @@ export class WorkerSource implements LandmarkSource {
 
   stop(): void {
     this.running = false;
-    if ("cancelVideoFrameCallback" in this.video) this.video.cancelVideoFrameCallback(this.handle);
-    cancelAnimationFrame(this.handle);
+    // Each API has its own id space: cancel only with the one that issued the handle.
+    if ("requestVideoFrameCallback" in this.video) this.video.cancelVideoFrameCallback(this.handle);
+    else cancelAnimationFrame(this.handle);
   }
 
   private schedule(tick: () => void): void {
