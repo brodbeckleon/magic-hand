@@ -33,10 +33,13 @@ export class HandAssociator {
     return this.bindings.get(handId);
   }
 
-  /** Call on frames where the pose model ran. `aspect` = width / height of the frame. */
-  update(hands: readonly HandTrack[], persons: readonly PersonTrack[], aspect: number): void {
-    const live = new Set(hands.map((h) => h.id));
-    for (const id of this.bindings.keys()) if (!live.has(id)) this.bindings.delete(id);
+  /**
+   * Call on frames where the pose model ran. `aspect` = width / height of the frame. `alive` tells
+   * which tracks still exist: a hand the detector missed on this one frame keeps its binding.
+   */
+  update(hands: readonly HandTrack[], persons: readonly PersonTrack[], aspect: number, alive?: (handId: number) => boolean): void {
+    const seen = new Set(hands.map((h) => h.id));
+    for (const id of this.bindings.keys()) if (!seen.has(id) && !alive?.(id)) this.bindings.delete(id);
 
     const wrists: { personId: number; side: Side; lm: Landmark; shoulder: number }[] = [];
     for (const p of persons) {

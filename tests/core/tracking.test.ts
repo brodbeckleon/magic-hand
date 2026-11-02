@@ -27,6 +27,15 @@ describe("HandTracker", () => {
     expect(b).not.toBe(a);
   });
 
+  it("still has a track the detector missed on one frame, until maxAge", () => {
+    const tr = new HandTracker();
+    const a = step(tr, 0, [[{ cx: 100, cy: 200, scale: 40 }, "right"]])[0]!.id;
+    expect(step(tr, 1 / 30, [])).toEqual([]);
+    expect(tr.has(a)).toBe(true);
+    step(tr, 1.0, []);
+    expect(tr.has(a)).toBe(false);
+  });
+
   it("ignores single-frame side flicker (majority vote)", () => {
     const tr = new HandTracker();
     const sides: Side[] = [];

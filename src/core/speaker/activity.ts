@@ -22,12 +22,16 @@ export class MouthActivity {
     }
     if (v === null) return;
     this.samples.push({ t, v });
-    while (this.samples.length && t - this.samples[0]!.t > this.window) this.samples.shift();
+    while (this.samples.length && t - this.samples[0]!.t > this.window * 1.5) this.samples.shift();
   }
 
-  /** Activity score (std dev of the mouth signal), or null without recent face data. */
+  /**
+   * Activity score (std dev of the mouth signal over the last `window`), or null without recent face
+   * data. With sparse samples (faces only every ~0.5 s under load) it looks back up to 1.5 windows.
+   */
   score(t: number): number | null {
-    const s = this.samples.filter((x) => t - x.t <= this.window * 1.5);
+    let s = this.samples.filter((x) => t - x.t <= this.window);
+    if (s.length < 3) s = this.samples.filter((x) => t - x.t <= this.window * 1.5);
     if (s.length < 3) return null;
     const mean = s.reduce((a, x) => a + x.v, 0) / s.length;
     return Math.sqrt(s.reduce((a, x) => a + (x.v - mean) ** 2, 0) / s.length);

@@ -103,6 +103,17 @@ describe("HandAssociator", () => {
     a.update([], persons, 4 / 3);
     expect(a.binding(1)).toBeUndefined();
   });
+
+  it("keeps the binding of a hand the detector missed on one frame (track still alive)", () => {
+    const tr = new PersonTracker();
+    const a = new HandAssociator();
+    const persons = tr.update(0, [withWrists(person(0.5, 0.3, 0.1), [0.55, 0.5], [0.45, 0.5])]);
+    a.update([hand(1, 0.45, 0.5)], persons, 4 / 3);
+    a.update([], persons, 4 / 3, (id) => id === 1);
+    expect(a.binding(1)).toMatchObject({ side: "right" });
+    a.update([], persons, 4 / 3, () => false);
+    expect(a.binding(1)).toBeUndefined();
+  });
 });
 
 describe("ClaimDetector", () => {
@@ -150,6 +161,10 @@ describe("activity signals", () => {
     expect(talking.score(1.8)!).toBeGreaterThan(0.2);
     expect(open.score(1.8)!).toBeLessThan(0.01);
     expect(new MouthActivity().score(0)).toBeNull();
+    // Sparse samples (every 0.55 s, faces under load) still score.
+    const sparse = new MouthActivity();
+    for (let i = 0; i < 6; i++) sparse.update(i * 0.55, { jawOpen: i % 2 ? 0.5 : 0.05, lip: null });
+    expect(sparse.score(5 * 0.55)!).toBeGreaterThan(0.2);
   });
 
   it("movement energy grows with gesturing and decays when still", () => {

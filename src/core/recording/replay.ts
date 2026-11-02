@@ -19,7 +19,13 @@ export function replay(rec: Recording, override: Partial<PipelineSettings> = {})
   const changes = [...rec.settings];
   const out: ReplayEvent[] = [];
   for (const f of rec.frames) {
-    while (changes.length && changes[0]!.t <= f.t) p.updateSettings({ ...changes.shift()!.patch, ...override });
+    // A change is recorded with the time of the last frame processed before it, so it applies from
+    // the next frame on, as it did live.
+    while (changes.length && changes[0]!.t < f.t) {
+      const { patch } = changes.shift()!;
+      const swipe = patch.swipe || override.swipe ? { swipe: { ...patch.swipe!, ...override.swipe } } : {};
+      p.updateSettings({ ...patch, ...override, ...swipe });
+    }
     for (const e of p.step(f).events) out.push(toReplayEvent(e));
   }
   return out;

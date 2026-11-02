@@ -51,6 +51,11 @@ export class HandTracker {
     this.tracks = [];
   }
 
+  /** The track still exists (seen within maxAge), even if this frame missed it. */
+  has(id: number): boolean {
+    return this.tracks.some((tr) => tr.id === id);
+  }
+
   /** Returns the tracks seen in this frame. `hands` are the features of `observations` (same order). */
   update(t: number, observations: readonly HandObs[], hands: readonly Hand[]): HandTrack[] {
     const p = this.params;
