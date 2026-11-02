@@ -235,5 +235,5 @@ test("a pause shortcut owned by another app is not advertised", async ({ page })
   await expect(page.getByTestId("pref-shortcut")).toHaveAttribute("data-unavailable", "true");
   await expect(page.getByTestId("preferences")).toContainText("another app already uses this shortcut");
   await page.getByTestId("open-help").click();
-  await expect(page.getByTestId("help")).toContainText("with the button on the presenting bar");
+  await expect(page.getByTestId("help")).toContainText("with the button on the bar while presenting");
 });
