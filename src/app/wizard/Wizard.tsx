@@ -32,6 +32,7 @@ export function Wizard({ kind }: { kind: WizardKind }) {
   const step = steps[index]!;
 
   useEffect(() => engine.suppressKeys(), [engine]);
+  useEffect(() => engine.keepAwake(), [engine]);
 
   const finish = useCallback(() => {
     if (kind === "firstRun") update({ firstRunDone: true });

@@ -46,6 +46,7 @@ export class Engine {
   private workerFailed = false;
   private poseRequests = 0;
   private keySuppressions = 0;
+  private awake = 0;
   private recorder: Recorder | null = null;
   private recordTimer = 0;
   private frameIndex = 0;
@@ -136,7 +137,7 @@ export class Engine {
 
   /** Nobody in view for the configured time: turn the camera off (privacy, battery). */
   private checkIdle(t: number, present: boolean): void {
-    if (present || this.presenceReset || this.lastPresence > t) this.lastPresence = t;
+    if (present || this.presenceReset || this.awake > 0 || this.lastPresence > t) this.lastPresence = t;
     this.presenceReset = false;
     const minutes = useSettings.getState().autoPauseMinutes;
     if (minutes > 0 && !useEngine.getState().paused && t - this.lastPresence > minutes * 60) {
@@ -233,6 +234,23 @@ export class Engine {
     };
   }
 
+  /**
+   * While held (e.g. by an open wizard) the camera runs: a paused camera resumes, since the wizard
+   * waits for frames and has no Resume button, and nobody in view does not turn it off.
+   */
+  keepAwake(): () => void {
+    this.awake++;
+    if (useEngine.getState().paused) this.setPaused(false);
+    let released = false;
+    return () => {
+      if (!released) {
+        released = true;
+        this.awake--;
+        this.presenceReset = true;
+      }
+    };
+  }
+
   /** Feeds frames from any source (live camera, recording replay, tests). */
   useSource(source: LandmarkSource, followSettings = true): void {
     if (followSettings) this.followSettings();
@@ -266,7 +284,11 @@ export class Engine {
     if (paused) {
       this.generation++;
       this.stopCamera();
-      useEngine.getState().set({ paused: true, pausedReason: reason });
+      // Paused while the camera or model was still starting: that start was abandoned, so it must
+      // not keep showing "Starting camera…" under the paused card.
+      const { status } = useEngine.getState();
+      const abandoned = status.kind === "starting" || status.kind === "loading";
+      useEngine.getState().set({ paused: true, pausedReason: reason, ...(abandoned ? { status: { kind: "idle" } as const } : {}) });
     } else if (this.video) {
       void this.start(this.video);
     }
