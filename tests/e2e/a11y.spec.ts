@@ -62,10 +62,10 @@ test.describe("accessibility (axe, WCAG 2.1 AA)", () => {
 test("closing a sheet returns the keyboard focus to the button that opened it", async ({ page }) => {
   await open(page);
   await waitLive(page);
-  for (const id of ["open-preferences", "open-help"]) {
+  for (const [id, sheet] of [["open-preferences", "preferences"], ["open-help", "help"]] as const) {
     await page.getByTestId(id).focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByTestId(sheet)).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByTestId(id)).toBeFocused();
   }

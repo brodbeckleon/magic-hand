@@ -123,6 +123,7 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
   display: inline-block; padding: 3px 8px; border-radius: 6px; font-family: var(--mono); font-size: 13px;
   background: rgb(255 255 255 / 0.1); border: 1px solid var(--glass-border); border-bottom-width: 2px;
 }
+.kbd[data-unavailable="true"] { text-decoration: line-through; opacity: 0.6; }
 .link { border: 0; background: none; color: var(--teal); padding: 0; font: inherit; font-size: 13.5px; cursor: pointer; justify-self: start; text-decoration: underline; text-underline-offset: 3px; }
 .link:hover { color: #3cc9b6; }
 .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }

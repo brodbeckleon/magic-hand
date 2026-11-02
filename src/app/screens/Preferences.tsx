@@ -168,6 +168,7 @@ function PresentationSection() {
   const { t } = useTranslation();
   const s = useSettings();
   const shortcut = formatShortcut(s.pauseShortcut);
+  const shortcutOk = useUi((u) => u.pauseShortcutOk);
   return (
     <Section title={t("prefs.presentation")} icon="keyboard">
       <Row label={t("prefs.keys")} hint={t(`prefs.keysHint.${s.keyMapping}`)}>
@@ -212,8 +213,8 @@ function PresentationSection() {
         />
         <small className="field-hint">{t(`prefs.pillCameraHint.${s.pill.camera}`)}</small>
       </div>
-      <Row label={t("prefs.pauseShortcut")} hint={t("prefs.pauseShortcutHint")}>
-        <kbd className="kbd">{shortcut}</kbd>
+      <Row label={t("prefs.pauseShortcut")} hint={t(shortcutOk ? "prefs.pauseShortcutHint" : "prefs.pauseShortcutTaken")}>
+        <kbd className="kbd" data-testid="pref-shortcut" data-unavailable={!shortcutOk}>{shortcut}</kbd>
       </Row>
     </Section>
   );

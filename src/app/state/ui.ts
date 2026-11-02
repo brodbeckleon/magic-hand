@@ -20,6 +20,9 @@ interface UiStore {
   openSheet(sheet: Sheet, helpTab?: HelpTab): void;
   closeSheet(): void;
   setView(view: "main" | "pill"): void;
+  /** False when the system refused the global pause shortcut (another app owns it). */
+  pauseShortcutOk: boolean;
+  setPauseShortcutOk(ok: boolean): void;
 }
 
 export const useUi = create<UiStore>()((set) => ({
@@ -34,4 +37,6 @@ export const useUi = create<UiStore>()((set) => ({
   openSheet: (sheet, helpTab) => set((s) => ({ sheet, helpTab: helpTab ?? s.helpTab })),
   closeSheet: () => set({ sheet: null }),
   setView: (view) => set({ view, sheet: null }),
+  pauseShortcutOk: true,
+  setPauseShortcutOk: (pauseShortcutOk) => set({ pauseShortcutOk }),
 }));

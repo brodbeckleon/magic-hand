@@ -226,3 +226,14 @@ test("the orange trail only appears while the hand moves, not as a dot on a rest
   await expect(page.locator(".trail")).toHaveAttribute("d", /L/);
   await moving;
 });
+
+test("a pause shortcut owned by another app is not advertised", async ({ page }) => {
+  await page.addInitScript(() => ((window as unknown as { __shortcutTaken: boolean }).__shortcutTaken = true));
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-preferences").click();
+  await expect(page.getByTestId("pref-shortcut")).toHaveAttribute("data-unavailable", "true");
+  await expect(page.getByTestId("preferences")).toContainText("another app already uses this shortcut");
+  await page.getByTestId("open-help").click();
+  await expect(page.getByTestId("help")).toContainText("with the button on the presenting bar");
+});

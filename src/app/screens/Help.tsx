@@ -37,6 +37,7 @@ function GettingStarted() {
   const { t } = useTranslation();
   const reverse = useSettings((s) => s.reverse);
   const shortcut = formatShortcut(useSettings((s) => s.pauseShortcut));
+  const shortcutOk = useUi((s) => s.pauseShortcutOk);
   const update = useSettings((s) => s.update);
   const close = useUi((s) => s.closeSheet);
   const nextDir = reverse ? "right" : "left";
@@ -73,7 +74,7 @@ function GettingStarted() {
         <ul>
           <li>{t("help.tip1")}</li>
           <li>{t("help.tip2")}</li>
-          <li>{t("help.tip3", { shortcut })}</li>
+          <li>{t(shortcutOk ? "help.tip3" : "help.tip3Bar", { shortcut })}</li>
         </ul>
       </div>
       <button className="link" data-testid="replay-onboarding" onClick={() => { update({ firstRunDone: false }); close(); }}>

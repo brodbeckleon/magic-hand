@@ -99,7 +99,10 @@ const browser: Platform = {
   setPillMode: async () => {},
   yieldFocus: async () => {},
   updateTray: async () => {},
-  setPauseShortcut: async () => {},
+  // e2e tests set window.__shortcutTaken to simulate another app owning the shortcut.
+  setPauseShortcut: async () => {
+    if ((window as unknown as { __shortcutTaken?: boolean }).__shortcutTaken) throw new Error("shortcut taken");
+  },
   // e2e tests set window.__frontmostApp to simulate another app in front.
   frontmostApp: async () => (window as unknown as { __frontmostApp?: FrontApp }).__frontmostApp ?? null,
   onTrayAction: () => () => {},
