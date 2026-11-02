@@ -52,3 +52,24 @@ for (const { width, height } of [
     });
   }
 }
+
+for (const width of [640, 760, 900, 1280]) {
+  test(`with a sheet open, the swipe bar is readable or hidden at ${width} px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 600 });
+    await open(page);
+    await waitLive(page);
+    for (const sheet of ["preferences", "help"]) {
+      await page.getByTestId(`open-${sheet}`).click();
+      await expect(page.getByTestId(sheet)).toBeVisible();
+      await page.waitForTimeout(400); // slide-in
+      const bar = page.getByTestId("swipe-bar");
+      if (await bar.isVisible()) {
+        const b = (await bar.boundingBox())!;
+        const s = (await page.getByTestId(sheet).boundingBox())!;
+        expect(b.width, `${sheet}: swipe bar width`).toBeGreaterThanOrEqual(200);
+        expect(b.x + b.width, `${sheet}: swipe bar under the sheet`).toBeLessThanOrEqual(s.x);
+      }
+      await page.keyboard.press("Escape");
+    }
+  });
+}
