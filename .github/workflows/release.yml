@@ -1,0 +1,108 @@
+name: Release
+
+# Pushing a version tag (git tag v0.2.0 && git push origin v0.2.0) builds the installers and
+# publishes them as a GitHub release (docs/release.md). The release stays a draft until every
+# platform has uploaded, so a failed build never leaves a half-empty release behind.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.create.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm version:check "$GITHUB_REF_NAME"
+      - id: create
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Versions like 0.2.0-beta.1 are marked as pre-releases.
+          prerelease=false
+          [[ "$GITHUB_REF_NAME" == *-* ]] && prerelease=true
+          body=$(cat <<'EOF'
+          **Installieren:** unten unter *Assets* die `.dmg` (macOS, Apple Silicon und Intel) oder den `.exe`-/`.msi`-Installer (Windows) herunterladen. Schritte und Berechtigungen: [README → Installieren](https://github.com/${{ github.repository }}#installieren).
+          EOF
+          )
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -X POST \
+            -f tag_name="$GITHUB_REF_NAME" -f name="Magic Hand $GITHUB_REF_NAME" -f body="$body" \
+            -F draft=true -F prerelease=$prerelease -F generate_release_notes=true --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: draft
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # One DMG for Apple Silicon and Intel Macs.
+          - os: macos-latest
+            args: --target universal-apple-darwin
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - os: windows-latest
+            args: ""
+            rust-targets: ""
+    runs-on: ${{ matrix.os }}
+    env:
+      HAS_APPLE_CERT: ${{ secrets.APPLE_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: pnpm install --frozen-lockfile
+      # Signed + notarised only when the secrets exist (docs/release.md), as in ci.yml: empty
+      # variables would make the bundler try to import an empty certificate.
+      - name: build and upload (signed)
+        if: env.HAS_APPLE_CERT == 'true' && runner.os == 'macOS'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          releaseId: ${{ needs.draft.outputs.id }}
+          args: ${{ matrix.args }}
+      - name: build and upload
+        if: env.HAS_APPLE_CERT != 'true' || runner.os != 'macOS'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          releaseId: ${{ needs.draft.outputs.id }}
+          args: ${{ matrix.args }}
+
+  publish:
+    needs: [draft, build]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/releases/${{ needs.draft.outputs.id }}" -X PATCH -F draft=false

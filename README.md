@@ -25,13 +25,15 @@ Kaspar Streiff und Diego Esposito. Der ursprüngliche Python-Prototyp liegt unte
 > Kamerabild kann nicht über der Präsentation schweben. Zum Präsentieren die installierte App
 > verwenden.
 
-Solange es keine offiziellen Releases gibt, baut GitHub die Installer automatisch bei jedem Pull
-Request: im Pull Request unter **Checks → CI → Artifacts** (Anmeldung bei GitHub nötig).
+Die Installer gibt es unter [**Releases**](https://github.com/brodbeckleon/magic-hand/releases)
+(unter *Assets*). Neuere, noch nicht veröffentlichte Stände baut GitHub bei jedem Pull Request: im
+Pull Request unter **Checks → CI → Artifacts** (Anmeldung bei GitHub nötig).
 
-### macOS (13 oder neuer, Apple Silicon)
+### macOS (13 oder neuer)
 
-1. Artefakt **`magic-hand-macos-latest`** herunterladen, entpacken, die `.dmg` öffnen und
-   **Magic Hand** in den Ordner **Programme** ziehen.
+1. Aus dem Release die `.dmg` herunterladen (Apple Silicon und Intel), öffnen und **Magic Hand** in
+   den Ordner **Programme** ziehen. (Das CI-Artefakt **`magic-hand-macos-latest`** läuft nur auf
+   Apple Silicon und muss zuerst entpackt werden.)
 2. Die App ist noch nicht signiert: im Ordner Programme **Rechtsklick → Öffnen → Öffnen**.
    Meldet macOS, die App sei «beschädigt», einmal im Terminal ausführen und dann erneut öffnen:
    ```bash
@@ -47,8 +49,8 @@ Dann einfach erneut erlauben.
 
 ### Windows (10 und 11)
 
-1. Artefakt **`magic-hand-windows-latest`** herunterladen, entpacken und den Installer
-   (`.exe` oder `.msi`) starten.
+1. Aus dem Release den Installer (`.exe` oder `.msi`) herunterladen und starten (oder das
+   CI-Artefakt **`magic-hand-windows-latest`** entpacken).
 2. Warnt SmartScreen, weil die App nicht signiert ist: **Weitere Informationen → Trotzdem ausführen**.
 3. Unter *Einstellungen → Datenschutz → Kamera* muss «Desktop-Apps den Zugriff erlauben» an sein.
 
