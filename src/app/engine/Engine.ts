@@ -173,6 +173,7 @@ export class Engine {
 
   private scheduleFrame = 0;
   private lastFaceAt = -Infinity;
+  private lastPoseAt = -Infinity;
   private loadMs = 0;
   private personCount = 0;
 
@@ -190,8 +191,10 @@ export class Engine {
       forcePose: this.poseRequests > 0,
       far: this.anyFar,
       sinceFace: now - this.lastFaceAt,
+      sincePose: now - this.lastPoseAt,
     });
     if (plan.face) this.lastFaceAt = now;
+    if (plan.pose) this.lastPoseAt = now;
     return { zone: s.zone, fullFrame: this.fullFrameRequests > 0, wristCrops: this.wristCrops, ...plan };
   }
 
