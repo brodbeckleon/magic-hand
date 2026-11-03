@@ -39,9 +39,12 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
     <div className={cls}>
       <div className="drag-strip" data-tauri-drag-region />
       <Toolbar />
-      {live && <StatusChip />}
+      <div className="top-left">
+        {live && <StatusChip />}
+        <PreviewNotice />
+        {devUnlocked && status.kind === "live" && <DevPanel />}
+      </div>
       {live && showEvents && <EventList />}
-      {devUnlocked && status.kind === "live" && <DevPanel />}
       <RecBadge />
       {status.kind === "live" && <StudyOverlay />}
       {live && <SwipeBar />}
@@ -54,7 +57,6 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
       {status.kind === "error" && <CameraError status={status} onRetry={onRetry} />}
       {paused && <PausedCard />}
       <AccessibilityCard />
-      <PreviewNotice />
       <Preferences />
       <Help />
     </div>
@@ -105,6 +107,7 @@ function PresentButton() {
           className="present-btn"
           data-testid="present"
           title={t("main.presentHint")}
+          aria-label={t("main.present")}
           onClick={() => setView("pill")}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -112,7 +115,7 @@ function PresentButton() {
           transition={spring}
         >
           <Icon name="present" />
-          {t("main.present")}
+          <span>{t("main.present")}</span>
         </motion.button>
       )}
     </AnimatePresence>

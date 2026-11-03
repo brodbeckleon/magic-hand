@@ -58,3 +58,26 @@ test.describe("accessibility (axe, WCAG 2.1 AA)", () => {
     }
   });
 });
+
+test("closing a sheet returns the keyboard focus to the button that opened it", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  for (const [id, sheet] of [["open-preferences", "preferences"], ["open-help", "help"]] as const) {
+    await page.getByTestId(id).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId(sheet)).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId(id)).toBeFocused();
+  }
+});
+
+test("with reduced motion, sheets open without sliding in", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-preferences").click();
+  // No spring: the sheet is in place right away (a slide takes ~300 ms).
+  await page.waitForTimeout(60);
+  const t = await page.getByTestId("preferences").evaluate((el) => getComputedStyle(el).transform);
+  expect(t === "none" || /matrix\(1, 0, 0, 1, 0, 0\)/.test(t)).toBe(true);
+});

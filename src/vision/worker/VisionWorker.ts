@@ -5,11 +5,15 @@ import type { FromWorker, ToWorker } from "./protocol.ts";
 
 type Result = Extract<FromWorker, { type: "result" }>;
 
+const emptyResult = (id: number): Result =>
+  ({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0 });
+
 /** Promise-based handle to the vision worker. */
 export class VisionWorker implements VisionBackend {
   readonly inWorker = true;
   private readonly worker: Worker;
   private pending = new Map<number, (r: Result) => void>();
+  private terminated = false;
   private onReady: ((d: Delegate) => void) | null = null;
   private onInitError: ((e: Error) => void) | null = null;
   private nextId = 1;
@@ -41,7 +45,7 @@ export class VisionWorker implements VisionBackend {
   }
 
   private resolvePending(): void {
-    for (const [id, resolve] of this.pending) resolve({ type: "result", id, hands: [], poses: null, faces: null, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0 });
+    for (const [id, resolve] of this.pending) resolve(emptyResult(id));
     this.pending.clear();
   }
 
@@ -62,8 +66,21 @@ export class VisionWorker implements VisionBackend {
   detect(frame: DetectRequest): Promise<DetectResult> {
     const id = this.nextId++;
     return new Promise((resolve) => {
+      // A terminated worker would never answer, and a frame that cannot be posted never arrives:
+      // either way answer "nothing found" so the caller is not stuck busy, and free the bitmap.
+      if (this.terminated) {
+        frame.bitmap.close();
+        return resolve(emptyResult(id));
+      }
       this.pending.set(id, resolve);
-      this.worker.postMessage({ type: "frame", id, ...frame } satisfies ToWorker, [frame.bitmap]);
+      try {
+        this.worker.postMessage({ type: "frame", id, ...frame } satisfies ToWorker, [frame.bitmap]);
+      } catch (err) {
+        this.pending.delete(id);
+        frame.bitmap.close();
+        console.error("vision worker: frame not sent", err);
+        resolve(emptyResult(id));
+      }
     });
   }
 
@@ -76,6 +93,7 @@ export class VisionWorker implements VisionBackend {
   }
 
   terminate(): void {
+    this.terminated = true;
     this.worker.terminate();
     // A terminated worker never answers: callers awaiting detect() must not hang.
     this.resolvePending();

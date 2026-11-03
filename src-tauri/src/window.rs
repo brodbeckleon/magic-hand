@@ -72,6 +72,10 @@ fn leave_pill<R: Runtime>(w: &WebviewWindow<R>, state: &WindowState) -> tauri::R
     w.set_visible_on_all_workspaces(false)?;
     w.set_skip_taskbar(false)?;
     w.set_decorations(true)?;
+    // tao rebuilds the style mask without FullSizeContentView: restore the overlay title bar of
+    // tauri.conf.json, or the content no longer extends under the traffic lights.
+    #[cfg(target_os = "macos")]
+    w.set_title_bar_style(tauri::TitleBarStyle::Overlay)?;
     w.set_shadow(true)?;
     w.set_resizable(true)?;
     w.set_min_size(Some(Size::Logical(MIN_SIZE)))?;
@@ -141,6 +145,7 @@ mod platform {
 mod platform {
     use tauri::{Runtime, WebviewWindow};
     use windows::Win32::Foundation::HWND;
+    use windows::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
     use windows::Win32::UI::WindowsAndMessaging::{
         GW_HWNDNEXT, GWL_EXSTYLE, GetWindow, GetWindowLongPtrW, GetWindowRect, IsIconic,
         IsWindowVisible, SetForegroundWindow, SetWindowLongPtrW, WS_EX_NOACTIVATE,
@@ -159,6 +164,22 @@ mod platform {
         }
     }
 
+    /// "Visible" windows the user cannot see: suspended store apps, other virtual desktops.
+    unsafe fn is_cloaked(h: HWND) -> bool {
+        let mut cloaked: u32 = 0;
+        // SAFETY: the buffer is a u32, the size DWMWA_CLOAKED writes.
+        unsafe {
+            DwmGetWindowAttribute(
+                h,
+                DWMWA_CLOAKED,
+                (&mut cloaked as *mut u32).cast(),
+                std::mem::size_of::<u32>() as u32,
+            )
+        }
+        .is_ok()
+            && cloaked != 0
+    }
+
     /// Activates the next visible, normal top-level window below ours in the z-order.
     pub fn yield_focus<R: Runtime>(w: &WebviewWindow<R>) {
         let Ok(ours) = w.hwnd() else { return };
@@ -174,7 +195,8 @@ mod platform {
                 let ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
                 if !IsWindowVisible(h).as_bool()
                     || IsIconic(h).as_bool()
-                    || ex & (WS_EX_TOOLWINDOW.0 as isize) != 0
+                    || ex & ((WS_EX_TOOLWINDOW.0 | WS_EX_NOACTIVATE.0) as isize) != 0
+                    || is_cloaked(h)
                 {
                     continue;
                 }

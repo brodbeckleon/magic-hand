@@ -146,3 +146,24 @@ test("zone editor: keyboard moves the zone", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await expect.poll(async () => Number(await rect.getAttribute("x"))).toBeGreaterThan(before);
 });
+
+test("opening the calibration while paused turns the camera back on (the wizard has no Resume button)", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.keyboard.press("p");
+  await expect(page.getByTestId("paused")).toBeVisible();
+  await page.getByTestId("open-calibrate").click();
+  await expect.poll(() => page.locator("video.camera").evaluate((v: HTMLVideoElement) => (v.srcObject as MediaStream | null)?.active ?? false)).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("paused")).toHaveCount(0);
+});
+
+test("pausing while the camera is still starting does not leave 'Starting camera' behind", async ({ page }) => {
+  await open(page);
+  await expect(page.getByText(/Starting camera|Loading/)).toBeVisible();
+  await page.keyboard.press("p");
+  await expect(page.getByTestId("paused")).toBeVisible();
+  await expect(page.getByText(/Starting camera|Loading/)).toHaveCount(0);
+  await page.getByTestId("resume").click();
+  await waitLive(page);
+});

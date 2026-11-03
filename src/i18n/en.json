@@ -182,6 +182,7 @@
     },
     "pauseShortcut": "Pause shortcut",
     "pauseShortcutHint": "Works even while the presentation is in front.",
+    "pauseShortcutTaken": "Not available: another app already uses this shortcut. Pause with the button on the bar instead.",
     "language": "Language",
     "languageSystem": "System",
     "privacy": "Privacy",
@@ -270,6 +271,7 @@
     "tip1": "Slow or diagonal movements while explaining are ignored.",
     "tip2": "Hand shape does not matter.",
     "tip3": "Press {{shortcut}} to pause at any time, even during the presentation.",
+    "tip3Bar": "Pause at any time with the button on the bar while presenting ({{shortcut}} is used by another app).",
     "replayOnboarding": "Show the introduction again",
     "trouble": {
       "noSlideTitle": "The slide does not change",
@@ -376,6 +378,7 @@
       "nobody": "Nobody was in view. You can set the area by hand or use the whole picture.",
       "tipDrag": "Drag the frame or its handles. Arrow keys move it, with Shift they resize it.",
       "tipPrivacy": "The dark part is ignored.",
+      "editorLabel": "Presenting area",
       "confirm": "Use this area",
       "again": "Detect again",
       "whole": "Use the whole picture",

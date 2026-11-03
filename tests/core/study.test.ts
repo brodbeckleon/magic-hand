@@ -67,4 +67,10 @@ describe("StudySession", () => {
     expect(csv).toContain("1,next,hit,500,310,70");
     expect(csv).toContain("distanz,3 m");
   });
+
+  it("quotes typed notes with commas, quotes and line breaks", () => {
+    const s = new StudySession(0, { ...plan, perDirection: 1 });
+    const csv = reportCsv(s.report(), { notiz: 'Raum 2, Licht "schlecht"\nzweite Zeile' });
+    expect(csv).toContain('notiz,"Raum 2, Licht ""schlecht""\nzweite Zeile"\r\n');
+  });
 });

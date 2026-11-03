@@ -21,6 +21,7 @@ const dynamicImport: (url: string) => Promise<{ default: unknown }> = import.met
 };
 
 const CROP_PX = 224;
+const POSES = 4;
 const FACE_PX = 256;
 
 export interface DetectRequest {
@@ -89,9 +90,9 @@ export class VisionRunner {
     await this.hands?.setOptions({ numHands: n });
   }
 
-  /** The tracker's region of interest refers to the old crop; restart tracking. */
+  /** The trackers' regions of interest refer to the old crop; restart tracking (hands and poses). */
   async reset(): Promise<void> {
-    await this.hands?.setOptions({ numHands: this.numHands });
+    await Promise.all([this.hands?.setOptions({ numHands: this.numHands }), this.pose.current?.setOptions({ numPoses: POSES })]);
   }
 
   close(): void {
@@ -149,7 +150,7 @@ export class VisionRunner {
     return PoseLandmarker.createFromOptions(this.fileset!, {
       baseOptions: { modelAssetPath: MODEL_PATHS.pose, delegate: this.delegate },
       runningMode: "VIDEO",
-      numPoses: 4,
+      numPoses: POSES,
       minPoseDetectionConfidence: 0.5,
       minPosePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,
@@ -252,6 +253,11 @@ class LazyModel<T extends { close(): void }> {
 
   constructor(name: string) {
     this.name = name;
+  }
+
+  /** The model if it is loaded, without starting a load. */
+  get current(): T | null {
+    return this.model;
   }
 
   /** The model if ready; otherwise starts loading it and returns null for now. */

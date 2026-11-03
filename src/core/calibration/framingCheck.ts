@@ -16,7 +16,7 @@ export const FRAMING_LIMITS = {
   /** Shoulder width as a share of the frame width. */
   minShoulder: 0.07,
   maxShoulder: 0.45,
-  /** Hand length in pixels at the analysed resolution. */
+  /** Hand length in pixels at 640 px frame width (scaled with the width). */
   minHandPx: 18,
 };
 
@@ -32,7 +32,7 @@ export function meanLuma(rgba: ArrayLike<number>): number {
  * Live checks for the framing step: enough light, presenter neither too far nor too close, and a
  * hand large enough to track. "unknown" means there is nothing to judge yet (nobody in view).
  */
-export function checkFraming(luma: number | null, poses: readonly PoseObs[] | null, handPx: number | null): FramingResult {
+export function checkFraming(luma: number | null, poses: readonly PoseObs[] | null, handPx: number | null, width = 640): FramingResult {
   const L = FRAMING_LIMITS;
   const light: Check = luma === null ? "unknown" : luma < L.minLuma ? "low" : luma > L.maxLuma ? "high" : "ok";
   let distance: Check = "unknown";
@@ -41,6 +41,6 @@ export function checkFraming(luma: number | null, poses: readonly PoseObs[] | nu
     const s = Math.max(...shoulders); // the closest person is the presenter
     distance = s < L.minShoulder ? "low" : s > L.maxShoulder ? "high" : "ok";
   }
-  const hand: Check = handPx === null ? "unknown" : handPx < L.minHandPx ? "low" : "ok";
+  const hand: Check = handPx === null ? "unknown" : handPx < (L.minHandPx * width) / 640 ? "low" : "ok";
   return { light, distance, hand };
 }

@@ -182,6 +182,7 @@
     },
     "pauseShortcut": "Pause-Kurzbefehl",
     "pauseShortcutHint": "Funktioniert auch, wenn die Präsentation im Vordergrund ist.",
+    "pauseShortcutTaken": "Nicht verfügbar: Eine andere App verwendet diesen Kurzbefehl schon. Pausiere stattdessen mit der Taste auf der Leiste.",
     "language": "Sprache",
     "languageSystem": "System",
     "privacy": "Datenschutz",
@@ -270,6 +271,7 @@
     "tip1": "Langsame oder schräge Bewegungen beim Erklären werden ignoriert.",
     "tip2": "Die Handform spielt keine Rolle.",
     "tip3": "Mit {{shortcut}} pausierst du jederzeit, auch während der Präsentation.",
+    "tip3Bar": "Pausieren kannst du beim Präsentieren jederzeit mit der Taste auf der Leiste ({{shortcut}} verwendet eine andere App).",
     "replayOnboarding": "Einführung erneut zeigen",
     "trouble": {
       "noSlideTitle": "Die Folie wechselt nicht",
@@ -376,6 +378,7 @@
       "nobody": "Es war niemand zu sehen. Du kannst den Bereich von Hand festlegen oder das ganze Bild verwenden.",
       "tipDrag": "Ziehe den Rahmen oder seine Punkte. Pfeiltasten verschieben, mit Shift ändern sie die Grösse.",
       "tipPrivacy": "Der dunkle Teil wird ignoriert.",
+      "editorLabel": "Präsentationsbereich",
       "confirm": "Bereich übernehmen",
       "again": "Neu erkennen",
       "whole": "Ganzes Bild verwenden",

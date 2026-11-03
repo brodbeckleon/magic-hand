@@ -91,5 +91,7 @@ describe("checkFraming", () => {
   it("judges whether the hand is big enough to track", () => {
     expect(checkFraming(null, null, 12).hand).toBe("low");
     expect(checkFraming(null, null, 40).hand).toBe("ok");
+    expect(checkFraming(null, null, 30, 1280).hand).toBe("low"); // 15 px at 640
+    expect(checkFraming(null, null, 12, 320).hand).toBe("ok"); // 24 px at 640
   });
 });

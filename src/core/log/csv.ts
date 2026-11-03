@@ -45,7 +45,7 @@ export interface LogEntry {
   detectMs?: number;
 }
 
-const csvCell = (v: string): string => (/[",\r\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
+export const csvCell = (v: string): string => (/[",\r\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
 
 const fixed = (v: number | undefined, digits: number): string => (v === undefined ? "" : v.toFixed(digits));
 

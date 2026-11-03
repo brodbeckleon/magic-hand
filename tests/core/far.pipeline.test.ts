@@ -18,7 +18,8 @@ function pose(shoulder: number, wx: number, wy: number): PoseObs {
 }
 
 /** Pose-only frames (hand model finds nothing): hold, swipe the wrist left in the mirrored view. */
-function run(shoulder: number, opts: { farAssist?: boolean } = {}) {
+function run(shoulder: number, opts: { farAssist?: boolean } = {}, W = 640) {
+  const H = (W * 3) / 4;
   const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, ...opts });
   const events: string[] = [];
   let snap = null as ReturnType<GesturePipeline["step"]>["snapshot"] | null;
@@ -49,6 +50,13 @@ describe("far-distance assist", () => {
     const { events, snap } = run(0.25); // 160 px shoulders
     expect(events.filter((e) => e === "next" || e === "prev")).toEqual([]);
     expect(snap.persons[0]!.far).toBe(false);
+  });
+
+  it("judges 'far' relative to the frame width, not in absolute pixels", () => {
+    // Same presenter, same distance: 0.12 of the frame width is far at every resolution.
+    for (const w of [320, 640, 1280]) expect(run(0.12, {}, w).snap.persons[0]!.far).toBe(true);
+    // A near presenter is near even at 320 px (0.25 x 320 = 80 px was "far" in absolute pixels).
+    expect(run(0.25, {}, 320).snap.persons[0]!.far).toBe(false);
   });
 
   it("can be switched off", () => {

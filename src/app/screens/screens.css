@@ -39,7 +39,11 @@
 .chrome { position: absolute; inset: 0; pointer-events: none; }
 .chrome > * { pointer-events: auto; }
 .chrome .drag-strip { position: absolute; top: 0; left: 0; right: 0; height: 30px; }
-.chrome.mac .status-chip { top: 40px; }
+.top-left {
+  position: absolute; top: 14px; left: 14px; max-height: calc(100% - 110px);
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+}
+.chrome.mac .top-left { top: 40px; }
 
 .toolbar {
   position: absolute; top: 14px; right: 14px; display: flex; gap: 2px; padding: 4px; border-radius: 16px; z-index: 25;
@@ -54,6 +58,9 @@
 .tool svg { opacity: 0.9; }
 @media (max-width: 760px) { .tool span { display: none; } .tool { padding: 8px 10px; } }
 
+/* The swipe bar is centred and keeps clear of the Present button on both sides. */
+.chrome { --present-clear: 220px; }
+
 .present-btn {
   position: absolute; right: 18px; bottom: 18px; display: inline-flex; align-items: center; gap: 10px;
   padding: 13px 20px; border-radius: 999px; border: 0; cursor: pointer; font-size: 15px; font-weight: 700;
@@ -62,6 +69,12 @@
 }
 .present-btn:hover { filter: brightness(1.08); }
 .present-btn:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+/* Small windows: icon only, like the toolbar (the label stays as aria-label and tooltip). */
+@media (max-width: 760px) {
+  .present-btn { padding: 13px; }
+  .present-btn span { display: none; }
+  .chrome { --present-clear: 84px; }
+}
 
 .toast-slot { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); pointer-events: none; }
 .toast { padding: 9px 16px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; }
@@ -110,6 +123,7 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
   display: inline-block; padding: 3px 8px; border-radius: 6px; font-family: var(--mono); font-size: 13px;
   background: rgb(255 255 255 / 0.1); border: 1px solid var(--glass-border); border-bottom-width: 2px;
 }
+.kbd[data-unavailable="true"] { text-decoration: line-through; opacity: 0.6; }
 .link { border: 0; background: none; color: var(--teal); padding: 0; font: inherit; font-size: 13.5px; cursor: pointer; justify-self: start; text-decoration: underline; text-underline-offset: 3px; }
 .link:hover { color: #3cc9b6; }
 .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
@@ -159,6 +173,9 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 /* With a sheet open, keep the feedback centred in the part of the camera that is still visible. */
 .chrome.sheet-open .swipe-bar { left: calc((100% - 444px) / 2); width: min(460px, calc(100% - 484px)); }
 .chrome.sheet-open.sheet-wide .swipe-bar { left: calc((100% - 584px) / 2); width: min(420px, calc(100% - 624px)); }
+/* Too little camera left beside the sheet for a readable bar: the sheet has the window's attention. */
+@media (max-width: 720px) { .chrome.sheet-open .swipe-bar { display: none; } }
+@media (max-width: 860px) { .chrome.sheet-open.sheet-wide .swipe-bar { display: none; } }
 .chrome.sheet-open .arrow-flash { right: 444px; }
 .chrome.sheet-open .toast-slot { left: calc((100% - 444px) / 2); }
 
@@ -187,7 +204,7 @@ html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .pill-warn { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .preview-notice {
-  position: absolute; left: 14px; bottom: 18px; max-width: min(420px, calc(100% - 260px)); z-index: 5;
+  max-width: min(380px, calc(100vw - 344px)); z-index: 5;
   display: flex; gap: 8px; align-items: flex-start; padding: 9px 12px; border-radius: var(--radius-m);
   font-size: 12.5px; line-height: 1.4; color: var(--text); border-color: rgb(255 181 71 / 0.45);
 }

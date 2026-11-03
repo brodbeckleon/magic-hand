@@ -3,10 +3,12 @@ import { schedule } from "../../src/core/pipeline/scheduler.ts";
 /** n frames at `fps`, feeding back when the face model last ran (as the engine does). */
 const run = (n: number, o: Partial<Parameters<typeof schedule>[0]> = {}, fps = 30) => {
   let lastFace = -Infinity;
+  let lastPose = -Infinity;
   return Array.from({ length: n }, (_, frame) => {
     const t = frame / fps;
-    const s = schedule({ frame, persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, ...o });
+    const s = schedule({ frame, persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, sincePose: t - lastPose, ...o });
     if (s.face) lastFace = t;
+    if (s.pose) lastPose = t;
     return s;
   });
 };
@@ -39,4 +41,11 @@ describe("scheduler", () => {
 
 it("runs pose every 2nd frame while a presenter is far away", () => {
   expect(run(12, { far: true }).filter((s) => s.pose)).toHaveLength(6);
+});
+
+it("keeps pose gaps below the swipe detector's maxGap while far away, even busy at low frame rates", () => {
+  for (const fps of [10, 15, 20, 30]) {
+    const poses = run(fps * 3, { far: true, loadMs: 50 }, fps).flatMap((s, i) => (s.pose ? [i / fps] : []));
+    for (let i = 1; i < poses.length; i++) expect(poses[i]! - poses[i - 1]!).toBeLessThan(0.2);
+  }
 });

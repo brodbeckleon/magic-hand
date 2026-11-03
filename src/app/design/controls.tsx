@@ -15,9 +15,19 @@ export function Sheet({ open, title, onClose, children, testId, wide }: {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    panel.current?.focus();
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+  useEffect(() => {
+    if (!open) return;
+    // Back to the button that opened the sheet when it closes, not to <body>.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const sheet = panel.current;
+    sheet?.focus();
+    return () => {
+      const now = document.activeElement;
+      if (opener?.isConnected && (!now || now === document.body || sheet?.contains(now))) opener.focus();
+    };
+  }, [open]);
   return (
     <AnimatePresence>
       {open && (

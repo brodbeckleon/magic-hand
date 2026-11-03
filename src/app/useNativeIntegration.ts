@@ -65,7 +65,14 @@ export function useNativeIntegration(engine: Engine): void {
   }, [t, paused, calibrated]);
 
   useEffect(() => {
-    platform.setPauseShortcut(shortcut).catch((err) => console.warn("pause shortcut not available", err));
+    const setOk = useUi.getState().setPauseShortcutOk;
+    platform.setPauseShortcut(shortcut).then(
+      () => setOk(true),
+      (err) => {
+        console.warn("pause shortcut not available", err);
+        setOk(false);
+      },
+    );
   }, [shortcut]);
 
   useEffect(() => {

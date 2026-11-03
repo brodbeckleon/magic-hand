@@ -1,4 +1,4 @@
-import { FAR_SHOULDER_PX, HandRatio, poseHand, shoulderPx, SMALL_HAND_PX, wristCrop } from "../far/wrist.ts";
+import { atWidth, FAR_SHOULDER_PX, HandRatio, poseHand, shoulderPx, SMALL_HAND_PX, wristCrop } from "../far/wrist.ts";
 import { handFeatures } from "../features.ts";
 import { MotionEnergy, MouthActivity } from "../speaker/activity.ts";
 import { Arbiter, type AutoSignal, type SpeakerMode, type SwitchReason } from "../speaker/Arbiter.ts";
@@ -201,7 +201,7 @@ export class GesturePipeline {
     for (const p of persons) {
       const sh = shoulderPx(p.pose, width, height);
       if (sh === null) continue;
-      if (sh < FAR_SHOULDER_PX) farIds.add(p.id);
+      if (sh < atWidth(FAR_SHOULDER_PX, width)) farIds.add(p.id);
       const st = this.state(p.id);
       if (frame.poses && p.poseIndex !== null) {
         for (const a of assigned) if (a.person === p.id) st.ratio.observe(a.tr.hand.scale, sh);
@@ -330,7 +330,7 @@ export class GesturePipeline {
         calibrated: this.armed || shown.calibrated,
         calibProgress: this.armed ? 0 : Math.max(...[...this.people.values()].map((p) => p.lock.primary.calibProgress(t)), det.calibProgress(t)),
         progress: det.progress,
-        trail: det.history,
+        trail: det.history.slice(), // the detector changes its history in place
         blocked: det.isBlocked(t),
         returnRemaining: det.returnRemaining(t),
         activeSide: det === shown.detectors.left ? "left" : "right",
@@ -353,7 +353,7 @@ export class GesturePipeline {
       const real = assigned.find((a) => a.person === target.id && a.side === side);
       // A hand the crop itself found keeps its crop: the full-frame pass would lose it again, and
       // switching between crop and pose hands every frame clears the swipe history.
-      if (real && !real.tr.obs.fromCrop && real.tr.hand.scale >= SMALL_HAND_PX) continue;
+      if (real && !real.tr.obs.fromCrop && real.tr.hand.scale >= atWidth(SMALL_HAND_PX, width)) continue;
       const crop = wristCrop(target.pose, side, width, height, ratio);
       if (crop) out.push(crop);
     }

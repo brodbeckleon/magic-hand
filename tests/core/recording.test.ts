@@ -80,3 +80,10 @@ describe("recorded fixtures (regression)", () => {
     expect(diffEvents(rec.events, replay(rec))).toEqual([]);
   });
 });
+
+it("diffEvents counts repeated events in the same frame", () => {
+  const e = { t: 1, event: "ignored_not_speaker" } as Parameters<typeof diffEvents>[0][number];
+  expect(diffEvents([e, e], [e])).toEqual(["- 1.0000 ignored_not_speaker"]);
+  expect(diffEvents([e], [e, e])).toEqual(["+ 1.0000 ignored_not_speaker"]);
+  expect(diffEvents([e, e], [e, e])).toEqual([]);
+});
