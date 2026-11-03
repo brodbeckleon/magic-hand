@@ -62,13 +62,30 @@ try {
   // Settings store: a change is written to settings.json (the only file the app stores).
   const prefs = await find("[data-testid=open-preferences]");
   await wd("POST", S(`/element/${prefs}/click`), {});
+  // The sheet slides in: a click during the animation can miss, so click until "Left" is selected.
   const left = await find("[data-testid=pref-hand] [role=radio]");
-  await wd("POST", S(`/element/${left}/click`), {});
-  await sleep(1500);
+  for (let i = 0; i < 10; i++) {
+    await wd("POST", S(`/element/${left}/click`), {});
+    await sleep(300);
+    if ((await wd<string | null>("GET", S(`/element/${left}/attribute/aria-checked`))) === "true") break;
+  }
+  // Saving is debounced: wait for the file to show the change instead of a fixed time.
   const candidates = [".local/share", ".config"].map((d) => join(homedir(), d, "ch.zhaw.magichand", "settings.json"));
-  const file = candidates.find(existsSync);
-  check("settings.json written", !!file, file);
-  if (file) check("the change is persisted", JSON.parse(readFileSync(file, "utf8")).settings?.preferredHand === "left");
+  const stored = () => {
+    const f = candidates.find(existsSync);
+    try {
+      return { file: f, hand: f ? JSON.parse(readFileSync(f, "utf8")).settings?.preferredHand : undefined };
+    } catch {
+      return { file: f, hand: undefined }; // read while being written
+    }
+  };
+  let saved = stored();
+  for (let t = 0; t < 8000 && saved.hand !== "left"; t += 250) {
+    await sleep(250);
+    saved = stored();
+  }
+  check("settings.json written", !!saved.file, saved.file);
+  if (saved.file) check("the change is persisted", saved.hand === "left", `preferredHand=${saved.hand}`);
 
   const ax = await invoke("accessibility_status");
   check("accessibility_status", ax.ok === "not-needed", JSON.stringify(ax));
