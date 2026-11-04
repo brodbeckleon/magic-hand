@@ -34,10 +34,14 @@ const MCPS = [5, 9, 13, 17];
  */
 export function isHandOpen(lms: readonly Landmark[], aspect = 4 / 3): boolean {
   const d = (a: Landmark, b: Landmark) => Math.hypot((a.x - b.x) * aspect, a.y - b.y, (a.z - b.z) * aspect);
+  const wrist = lms[WRIST]!;
   let stretched = 0;
   for (let i = 0; i < 4; i++) {
     const mcp = lms[MCPS[i]!]!;
-    if (d(lms[TIPS[i]!]!, mcp) > 1.3 * d(lms[PIPS[i]!]!, mcp)) stretched++;
+    const tip = lms[TIPS[i]!]!;
+    const pip = lms[PIPS[i]!]!;
+    // A curled finger also brings its tip back towards the wrist; both must agree.
+    if (d(tip, mcp) > 1.3 * d(pip, mcp) && d(tip, wrist) > d(pip, wrist)) stretched++;
   }
   // One finger may be misdetected (motion blur, occlusion) or slightly bent.
   return stretched >= 3;

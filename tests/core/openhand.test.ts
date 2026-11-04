@@ -55,3 +55,15 @@ describe("isHandOpen (fingers stretched, however the hand is turned)", () => {
     expect(isHandOpen(pointing)).toBe(false);
   });
 });
+
+describe("isHandOpen: fingers curled back towards the wrist", () => {
+  it("a loose fist whose tips stick out from the knuckles but point back at the wrist is not open", () => {
+    // Tips far from the knuckles (passes the knuckle test alone), but nearer the wrist than the middle joints.
+    const lms = palmLandmarks(0.5, 0.6, 0.15, false).map((l) => ({ ...l }));
+    for (const [mcp, pip, tip] of [[5, 6, 8], [9, 10, 12], [13, 14, 16], [17, 18, 20]] as const) {
+      lms[pip] = { ...lms[mcp]!, y: lms[mcp]!.y - 0.06 };
+      lms[tip] = { ...lms[mcp]!, y: lms[mcp]!.y + 0.1 };
+    }
+    expect(isHandOpen(lms)).toBe(false);
+  });
+});
