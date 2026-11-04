@@ -23,6 +23,20 @@ export function landmarksFor(hand: Hand, width = 640, height = 480): Landmark[] 
   });
 }
 
+/** The same hand made into a fist: each finger curled back from its knuckle towards the wrist. */
+export function curled(lms: readonly Landmark[]): Landmark[] {
+  const out = lms.slice();
+  const w = lms[0]!;
+  for (const mcp of [5, 9, 13, 17]) {
+    const k = lms[mcp]!;
+    const at = (f: number) => ({ x: k.x + f * (k.x - w.x), y: k.y + f * (k.y - w.y), z: 0 });
+    out[mcp + 1] = at(0.3);
+    out[mcp + 2] = at(0.1);
+    out[mcp + 3] = at(-0.15);
+  }
+  return out;
+}
+
 export function handObs(hand: Hand, side: Side = "right", sideScore = 0.95, width = 640, height = 480): HandObs {
   return { landmarks: landmarksFor(hand, width, height), side, sideScore };
 }
