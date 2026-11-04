@@ -4,7 +4,8 @@ import { platform, type PermissionState } from "../../platform/index.ts";
 
 /**
  * macOS only: without the Accessibility permission the arrow keys never reach the presentation.
- * An inline card (not a modal) that disappears by itself once the permission is granted.
+ * An inline card (not a modal) that disappears by itself once the permission is granted. macOS
+ * does not always tell a running app about the switch, so a restart is offered while waiting.
  */
 export function AccessibilityCard() {
   const { t } = useTranslation();
@@ -18,8 +19,14 @@ export function AccessibilityCard() {
 
   useEffect(() => {
     if (!waiting || state === "granted") return;
-    const id = window.setInterval(() => void platform.accessibilityStatus().then(setState), 2000);
-    return () => window.clearInterval(id);
+    const check = () => void platform.accessibilityStatus().then(setState);
+    const id = window.setInterval(check, 1000);
+    // Coming back from System Settings is the moment the switch was most likely turned on.
+    window.addEventListener("focus", check);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", check);
+    };
   }, [waiting, state]);
 
   if (state !== "denied" || dismissed) return null;
@@ -35,11 +42,23 @@ export function AccessibilityCard() {
     <div className="side-card glass" role="dialog" aria-labelledby="ax-title" data-testid="accessibility-card">
       <h3 id="ax-title">{t("accessibility.title")}</h3>
       <p>{t("accessibility.body")}</p>
+      {waiting && (
+        <ol className="small-list ax-steps" data-testid="accessibility-steps">
+          <li>{t("accessibility.step1")}</li>
+          <li>{t("accessibility.step2")}</li>
+          <li>{t("accessibility.step3")}</li>
+        </ol>
+      )}
       <div className="actions">
         <button className="btn ghost" onClick={() => setDismissed(true)}>{t("accessibility.later")}</button>
-        <button className="btn primary" onClick={() => void grant()} disabled={waiting}>
-          {waiting ? t("accessibility.waiting") : t("accessibility.grant")}
-        </button>
+        {waiting ? (
+          <>
+            <button className="btn" onClick={() => void platform.openAccessibilitySettings()}>{t("accessibility.openSettings")}</button>
+            <button className="btn primary" data-testid="accessibility-restart" onClick={() => void platform.restartApp()}>{t("accessibility.restart")}</button>
+          </>
+        ) : (
+          <button className="btn primary" onClick={() => void grant()}>{t("accessibility.grant")}</button>
+        )}
       </div>
     </div>
   );

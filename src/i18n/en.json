@@ -54,10 +54,14 @@
   },
   "accessibility": {
     "title": "One more permission and you're ready",
-    "body": "To change slides, Magic Hand needs the Accessibility permission on macOS.",
+    "body": "To change slides, Magic Hand must be allowed to control your computer. macOS lists this under Privacy & Security → Accessibility.",
     "grant": "Grant permission",
     "later": "Later",
-    "waiting": "Waiting for permission …"
+    "step1": "In System Settings, turn on Magic Hand under Privacy & Security → Accessibility. If it is not in the list, add it with “+” from the Applications folder.",
+    "step2": "Already switched on? After an update macOS may no longer recognise the app: remove Magic Hand with “–” and add it again.",
+    "step3": "Still not working? Restart Magic Hand: macOS sometimes only applies the permission after a restart.",
+    "openSettings": "Open settings",
+    "restart": "Restart Magic Hand"
   },
   "actions": {
     "pause": "Pause",
@@ -406,8 +410,8 @@
     "practice": {
       "title": "Practice round",
       "lead": "Swipe {{n}}× in each direction, the way you would while presenting. Magic Hand learns your speed and reach.",
-      "nextSlide": "next slide",
-      "prevSlide": "previous slide",
+      "swipeLeft": "Swipe left",
+      "swipeRight": "Swipe right",
       "ok": "Got it!",
       "diagonal": "Too diagonal, swipe more horizontally",
       "note": "No keys are sent during practice."
@@ -430,7 +434,8 @@
       "lead": "Click “Present”: Magic Hand turns into a small bar and hands the focus back to your presentation.",
       "stay": "Stay here",
       "calibrateLater": "Use “Calibrate” later to tune Magic Hand more closely to your movements."
-    }
+    },
+    "autoNext": "All good, continuing …"
   },
   "hints": {
     "ok": "Got it",
