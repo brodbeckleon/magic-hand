@@ -138,16 +138,28 @@ describe("ClaimDetector", () => {
     expect(done).toBeLessThan(CLAIM_TIME + 0.1);
   });
 
-  it("resets when the hand closes or moves", () => {
+  it("resets when the hand stays closed (longer than a dropout) or moves", () => {
     const c = new ClaimDetector();
     const open = palmLandmarks(0.5, 0.3, 0.06, true);
+    const fist = palmLandmarks(0.5, 0.3, 0.06, false);
     for (let i = 0; i < 20; i++) c.update(i * DT, open, { cx: 320, cy: 150, scale: 30 });
     expect(c.progress).toBeGreaterThan(0.5);
-    c.update(21 * DT, palmLandmarks(0.5, 0.3, 0.06, false), { cx: 320, cy: 150, scale: 30 });
+    for (let i = 20; i < 35; i++) c.update(i * DT, fist, { cx: 320, cy: 150, scale: 30 });
     expect(c.progress).toBe(0);
     for (let i = 22; i < 40; i++) c.update(i * DT, open, { cx: 320 + (i - 22) * 5, cy: 150, scale: 30 });
     expect(c.progress).toBeLessThan(0.5);
   });
+});
+
+it("ClaimDetector tolerates single frames that do not look open (real hands, motion blur)", () => {
+  const c = new ClaimDetector();
+  const open = palmLandmarks(0.5, 0.3, 0.06, true);
+  const fist = palmLandmarks(0.5, 0.3, 0.06, false);
+  let done = -1;
+  // 15 fps, every third frame misdetected as closed.
+  for (let i = 0; i < 30 && done < 0; i++) if (c.update(i / 15, i % 3 === 2 ? fist : open, { cx: 320, cy: 150, scale: 30 })) done = i / 15;
+  expect(done).toBeGreaterThanOrEqual(CLAIM_TIME - 1e-9);
+  expect(done).toBeLessThan(CLAIM_TIME + 0.15);
 });
 
 describe("activity signals", () => {
@@ -181,14 +193,16 @@ describe("activity signals", () => {
 describe("Arbiter", () => {
   const c = (id: number, o: Partial<Candidate> = {}): Candidate => ({ id, present: true, claimed: false, claimStart: null, mouth: null, motion: 0, midSwipe: false, ...o });
 
-  it("a single person gets control automatically", () => {
+  it("nobody has control until someone arms, swipes or claims (grant)", () => {
     const a = new Arbiter();
-    expect(a.update(0, [c(1)], "manual", "both")).toEqual({ id: 1, reason: "only" });
+    expect(a.update(0, [c(1)], "manual", "both")).toBeNull();
+    expect(a.grant(1, 0.1, "swipe")).toEqual({ id: 1, reason: "swipe" });
+    expect(a.grant(2, 0.2, "swipe")).toBeNull(); // someone has it now
   });
 
   it("manual: only a palm claim changes the speaker", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1), c(2, { motion: 10 })], "manual", "both")).toBeNull();
     expect(a.update(2, [c(1), c(2, { claimed: true, claimStart: 1 })], "manual", "both")).toEqual({ id: 2, reason: "claim" });
     expect(a.active).toBe(2);
@@ -196,7 +210,7 @@ describe("Arbiter", () => {
 
   it("simultaneous claims: the speaker keeps control, otherwise the earlier claim wins", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1, { claimed: true, claimStart: 0.5 }), c(2, { claimed: true, claimStart: 0.1 })], "manual", "both")).toBeNull();
     expect(a.active).toBe(1);
     const b = new Arbiter();
@@ -206,17 +220,20 @@ describe("Arbiter", () => {
 
   it("never switches while the speaker is mid-swipe", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1, { midSwipe: true }), c(2, { claimed: true, claimStart: 0.5 })], "manual", "both")).toBeNull();
     expect(a.active).toBe(1);
   });
 
-  it("a speaker out of view loses control after the grace period; the only remaining person takes over", () => {
+  it("a speaker out of view loses control after the grace period; nobody has it until the next swipe", () => {
     const a = new Arbiter();
     a.update(0, [c(1), c(2, { claimed: true, claimStart: 0 })], "manual", "both");
     expect(a.active).toBe(2);
     expect(a.update(2, [c(1), c(2, { present: false })], "manual", "both")).toBeNull();
-    expect(a.update(3.5, [c(1), c(2, { present: false })], "manual", "both")).toEqual({ id: 1, reason: "only" });
+    expect(a.update(3.5, [c(1), c(2, { present: false })], "manual", "both")).toEqual({ id: null, reason: "lost" });
+    // The one who stayed is not made speaker just for being there.
+    expect(a.update(4, [c(1)], "manual", "both")).toBeNull();
+    expect(a.active).toBeNull();
   });
 
   it("auto: switches to the clearly more active person after the hold time, with hysteresis", () => {

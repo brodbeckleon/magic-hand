@@ -40,8 +40,9 @@ export const FAR_POSE_INTERVAL_S = 0.09;
 
 export function schedule(i: ScheduleInput): Schedule {
   const busy = i.loadMs > LOAD_BUDGET_MS;
-  // With several people, poses keep hands bound to the right person; with one, they only count people.
-  const posePeriod = (i.persons >= 2 || i.far ? 2 : 4) + (busy ? 2 : 0);
+  // With several people, poses keep hands bound to the right person; with one, they only notice
+  // someone joining or the presenter stepping back (far), which ~5 Hz at 30 fps is quick enough for.
+  const posePeriod = (i.persons >= 2 || i.far ? 2 : 6) + (busy ? 2 : 0);
   const farDue = !!i.far && (i.sincePose ?? Infinity) >= FAR_POSE_INTERVAL_S - 0.01;
   const pose = i.forcePose || farDue || i.frame % posePeriod === 0;
   // Faces are found from pose head positions, so they run on pose frames only. Slightly early is
