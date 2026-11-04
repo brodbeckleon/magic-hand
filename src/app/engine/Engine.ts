@@ -347,6 +347,7 @@ export class Engine {
       type: "header", schema: SCHEMA, app: `magic-hand ${__APP_VERSION__}`, created: localIsoTimestamp(new Date()),
       platform: navigator.userAgent, src: this.lastSize, mirror: true, handednessSwap: HANDEDNESS_SWAP,
       zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist, openHand: s.openHand, smoothing: s.dev.smoothing, maxPeople: s.maxPeople },
+      armed: this.pipeline.isArmed,
     };
     this.recorder = new Recorder();
     this.recorder.write(header);

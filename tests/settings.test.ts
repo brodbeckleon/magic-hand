@@ -5,7 +5,7 @@ describe("settings migration v1 -> v2 (swipe angle)", () => {
     const s = parseSettings({ version: 1, sensitivity: "normal", swipe: { distance: 2.5, window: 0.5, maxSlope: 0.6 } });
     expect(s.swipe.maxSlope).toBe(1.0);
     expect(sensitivityOf(s.swipe)).toBe("normal");
-    expect(s.version).toBe(3);
+    expect(s.version).toBe(4);
   });
 
   it("custom (calibrated) values are kept", () => {
@@ -19,18 +19,18 @@ describe("settings migration v1 -> v2 (swipe angle)", () => {
   });
 });
 
-describe("settings migration v2 -> v3 (open hand)", () => {
-  it("is on by default", () => {
-    expect(DEFAULT_SETTINGS.openHand).toBe(true);
+describe("settings migration -> v4 (open hand off again)", () => {
+  it("is off by default", () => {
+    expect(DEFAULT_SETTINGS.openHand).toBe(false);
   });
 
-  it("the old default (off) is switched on once", () => {
-    expect(parseSettings({ version: 2, openHand: false }).openHand).toBe(true);
-    expect(parseSettings({ version: 1, openHand: false }).openHand).toBe(true);
+  it("the forced switch-on of v3 is undone once", () => {
+    expect(parseSettings({ version: 3, openHand: true }).openHand).toBe(false);
+    expect(parseSettings({ version: 2, openHand: true }).openHand).toBe(false);
   });
 
-  it("turning it off after the update sticks", () => {
-    expect(parseSettings({ version: 3, openHand: false }).openHand).toBe(false);
+  it("turning it on after the update sticks", () => {
+    expect(parseSettings({ version: 4, openHand: true }).openHand).toBe(true);
   });
 });
 

@@ -1,3 +1,4 @@
+import type { SwipeParams } from "../../src/core/swipe/params.ts";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { HandSmoother, OneEuro } from "../../src/core/filter/OneEuro.ts";
@@ -69,8 +70,8 @@ describe("One Euro filter", () => {
 });
 
 describe("pipeline with smoothing", () => {
-  const run = (frames: Frame[], smoothing: boolean) => {
-    const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, smoothing });
+  const run = (frames: Frame[], smoothing: boolean, swipe: Partial<SwipeParams> = {}) => {
+    const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, smoothing, swipe: { ...DEFAULT_PIPELINE_SETTINGS.swipe, ...swipe } });
     return toFrames(frames).flatMap((f) => p.step(f).events.map((e) => ({ type: e.type === "trigger" ? e.command : e.type, t: e.t })));
   };
 
@@ -85,7 +86,8 @@ describe("pipeline with smoothing", () => {
     const dir = join(import.meta.dirname, "..", "fixtures", "golden");
     for (const f of readdirSync(dir)) {
       const g = JSON.parse(readFileSync(join(dir, f), "utf8")) as { frames: Frame[] };
-      const types = (smoothing: boolean) => run(g.frames, smoothing).map((e) => e.type);
+      // Without the minimum speed, which the prototype did not have: smoothing lowers the top speed a little.
+      const types = (smoothing: boolean) => run(g.frames, smoothing, { minSpeed: 0 }).map((e) => e.type);
       expect(types(true), f).toEqual(types(false));
     }
   });

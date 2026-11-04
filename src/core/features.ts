@@ -5,8 +5,11 @@ export const WRIST = 0;
 export const MIDDLE_MCP = 9;
 export const PALM = [0, 5, 9, 13, 17] as const;
 
-/** Palm centre and hand length (wrist -> middle finger MCP) in pixels; x mirrored like the view. */
-export function handFeatures(landmarks: readonly Landmark[], width: number, height: number, mirror = true): Hand {
+/**
+ * Palm centre and hand length (wrist -> middle finger MCP) in pixels; x mirrored like the view.
+ * `depth` = false measures the length in the image plane only, like the prototype.
+ */
+export function handFeatures(landmarks: readonly Landmark[], width: number, height: number, mirror = true, depth = true): Hand {
   const xs = landmarks.map((lm) => (mirror ? 1 - lm.x : lm.x) * width);
   const ys = landmarks.map((lm) => lm.y * height);
   let cx = 0;
@@ -17,7 +20,10 @@ export function handFeatures(landmarks: readonly Landmark[], width: number, heig
   }
   cx /= PALM.length;
   cy /= PALM.length;
-  const scale = Math.max(dist(xs[WRIST]!, ys[WRIST]!, xs[MIDDLE_MCP]!, ys[MIDDLE_MCP]!), 1.0);
+  // In 3D (MediaPipe's z has the scale of x): the projected length shrinks whenever the hand tilts,
+  // which made small movements look like whole swipes.
+  const dz = depth ? ((landmarks[WRIST]!.z ?? 0) - (landmarks[MIDDLE_MCP]!.z ?? 0)) * width : 0;
+  const scale = Math.max(Math.hypot(dist(xs[WRIST]!, ys[WRIST]!, xs[MIDDLE_MCP]!, ys[MIDDLE_MCP]!), dz), 1.0);
   return { cx, cy, scale };
 }
 

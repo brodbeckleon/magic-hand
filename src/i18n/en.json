@@ -285,7 +285,7 @@
     "dirRight": "right",
     "tipsTitle": "Good to know",
     "tip1": "Slow or diagonal movements while explaining are ignored.",
-    "tip2": "Swipe with an open hand (fingers stretched). A fist or a clicker in your hand does not change slides; you can switch this off in the preferences.",
+    "tip2": "A brisk swipe counts; lifting your hand first or bringing it back slowly does not. Hand shape does not matter unless you turn on “Only with an open hand”.",
     "tip3": "Press {{shortcut}} to pause at any time, even during the presentation.",
     "tip3Bar": "Pause at any time with the button on the bar while presenting ({{shortcut}} is used by another app).",
     "replayOnboarding": "Show the introduction again",

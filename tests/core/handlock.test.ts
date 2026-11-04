@@ -87,8 +87,10 @@ describe("HandLock: wind-up before a swipe", () => {
     for (const [dx, n] of segments) for (let i = 0; i < n; i++) xs.push(xs[xs.length - 1]! + dx);
     return xs;
   }
+  /** The check is off by default; these tests turn it on with a hold of 0.18 s. */
+  const HOLD = 0.18;
   function run(xs: number[], params = {}) {
-    const lock = new HandLock("either", { ...DEFAULT_SWIPE_PARAMS, ...params });
+    const lock = new HandLock("either", { ...DEFAULT_SWIPE_PARAMS, windupHold: HOLD, minSpeed: 0, ...params });
     const { t } = calibrate(lock);
     const out: { event: string; t: number; lastDx?: number }[] = [];
     const n = xs.length + 30; // then the hand rests for a second
@@ -118,11 +120,11 @@ describe("HandLock: wind-up before a swipe", () => {
     const late = run(path(320, [[-22, 8]]), { windupHold: 0 });
     expect(names(late)).toEqual(["next"]);
     const held = r[0]!.t - late[0]!.t;
-    expect(held).toBeGreaterThanOrEqual(DEFAULT_SWIPE_PARAMS.windupHold - 1e-9);
-    expect(held).toBeLessThan(DEFAULT_SWIPE_PARAMS.windupHold + DT + 1e-9);
+    expect(held).toBeGreaterThanOrEqual(HOLD - 1e-9);
+    expect(held).toBeLessThan(HOLD + DT + 1e-9);
   });
 
-  it("windupHold 0 turns the check off (the prototype's behaviour)", () => {
+  it("windupHold 0 (the default) turns the check off, like the prototype", () => {
     const r = run(path(320, [[-20, 6], [30, 8]]), { windupHold: 0 });
     expect(names(r)[0]).toBe("next");
     expect(names(r)).not.toContain("prev");

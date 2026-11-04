@@ -19,6 +19,11 @@ export interface SwipeParams {
   /** Hand lengths per s, for longer pauses between frames. */
   maxSpeed: number;
   /**
+   * Top palm speed (hand lengths per s) a swipe must reach. Lifting the hand before a swipe,
+   * bringing it back and explaining are slower than a swipe. 0 = no limit (prototype).
+   */
+  minSpeed: number;
+  /**
    * A recognised swipe is held back this long (s): if the hand turns around at once into a
    * stronger swipe the other way, the first one was only a wind-up. 0 = send at once.
    */
@@ -40,6 +45,7 @@ export const PROTOTYPE_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   maxGap: 0.2,
   maxJump: 1.5,
   maxSpeed: 40.0,
+  minSpeed: 0,
   windupHold: 0,
   windupReverse: 0.35,
   windupRatio: 1.0,
@@ -47,8 +53,11 @@ export const PROTOTYPE_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
 
 /**
  * App defaults: the prototype's, except that swipes may be tilted up to 45° (the prototype allowed
- * ~31°, which rejected many natural, arc-shaped swipes). Explaining gestures are still filtered by
- * the required distance and speed. The prototype had no wind-up check.
+ * ~31°, which rejected many natural, arc-shaped swipes), and that a swipe must reach a top speed of
+ * 12 hand lengths per s. In recordings (Mac, 11-18 fps) the swipes peaked above ~13, while lifting
+ * the hand before a swipe, bringing it back and explaining mostly stayed below 12. The wind-up hold
+ * is off: in the same recordings it caught nothing (people pause before the real swipe) and only
+ * added latency.
  */
 export const DEFAULT_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   distance: 2.5,
@@ -60,7 +69,8 @@ export const DEFAULT_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   maxGap: 0.2,
   maxJump: 1.5,
   maxSpeed: 40.0,
-  windupHold: 0.18,
+  minSpeed: 12,
+  windupHold: 0,
   windupReverse: 0.35,
   windupRatio: 1.0,
 });
@@ -76,6 +86,7 @@ export const SWIPE_PARAM_RANGES: Readonly<Record<keyof SwipeParams, { min: numbe
   maxGap: { min: 0.0, max: 0.6, step: 0.02 },
   maxJump: { min: 0.5, max: 4.0, step: 0.1 },
   maxSpeed: { min: 10, max: 80, step: 1 },
+  minSpeed: { min: 0, max: 30, step: 0.5 },
   windupHold: { min: 0, max: 0.35, step: 0.01 },
   windupReverse: { min: 0.1, max: 1.0, step: 0.05 },
   windupRatio: { min: 0.5, max: 2.0, step: 0.05 },

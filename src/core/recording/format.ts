@@ -18,6 +18,8 @@ export interface RecHeader {
   handednessSwap: boolean;
   zone: Rect | null;
   settings: PipelineSettings;
+  /** Gestures were already active when the recording started (missing in older recordings). */
+  armed?: boolean;
 }
 
 type Q = [number, number, number];

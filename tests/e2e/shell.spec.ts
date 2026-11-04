@@ -238,19 +238,18 @@ test("a pause shortcut owned by another app is not advertised", async ({ page })
   await expect(page.getByTestId("help")).toContainText("with the button on the bar while presenting");
 });
 
-test("'only with an open hand' (on by default): a fist changes nothing and is explained", async ({ page }) => {
+test("'only with an open hand' (off by default): once on, a fist changes nothing and is explained", async ({ page }) => {
   await open(page);
   await waitLive(page);
   await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3), {}, { fist: true });
-  expect(await sentKeys(page)).toEqual([]);
-  await expect(page.getByTestId("toast")).toHaveText("Not recognised: swipe with an open hand");
+  expect(await sentKeys(page)).toEqual(["next"]);
 
-  // Switched off, a fist swipes too.
   await page.getByTestId("open-preferences").click();
   await page.getByRole("switch", { name: "Only with an open hand" }).click();
   await page.keyboard.press("Escape");
-  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3), {}, { fist: true });
+  await play(page, new TraceBuilder().hold(1.2).move(-160, 0, 0.25).hold(0.3), {}, { fist: true });
   expect(await sentKeys(page)).toEqual(["next"]);
+  await expect(page.getByTestId("toast")).toHaveText("Not recognised: swipe with an open hand");
 });
 
 test("'only me' as the number of people hides the speaker selection", async ({ page }) => {

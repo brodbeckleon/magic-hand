@@ -123,8 +123,12 @@ interface PersonState {
   mouth: MouthActivity;
   motion: MotionEnergy;
   ratio: HandRatio;
-  /** Where each side's position came from last frame (switching sources restarts the swipe). */
-  source: Record<Side, "hand" | "pose" | null>;
+  /**
+   * Where each side's position came from last frame: the pose, or which tracked hand. Switching
+   * restarts the swipe: when the side labels of two hands swap, a jump from one hand to the other
+   * must not look like a swipe.
+   */
+  source: Record<Side, string | null>;
   /** Recent hand shapes per side: open or not; null = no finger landmarks (palm from the pose). */
   shapes: Record<Side, { t: number; open: boolean | null }[]>;
   smooth: Record<Side, HandSmoother>;
@@ -150,6 +154,16 @@ export class GesturePipeline {
   private people = new Map<number, PersonState>();
   private claims = new Map<number, ClaimDetector>();
   private armed = false;
+
+  /** Gestures are active (calibrated or claimed). */
+  get isArmed(): boolean {
+    return this.armed;
+  }
+
+  /** Arms without the hold-still step: a replay of a recording started after calibration. */
+  arm(): void {
+    this.armed = true;
+  }
   private lastPersons: PersonTrack[] = [];
 
   constructor(settings: PipelineSettings = DEFAULT_PIPELINE_SETTINGS) {
@@ -213,10 +227,12 @@ export class GesturePipeline {
     const assigned = tracks.map((tr) => ({ tr, ...this.ownerOf(tr, persons, aspect) }));
     const byPerson = new Map<number, Partial<Record<Side, Hand>>>();
     const openBy = new Map<number, Partial<Record<Side, boolean>>>();
+    const trackBy = new Map<number, Partial<Record<Side, number>>>();
     for (const a of assigned) {
       const m = byPerson.get(a.person) ?? {};
       m[a.side] = a.tr.hand;
       byPerson.set(a.person, m);
+      trackBy.set(a.person, { ...trackBy.get(a.person), [a.side]: a.tr.id });
       if (this.settings.openHand) openBy.set(a.person, { ...openBy.get(a.person), [a.side]: isHandOpen(a.tr.obs.landmarks, aspect) });
     }
 
@@ -296,7 +312,8 @@ export class GesturePipeline {
         const st = this.state(person);
         if (this.armed && !st.lock.calibrated) st.lock.forceCalibrated(t);
         for (const side of ["left", "right"] as const) {
-          const src = !hands[side] ? null : poseHands.some((ph) => ph.person === person && ph.side === side) ? "pose" : "hand";
+          const fromPose = poseHands.some((ph) => ph.person === person && ph.side === side);
+          const src = !hands[side] ? null : fromPose ? "pose" : `hand#${trackBy.get(person)?.[side]}`;
           if (src && st.source[side] && src !== st.source[side]) {
             st.lock.detectors[side].clearHistory();
             st.smooth[side].reset();
@@ -304,7 +321,7 @@ export class GesturePipeline {
           if (src) st.source[side] = src;
           if (this.settings.openHand && src) {
             const shapes = st.shapes[side];
-            shapes.push({ t, open: src === "hand" ? (openBy.get(person)?.[side] ?? false) : null });
+            shapes.push({ t, open: src !== "pose" ? (openBy.get(person)?.[side] ?? false) : null });
             while (shapes.length && shapes[0]!.t < t - SHAPE_KEEP_S) shapes.shift();
           }
         }

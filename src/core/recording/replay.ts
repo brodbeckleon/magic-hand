@@ -16,6 +16,7 @@ export const toReplayEvent = (e: PipelineEvent): ReplayEvent =>
  */
 export function replay(rec: Recording, override: Partial<PipelineSettings> = {}): ReplayEvent[] {
   const p = new GesturePipeline({ ...rec.header.settings, ...override, swipe: { ...rec.header.settings.swipe, ...override.swipe } });
+  if (rec.header.armed) p.arm();
   const changes = [...rec.settings];
   const out: ReplayEvent[] = [];
   for (const f of rec.frames) {
