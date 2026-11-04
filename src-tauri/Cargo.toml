@@ -1,6 +1,6 @@
 [package]
 name = "magic-hand"
-version = "0.1.3"
+version = "0.1.4"
 description = "Folien per Handgeste wechseln"
 authors = ["Léon Brodbeck", "Michael Gasser", "Kaspar Streiff", "Diego Esposito"]
 repository = "https://github.com/brodbeckleon/magic-hand"

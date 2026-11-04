@@ -166,6 +166,8 @@ export class SwipeDetector {
     this.progress = clamp(dx / threshold, -1, 1);
 
     if (Math.hypot(dx, dy) < threshold) return null;
+    // Far enough but too slow: not (yet) a swipe; it may still speed up within the window.
+    if (p.minSpeed > 0 && SwipeDetector.peakSpeed(this._history, ref) < p.minSpeed) return null;
 
     const swipe = this._history;
     this._history = [];
@@ -197,6 +199,17 @@ export class SwipeDetector {
       return "calibrated";
     }
     return null;
+  }
+
+  /** Top palm speed between consecutive frames, in hand lengths per s. */
+  private static peakSpeed(swipe: readonly HistoryEntry[], ref: number): number {
+    let peak = 0;
+    for (let i = 1; i < swipe.length; i++) {
+      const a = swipe[i - 1]!;
+      const b = swipe[i]!;
+      if (b.t > a.t) peak = Math.max(peak, Math.hypot(b.hand.cx - a.hand.cx, b.hand.cy - a.hand.cy) / ref / (b.t - a.t));
+    }
+    return peak;
   }
 
   /** Last frame before the hand noticeably (10 % of the threshold) started to move. */

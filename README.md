@@ -112,7 +112,7 @@ Einmal in die Präsentation klicken.
 
 | Bereich | Möglichkeiten |
 |---------|---------------|
-| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist; Standard: an) |
+| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist; Standard: aus, weil Bewegungsunschärfe die Hand oft geschlossen aussehen lässt) |
 | Vortragende | Erkannte Personen (nur ich, 2, 3, 4; weniger ist schneller), per Handzeichen oder automatisch: sprechende Person, aktivste Person oder beides |
 | Kamera | Kamera, Auflösung, Hilfe auf Distanz |
 | Präsentation | Gesendete Tasten (Pfeiltasten oder Bild auf/ab), Kamerabild beim Präsentieren (aus / klein / gross), Ton beim Folienwechsel, Kamera bei Abwesenheit ausschalten |
@@ -181,7 +181,7 @@ Mehr in der App unter **Hilfe → Probleme lösen**.
 | MHR04 | Niedrige Auflösung | Wie MHR03, Auflösung 320×240 wählbar | Property-Test, manuell |
 | MHR05 | Mehrere Vortragende | Personen-Tracking, Handzeichen, automatische Sprecherwahl | Unit-, Pipeline- und e2e-Tests, manuell |
 | MHR06 | Verzögerung < 0.5 s | Analyse im Hintergrund-Thread; Messwerte p50/p95 in den Entwicklerwerkzeugen | Studienmodus, Handyvideo (manuell) |
-| MHR07 | Erklärgesten unterscheiden | Mindestweite, Mindesttempo, Winkel, Rückholzeit, Ausholbewegung (Wischen kurz zurückgehalten: kehrt die Hand sofort schneller um, zählt nur die zweite Geste), bevorzugte Hand | Golden- und Property-Tests, Studienmodus |
+| MHR07 | Erklärgesten unterscheiden | Mindestweite (Handlänge in 3D, kippt die Hand nicht weg), Mindesttempo (Spitze ≥ 12 Handlängen/s: Ausholen, Zurückführen und Erklären sind langsamer), Winkel, Rückholzeit, Handwechsel setzt die Geste zurück, bevorzugte Hand; optional Ausholprüfung (Entwickler) | Golden- und Property-Tests, Studienmodus |
 | MHR08 | Datenschutz | Nur lokal, keine Speicherung, kein Netzwerk, Kamera aus in der Pause | e2e prüft null Netzwerkanfragen, CI-Bundle-Prüfung |
 
 Das manuelle Testprotokoll steht in [docs/testing.md](docs/testing.md).

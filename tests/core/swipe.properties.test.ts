@@ -68,10 +68,11 @@ describe("SwipeDetector properties", () => {
     }));
   });
 
-  it("triggers each clean swipe exactly once and ignores the return movement", () => {
+  it("triggers each clean (brisk) swipe exactly once and ignores the return movement", () => {
     // Speeds stay below maxJump (1.5 hand lengths) per frame; faster motion is treated as a jump
     // to another hand, exactly like in the prototype.
-    fc.assert(fc.property(fc.boolean(), fc.integer({ min: 130, max: 300 }), fc.double({ min: 0.2, max: 0.4, noNaN: true }),
+    // At least ~13 hand lengths per s: slower movements are below the minimum swipe speed.
+    fc.assert(fc.property(fc.boolean(), fc.integer({ min: 160, max: 300 }), fc.double({ min: 0.2, max: 0.3, noNaN: true }),
       (left, d, s) => {
         const b = new TraceBuilder().calibrated().move(left ? -d : d, 0, s).move(left ? d : -d, 0, s).hold(1.2);
         const events = run(b.frames).filter((e) => e !== "calibrated");

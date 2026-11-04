@@ -27,8 +27,8 @@ describe("custom sensitivity", () => {
   });
 
   it("settings stored before the change keep their custom values as the custom option", () => {
-    const s = parseSettings({ version: 3, sensitivity: "custom", swipe: calibrated });
+    const s = parseSettings({ version: 4, sensitivity: "custom", swipe: calibrated });
     expect(s.customSwipe).toMatchObject(calibrated);
-    expect(parseSettings({ version: 3, sensitivity: "normal" }).customSwipe).toBeNull();
+    expect(parseSettings({ version: 4, sensitivity: "normal" }).customSwipe).toBeNull();
   });
 });

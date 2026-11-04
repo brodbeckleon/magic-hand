@@ -4,7 +4,7 @@ import { z } from "zod";
 import { clampRect } from "../../core/zone/Zone.ts";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 
-export const SETTINGS_VERSION = 3;
+export const SETTINGS_VERSION = 4;
 
 const swipeShape = Object.fromEntries(
   (Object.keys(DEFAULT_SWIPE_PARAMS) as (keyof SwipeParams)[]).map((k) => [
@@ -47,7 +47,7 @@ export const settingsSchema = z.object({
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
   /** Only swipes with stretched fingers count (a fist, a pointing finger or a clicker do not). */
-  openHand: z.boolean().catch(true),
+  openHand: z.boolean().catch(false),
   /** Short tone when a slide changes. */
   sound: z.boolean().catch(false),
   /** Turn the camera off after this many minutes without anyone in view (0 = never). */
@@ -100,8 +100,8 @@ export const DEFAULT_SETTINGS: Settings = settingsSchema.parse({});
 /**
  * Version 1 stored the prototype's ~31° swipe angle with every preset; version 2 allows more tilt.
  * Presets get their new angle; custom (calibrated) values are left alone.
- * Version 3 turns on "only with an open hand": it was off by default before, so a stored `false`
- * is almost always the old default and not a choice.
+ * Version 3 turned on "only with an open hand" for everyone; version 4 turns it off again: in
+ * recordings, motion blur made about half of the real swipes look like a closed hand.
  */
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
   let out = raw;
@@ -111,7 +111,8 @@ function migrate(raw: Record<string, unknown>): Record<string, unknown> {
     out = swipe && preset && swipe.maxSlope === 0.6 ? { ...out, swipe: { ...swipe, maxSlope: preset.maxSlope } } : out;
     out = { ...out, version: 2 };
   }
-  if (out.version === 2) out = { ...out, openHand: true, version: 3 };
+  if (out.version === 2) out = { ...out, version: 3 };
+  if (out.version === 3) out = { ...out, openHand: false, version: 4 };
   return out;
 }
 

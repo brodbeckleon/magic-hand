@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { GesturePipeline, DEFAULT_PIPELINE_SETTINGS } from "../../src/core/pipeline/GesturePipeline.ts";
-import { PROTOTYPE_SWIPE_PARAMS } from "../../src/core/swipe/params.ts";
-import type { Hand, Side } from "../../src/core/types.ts";
-import { toFrames } from "../support/landmarks.ts";
+import { PROTOTYPE_SWIPE_PARAMS, type SwipeParams } from "../../src/core/swipe/params.ts";
+import type { FrameObs, Hand, Side } from "../../src/core/types.ts";
+import { landmarksFor, toFrames } from "../support/landmarks.ts";
 import { TraceBuilder } from "../support/traces.ts";
 
 const goldenDir = join(import.meta.dirname, "..", "fixtures", "golden");
@@ -79,5 +79,42 @@ describe("swipe angle (app defaults)", () => {
 
   it("still rejects movements steeper than 45 degrees", () => {
     expect(run(-120, 208)).toContain("ignored_dir"); // 60 degrees
+  });
+});
+
+describe("recordings from a Mac (11-18 fps): wind-ups, returns and swapped hands", () => {
+  const events = (frames: FrameObs[], swipe: Partial<SwipeParams> = {}) => {
+    const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, swipe: { ...DEFAULT_PIPELINE_SETTINGS.swipe, ...swipe } });
+    return frames.flatMap((f) => p.step(f).events.map((e) => (e.type === "trigger" ? e.command : e.type)));
+  };
+
+  it("lifting the hand before a swipe (slow, then a pause) does not send the other direction", () => {
+    // 15 fps: lift 150 px to the right in 0.5 s, wait, then a brisk swipe 200 px to the left.
+    const frames = toFrames(new TraceBuilder(15).calibrated().move(150, 0, 0.5).hold(0.25).move(-200, 0, 0.25).hold(0.5).frames);
+    expect(events(frames)).toEqual(["calibrated", "next"]);
+    expect(events(frames, { minSpeed: 0 })[1]).toBe("prev"); // what happened before
+  });
+
+  it("a slow return after a swipe sends nothing", () => {
+    const frames = toFrames(new TraceBuilder(15).calibrated().move(-200, 0, 0.25).hold(1.1).move(150, 0, 0.6).hold(0.5).frames);
+    expect(events(frames)).toEqual(["calibrated", "next"]);
+  });
+
+  it("when the side labels of two hands swap, the jump between them is not a swipe", () => {
+    // 10 fps, both hands still, 100 px apart; the hand labelled "right" switches every 3 frames.
+    const a = landmarksFor({ cx: 260, cy: 240, scale: 40 });
+    const b = landmarksFor({ cx: 360, cy: 240, scale: 40 });
+    const frames: FrameObs[] = [];
+    for (let i = 0; i < 40; i++) {
+      const swap = Math.floor(i / 3) % 2 === 1;
+      frames.push({
+        t: i * 0.1, width: 640, height: 480,
+        hands: [
+          { landmarks: a, side: swap ? "left" : "right", sideScore: 0.9 },
+          { landmarks: b, side: swap ? "right" : "left", sideScore: 0.9 },
+        ],
+      });
+    }
+    expect(events(frames, { minSpeed: 0 }).filter((e) => e === "next" || e === "prev")).toEqual([]);
   });
 });
