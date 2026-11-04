@@ -22,7 +22,7 @@ import { Help } from "./Help.tsx";
 import { Preferences } from "./Preferences.tsx";
 import { PreviewNotice } from "./PreviewNotice.tsx";
 
-const isMacNative = platform.native && /mac/i.test(navigator.platform);
+export const isMacNative = platform.native && /mac/i.test(navigator.platform);
 
 /** Everything around the camera in the full window: toolbar, status, feedback, sheets. */
 export function MainChrome({ onRetry }: { onRetry: () => void }) {
@@ -37,7 +37,6 @@ export function MainChrome({ onRetry }: { onRetry: () => void }) {
 
   return (
     <div className={cls}>
-      <div className="drag-strip" data-tauri-drag-region />
       <Toolbar />
       <div className="top-left">
         {live && <StatusChip />}

@@ -1,6 +1,6 @@
 import { test, type Page } from "@playwright/test";
 import type { FrameObs } from "../../src/core/types.ts";
-import { toFrames } from "../support/landmarks.ts";
+import { curled, toFrames } from "../support/landmarks.ts";
 import type { TraceBuilder } from "../support/traces.ts";
 
 /** Opens the app. Headless Chromium only has software WebGL, where the CPU delegate is ~10x faster. */
@@ -15,8 +15,12 @@ export async function waitLive(page: Page): Promise<void> {
 }
 
 /** Plays a synthetic hand trace through the real engine (replacing the camera's detections). */
-export async function play(page: Page, trace: TraceBuilder, extra: Partial<FrameObs> = {}): Promise<void> {
-  const frames: FrameObs[] = toFrames(trace.frames).map((f) => ({ ...f, ...extra }));
+export async function play(page: Page, trace: TraceBuilder, extra: Partial<FrameObs> = {}, opts: { fist?: boolean } = {}): Promise<void> {
+  const frames: FrameObs[] = toFrames(trace.frames).map((f) => ({
+    ...f,
+    hands: opts.fist ? f.hands.map((h) => ({ ...h, landmarks: curled(h.landmarks) })) : f.hands,
+    ...extra,
+  }));
   await page.evaluate((f) => (window as unknown as { __magicHand: { play(f: FrameObs[]): Promise<void> } }).__magicHand.play(f), frames);
 }
 

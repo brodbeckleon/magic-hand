@@ -54,10 +54,14 @@
   },
   "accessibility": {
     "title": "Noch eine Berechtigung, dann geht's los",
-    "body": "Damit Magic Hand die Folien wechseln kann, braucht es unter macOS die Berechtigung «Bedienungshilfen».",
+    "body": "Damit Magic Hand die Folien wechseln kann, muss es deinen Computer steuern dürfen. macOS führt das unter Datenschutz & Sicherheit → Bedienungshilfen.",
     "grant": "Berechtigung erteilen",
     "later": "Später",
-    "waiting": "Warte auf die Freigabe …"
+    "step1": "Schalte in den Systemeinstellungen unter Datenschutz & Sicherheit → Bedienungshilfen Magic Hand ein. Fehlt es in der Liste, füge es mit «+» aus dem Ordner Programme hinzu.",
+    "step2": "Schon eingeschaltet? Nach einem Update erkennt macOS die App manchmal nicht mehr: Entferne Magic Hand mit «–» und füge es neu hinzu.",
+    "step3": "Klappt es immer noch nicht? Starte Magic Hand neu: macOS übernimmt die Berechtigung manchmal erst nach einem Neustart.",
+    "openSettings": "Einstellungen öffnen",
+    "restart": "Magic Hand neu starten"
   },
   "actions": {
     "pause": "Pause",
@@ -280,7 +284,7 @@
     "dirRight": "rechts",
     "tipsTitle": "Gut zu wissen",
     "tip1": "Langsame oder schräge Bewegungen beim Erklären werden ignoriert.",
-    "tip2": "Die Handform spielt keine Rolle.",
+    "tip2": "Wische mit offener Hand (Finger gestreckt). Eine Faust oder ein Klicker in der Hand wechseln keine Folien; das lässt sich in den Einstellungen abschalten.",
     "tip3": "Mit {{shortcut}} pausierst du jederzeit, auch während der Präsentation.",
     "tip3Bar": "Pausieren kannst du beim Präsentieren jederzeit mit der Taste auf der Leiste ({{shortcut}} verwendet eine andere App).",
     "replayOnboarding": "Einführung erneut zeigen",
@@ -406,8 +410,8 @@
     "practice": {
       "title": "Übungsrunde",
       "lead": "Wische {{n}}× in jede Richtung, so wie du es beim Präsentieren machen würdest. Magic Hand lernt dabei dein Tempo und deine Weite.",
-      "nextSlide": "nächste Folie",
-      "prevSlide": "vorherige Folie",
+      "swipeLeft": "Nach links wischen",
+      "swipeRight": "Nach rechts wischen",
       "ok": "Erkannt!",
       "diagonal": "Zu schräg, eher waagrecht wischen",
       "note": "Während der Übung werden keine Tasten gesendet."
@@ -430,7 +434,8 @@
       "lead": "Klicke auf «Präsentieren»: Magic Hand wird zu einer kleinen Leiste und gibt den Fokus an deine Präsentation zurück.",
       "stay": "Hier bleiben",
       "calibrateLater": "Mit «Kalibrieren» passt du Magic Hand später genauer an deine Bewegungen an."
-    }
+    },
+    "autoNext": "Alles bereit, es geht weiter …"
   },
   "hints": {
     "ok": "Verstanden",

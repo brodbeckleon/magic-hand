@@ -36,6 +36,30 @@ function useMovements(onMovement: (m: Movement) => void): void {
   }, [engine]);
 }
 
+/** Steps that are done with the hands continue by themselves: the mouse is out of reach. */
+const AUTO_NEXT_MS = 900;
+/** The checks must stay green this long, so a hand that flickers into view does not count. */
+const FRAMING_HOLD_MS = 1500;
+
+/** Calls `next` once `ready` has held for `delay` ms; going back to not ready cancels it. */
+function useAutoNext(ready: boolean, next: () => void, delay = AUTO_NEXT_MS): void {
+  const go = useEffectEvent(next);
+  useEffect(() => {
+    if (!ready) return;
+    const id = window.setTimeout(go, delay);
+    return () => window.clearTimeout(id);
+  }, [ready, delay]);
+}
+
+function AutoNextNote() {
+  const { t } = useTranslation();
+  return (
+    <p className="ok-note" data-testid="auto-next">
+      <Icon name="check" size={18} /> {t("wizard.autoNext")}
+    </p>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 export function WelcomeStep({ nav, onSkipAll }: { nav: StepNav; onSkipAll: () => void }) {
   const { t } = useTranslation();
@@ -123,11 +147,14 @@ export function FramingStep({ nav }: { nav: StepNav }) {
 
   const r = checkFraming(luma, poses, handPx, video?.videoWidth || 640);
   const allOk = r.light === "ok" && r.distance === "ok" && r.hand === "ok";
+  // The hand is up in front of the camera, not on the mouse: continue by itself once all is well.
+  useAutoNext(allOk, nav.next, FRAMING_HOLD_MS);
   return (
     <StepFrame title={t("wizard.framing.title")} onBack={nav.back}
       primary={{ label: allOk ? t("common.next") : t("wizard.continueAnyway"), onClick: nav.next }}>
       <SilhouetteGuide ok={allOk} />
       <p>{t("wizard.framing.lead")}</p>
+      {allOk && <AutoNextNote />}
       <div className="checks" data-testid="framing-checks">
         <CheckRow state={checkState(r.light)} label={t("wizard.framing.light")} detail={r.light === "low" ? t("wizard.framing.lightLow") : r.light === "high" ? t("wizard.framing.lightHigh") : undefined} />
         <CheckRow state={checkState(r.distance)} label={t("wizard.framing.distance")} detail={r.distance === "low" ? t("wizard.framing.tooFar") : r.distance === "high" ? t("wizard.framing.tooClose") : r.distance === "unknown" ? t("wizard.framing.noPerson") : undefined} />
@@ -255,7 +282,6 @@ export const PRACTICE_PER_SIDE = 3;
 
 export function PracticeStep({ nav, onDone }: { nav: StepNav; onDone: (m: Movement[]) => void }) {
   const { t } = useTranslation();
-  const reverse = useSettings((s) => s.reverse);
   const [moves, setMoves] = useState<Movement[]>([]);
   const [feedback, setFeedback] = useState<{ id: number; kind: "ok" | "diagonal"; dir: "left" | "right" } | null>(null);
   const counts = {
@@ -277,7 +303,8 @@ export function PracticeStep({ nav, onDone }: { nav: StepNav; onDone: (m: Moveme
     onDone(moves);
     nav.next();
   };
-  const nextDir = reverse ? "right" : "left";
+  // The hands are busy swiping: once both sides are done, go on without the mouse.
+  useAutoNext(done, finish);
   return (
     <StepFrame title={t("wizard.practice.title")} onBack={nav.back}
       primary={{ label: done ? t("common.next") : t("common.skip"), onClick: finish, disabled: false }}>
@@ -289,7 +316,7 @@ export function PracticeStep({ nav, onDone }: { nav: StepNav; onDone: (m: Moveme
             <div className="pips">
               {Array.from({ length: PRACTICE_PER_SIDE }, (_, i) => <span key={i} className="pip" data-on={i < counts[d]} />)}
             </div>
-            <small>{t(d === nextDir ? "wizard.practice.nextSlide" : "wizard.practice.prevSlide")}</small>
+            <small>{t(d === "left" ? "wizard.practice.swipeLeft" : "wizard.practice.swipeRight")}</small>
           </div>
         ))}
       </div>
@@ -302,7 +329,7 @@ export function PracticeStep({ nav, onDone }: { nav: StepNav; onDone: (m: Moveme
           )}
         </AnimatePresence>
       </div>
-      <p className="dim small">{t("wizard.practice.note")}</p>
+      {done ? <AutoNextNote /> : <p className="dim small">{t("wizard.practice.note")}</p>}
     </StepFrame>
   );
 }

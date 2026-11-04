@@ -4,7 +4,7 @@ import { z } from "zod";
 import { clampRect } from "../../core/zone/Zone.ts";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 const swipeShape = Object.fromEntries(
   (Object.keys(DEFAULT_SWIPE_PARAMS) as (keyof SwipeParams)[]).map((k) => [
@@ -41,11 +41,13 @@ export const settingsSchema = z.object({
   reverse: z.boolean().catch(false),
   sensitivity: z.enum(["low", "normal", "high", "custom"]).catch("normal"),
   swipe: z.object(swipeShape).catch({ ...DEFAULT_SWIPE_PARAMS }),
+  /** The last custom (calibrated) values, kept while a preset is chosen so they can be picked again. */
+  customSwipe: z.object(swipeShape).nullable().catch(null),
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
   /** Only swipes with stretched fingers count (a fist, a pointing finger or a clicker do not). */
-  openHand: z.boolean().catch(false),
+  openHand: z.boolean().catch(true),
   /** Short tone when a slide changes. */
   sound: z.boolean().catch(false),
   /** Turn the camera off after this many minutes without anyone in view (0 = never). */
@@ -98,19 +100,28 @@ export const DEFAULT_SETTINGS: Settings = settingsSchema.parse({});
 /**
  * Version 1 stored the prototype's ~31° swipe angle with every preset; version 2 allows more tilt.
  * Presets get their new angle; custom (calibrated) values are left alone.
+ * Version 3 turns on "only with an open hand": it was off by default before, so a stored `false`
+ * is almost always the old default and not a choice.
  */
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
-  if ((raw.version ?? 1) !== 1) return raw;
-  const swipe = raw.swipe as Record<string, unknown> | undefined;
-  const preset = SENSITIVITY_PRESETS[raw.sensitivity as keyof typeof SENSITIVITY_PRESETS];
-  if (swipe && preset && swipe.maxSlope === 0.6) return { ...raw, swipe: { ...swipe, maxSlope: preset.maxSlope }, version: 2 };
-  return { ...raw, version: 2 };
+  let out = raw;
+  if ((out.version ?? 1) === 1) {
+    const swipe = out.swipe as Record<string, unknown> | undefined;
+    const preset = SENSITIVITY_PRESETS[out.sensitivity as keyof typeof SENSITIVITY_PRESETS];
+    out = swipe && preset && swipe.maxSlope === 0.6 ? { ...out, swipe: { ...swipe, maxSlope: preset.maxSlope } } : out;
+    out = { ...out, version: 2 };
+  }
+  if (out.version === 2) out = { ...out, openHand: true, version: 3 };
+  return out;
 }
 
 /** Parses stored data; anything unusable becomes the default. */
 export function parseSettings(raw: unknown): Settings {
   const r = settingsSchema.safeParse(raw && typeof raw === "object" ? migrate(raw as Record<string, unknown>) : {});
-  return r.success ? r.data : DEFAULT_SETTINGS;
+  if (!r.success) return DEFAULT_SETTINGS;
+  // Stored before customSwipe existed: the current values are the custom ones.
+  if (r.data.sensitivity === "custom" && !r.data.customSwipe) return { ...r.data, customSwipe: { ...r.data.swipe } };
+  return r.data;
 }
 
 /** Which preset the current swipe parameters correspond to. */

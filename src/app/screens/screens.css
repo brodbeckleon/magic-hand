@@ -38,7 +38,8 @@
 /* ---------- Main chrome ---------- */
 .chrome { position: absolute; inset: 0; pointer-events: none; }
 .chrome > * { pointer-events: auto; }
-.chrome .drag-strip { position: absolute; top: 0; left: 0; right: 0; height: 30px; }
+/* Above the camera and the chrome, below the toolbar (z 25) and the wizard (z 30). */
+.drag-strip { position: absolute; top: 0; left: 0; right: 0; height: 30px; z-index: 24; }
 .top-left {
   position: absolute; top: 14px; left: 14px; max-height: calc(100% - 110px);
   display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
@@ -226,3 +227,6 @@ html[data-view="pill"][data-pill-camera="large"] .pill[data-flash="next"],
 html[data-view="pill"][data-pill-camera="large"] .pill[data-flash="prev"] { box-shadow: inset 0 0 0 2px var(--coral); border-radius: 0 0 22px 22px; }
 html[data-view="pill"][data-pill-camera="off"] .view-pill .frame { opacity: 0.01; width: 2px; height: 2px; }
 .pill-camera-drag { position: absolute; left: 8px; right: 8px; top: 8px; bottom: 72px; z-index: 3; cursor: grab; }
+
+.side-card .ax-steps { margin-top: 10px; }
+.side-card .actions { flex-wrap: wrap; }

@@ -6,14 +6,35 @@ const PALM_OFFSETS: Record<number, [number, number]> = {
   0: [0, 0.6], 5: [-0.3, -0.3], 9: [0, -0.4], 13: [0.1, -0.3], 17: [0.2, 0.4],
 };
 
-/** 21 landmarks (normalised, unmirrored source) whose handFeatures() are exactly `hand`. */
+// Fingers stretched upwards from their knuckle (an open hand, as when swiping); thumb to the side.
+const FINGER_OFFSETS: Record<number, [number, number]> = { 1: [-0.4, 0.3], 2: [-0.55, 0.1], 3: [-0.65, -0.1], 4: [-0.75, -0.3] };
+for (const mcp of [5, 9, 13, 17]) {
+  const [x, y] = PALM_OFFSETS[mcp]!;
+  for (let j = 1; j <= 3; j++) FINGER_OFFSETS[mcp + j] = [x, y - 0.3 * j];
+}
+
+/** 21 landmarks (normalised, unmirrored source) whose handFeatures() are exactly `hand`; an open hand. */
 export function landmarksFor(hand: Hand, width = 640, height = 480): Landmark[] {
   return Array.from({ length: 21 }, (_, i) => {
-    const [ox, oy] = PALM_OFFSETS[i] ?? [0, -0.8];
+    const [ox, oy] = PALM_OFFSETS[i] ?? FINGER_OFFSETS[i]!;
     const mx = hand.cx + ox * hand.scale; // mirrored px
     const my = hand.cy + oy * hand.scale;
     return { x: 1 - mx / width, y: my / height, z: 0 };
   });
+}
+
+/** The same hand made into a fist: each finger curled back from its knuckle towards the wrist. */
+export function curled(lms: readonly Landmark[]): Landmark[] {
+  const out = lms.slice();
+  const w = lms[0]!;
+  for (const mcp of [5, 9, 13, 17]) {
+    const k = lms[mcp]!;
+    const at = (f: number) => ({ x: k.x + f * (k.x - w.x), y: k.y + f * (k.y - w.y), z: 0 });
+    out[mcp + 1] = at(0.3);
+    out[mcp + 2] = at(0.1);
+    out[mcp + 3] = at(-0.15);
+  }
+  return out;
 }
 
 export function handObs(hand: Hand, side: Side = "right", sideScore = 0.95, width = 640, height = 480): HandObs {

@@ -24,6 +24,8 @@ export interface Platform {
   requestAccessibility(): Promise<PermissionState>;
   openAccessibilitySettings(): Promise<void>;
   openCameraSettings(): Promise<void>;
+  /** Relaunches the app (a newly granted macOS permission may only apply to a new process). */
+  restartApp(): Promise<void>;
   /** Lets the user pick a location and saves the text there. Returns the path, or null if cancelled. */
   saveTextFile(defaultName: string, extension: string, contents: string): Promise<string | null>;
   saveBinaryFile(defaultName: string, bytes: Uint8Array): Promise<string | null>;
@@ -58,6 +60,7 @@ const native: Platform = {
   requestAccessibility: () => invoke("request_accessibility"),
   openAccessibilitySettings: () => invoke("open_accessibility_settings"),
   openCameraSettings: () => invoke("open_camera_settings"),
+  restartApp: () => invoke("restart_app"),
   saveTextFile: (defaultName, extension, contents) =>
     invoke("save_text_file", { defaultName, extension, contents }),
   saveBinaryFile: (defaultName, bytes) => invoke("save_binary_file", bytes, { headers: { "x-file-name": defaultName } }),
@@ -82,6 +85,7 @@ const browser: Platform = {
   requestAccessibility: async () => "not-needed",
   openAccessibilitySettings: async () => {},
   openCameraSettings: async () => {},
+  restartApp: async () => location.reload(),
   saveTextFile: async (defaultName, _extension, contents) => {
     const url = URL.createObjectURL(new Blob([contents], { type: "text/plain" }));
     const a = Object.assign(document.createElement("a"), { href: url, download: defaultName });

@@ -7,7 +7,7 @@ import { HandLayer } from "./overlay/HandLayer.tsx";
 import { PersonLayer } from "./overlay/PersonLayer.tsx";
 import { ZoneMask } from "./overlay/ZoneMask.tsx";
 import "./overlay/overlay.css";
-import { MainChrome } from "./screens/MainChrome.tsx";
+import { isMacNative, MainChrome } from "./screens/MainChrome.tsx";
 import { Pill } from "./screens/Pill.tsx";
 import "./design/controls.css";
 import "./screens/screens.css";
@@ -52,7 +52,9 @@ function Root({ engine }: { engine: Engine }) {
 
   return (
     <FrameContext.Provider value={{ video, ...size, overlayHost: host }}>
-      <main className={`stage view-${view}${wizard ? " in-wizard" : ""}${panel}`}>
+      {/* On macOS the window has no title bar of its own (overlay style): free space moves it. */}
+      <main className={`stage view-${view}${wizard ? " in-wizard" : ""}${panel}`} data-tauri-drag-region>
+        {view === "main" && isMacNative && <div className="drag-strip" data-tauri-drag-region />}
         <div className="frame" style={{ "--ar": String(aspect), "--ar-num": aspect } as React.CSSProperties}>
           <video
             ref={setVideo}

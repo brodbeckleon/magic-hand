@@ -112,7 +112,7 @@ Einmal in die Präsentation klicken.
 
 | Bereich | Möglichkeiten |
 |---------|---------------|
-| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist) |
+| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist; Standard: an) |
 | Vortragende | Erkannte Personen (nur ich, 2, 3, 4; weniger ist schneller), per Handzeichen oder automatisch: sprechende Person, aktivste Person oder beides |
 | Kamera | Kamera, Auflösung, Hilfe auf Distanz |
 | Präsentation | Gesendete Tasten (Pfeiltasten oder Bild auf/ab), Kamerabild beim Präsentieren (aus / klein / gross), Ton beim Folienwechsel, Kamera bei Abwesenheit ausschalten |

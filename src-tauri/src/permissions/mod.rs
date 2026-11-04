@@ -52,6 +52,12 @@ pub fn open_accessibility_settings() -> Result<(), String> {
     Ok(())
 }
 
+/// Restarts the app: some macOS versions only apply a newly granted permission to a new process.
+#[tauri::command]
+pub fn restart_app<R: tauri::Runtime>(app: tauri::AppHandle<R>) {
+    app.restart();
+}
+
 /// Opens the camera privacy settings (when the camera was denied).
 #[tauri::command]
 pub fn open_camera_settings() -> Result<(), String> {

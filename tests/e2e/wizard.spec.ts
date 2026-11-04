@@ -101,7 +101,8 @@ test.describe("calibration wizard", () => {
     await play(page, t);
     await expect(page.locator(".pip[data-on='true']")).toHaveCount(6);
     expect(await sentKeys(page)).toEqual([]);
-    await page.getByTestId("wizard-next").click();
+    // Both sides done: the step continues by itself, the hands never need the mouse.
+    await expect(page.getByTestId("auto-next")).toBeVisible();
 
     await expect(page.getByTestId("summary-table")).toBeVisible();
     await page.getByTestId("summary-use").click();

@@ -27,6 +27,7 @@ pub fn run() {
                 )?;
             }
             tray::manage(app.handle())?;
+            window::watch_screens(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -35,6 +36,7 @@ pub fn run() {
             permissions::request_accessibility,
             permissions::open_accessibility_settings,
             permissions::open_camera_settings,
+            permissions::restart_app,
             export::save_text_file,
             export::save_binary_file,
             window::set_pill_mode,
