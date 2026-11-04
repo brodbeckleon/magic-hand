@@ -79,8 +79,10 @@ export const settingsSchema = z.object({
       unlocked: z.boolean().catch(false),
       dryRun: z.boolean().catch(false),
       showEvents: z.boolean().catch(true),
+      /** Smooth palm positions (One Euro filter) before swipe detection; for comparing with recordings. */
+      smoothing: z.boolean().catch(false),
     })
-    .catch({ unlocked: false, dryRun: false, showEvents: true }),
+    .catch({ unlocked: false, dryRun: false, showEvents: true, smoothing: false }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

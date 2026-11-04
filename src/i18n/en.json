@@ -234,6 +234,8 @@
     "reactionHint": "Start of the movement until key sent (includes the gesture itself, target < 500 ms)",
     "dropped": "{{n}} dropped",
     "resetParams": "Defaults",
+    "smoothing": "Smoothing",
+    "smoothingHint": "One Euro filter on the palm position: less jitter when still, at most one frame later on a swipe. Compare with a recording before turning it on for real.",
     "recordPrivacy": "Only hand points (coordinates) are recorded, never images. Only with the consent of everyone in view.",
     "recordConsent": "Everyone in view has agreed.",
     "startRecording": "Start recording",

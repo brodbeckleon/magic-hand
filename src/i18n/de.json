@@ -234,6 +234,8 @@
     "reactionHint": "Beginn der Bewegung bis Taste gesendet (enthält die Geste selbst, Ziel < 500 ms)",
     "dropped": "{{n}} ausgelassen",
     "resetParams": "Standardwerte",
+    "smoothing": "Glättung",
+    "smoothingHint": "One-Euro-Filter auf der Handposition: weniger Zittern in Ruhe, beim Swipe höchstens ein Frame später. Vor dem Einsatz mit einer Aufnahme vergleichen.",
     "recordPrivacy": "Aufgezeichnet werden nur Handpunkte (Koordinaten), keine Bilder. Nur mit Einverständnis aller Personen im Bild.",
     "recordConsent": "Alle Personen im Bild sind einverstanden.",
     "startRecording": "Aufnahme starten",
