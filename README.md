@@ -112,8 +112,8 @@ Einmal in die Präsentation klicken.
 
 | Bereich | Möglichkeiten |
 |---------|---------------|
-| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°) |
-| Mehrere Vortragende | Per Handzeichen oder automatisch: sprechende Person, aktivste Person oder beides |
+| Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist) |
+| Vortragende | Erkannte Personen (nur ich, 2, 3, 4; weniger ist schneller), per Handzeichen oder automatisch: sprechende Person, aktivste Person oder beides |
 | Kamera | Kamera, Auflösung, Hilfe auf Distanz |
 | Präsentation | Gesendete Tasten (Pfeiltasten oder Bild auf/ab), Kamerabild beim Präsentieren (aus / klein / gross), Ton beim Folienwechsel, Kamera bei Abwesenheit ausschalten |
 | Sprache | System, Deutsch, English |
@@ -128,6 +128,8 @@ Kamerabild markiert, die anderen sind abgedunkelt.
   über die Schulter, bis der orange Ring voll ist.
 - **Automatisch**: Magic Hand gibt das Wort der **sprechenden Person** (Mundbewegung), der
   **aktivsten Person** (Bewegung) oder nach **beidem**. Das Handzeichen übersteuert jederzeit.
+- Mit **Erkannte Personen: Nur ich** folgt Magic Hand nur der Person, die der Kamera am nächsten
+  steht, und rechnet weniger.
 - Es wird nie mitten in einer Wischgeste gewechselt. Wer kurz aus dem Bild geht, behält das
   Wort 3 Sekunden.
 
