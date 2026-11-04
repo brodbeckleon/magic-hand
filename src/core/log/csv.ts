@@ -21,6 +21,7 @@ export type LogEvent =
   | "ignored_dir"
   | "ignored_return"
   | "ignored_not_speaker"
+  | "ignored_closed"
   | "verpasst"
   | "fehlausloesung"
   | "pause"

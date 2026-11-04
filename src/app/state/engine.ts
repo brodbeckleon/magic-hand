@@ -11,7 +11,7 @@ export type EngineStatus =
   | { kind: "error"; error: CameraError | "model" | "gpu" };
 
 export type UiEventKind =
-  | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "speaker" | "missed" | "false";
+  | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "ignored_closed" | "speaker" | "missed" | "false";
 
 export interface UiEvent {
   id: number;

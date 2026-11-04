@@ -44,6 +44,8 @@ export const settingsSchema = z.object({
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
+  /** Only swipes with stretched fingers count (a fist, a pointing finger or a clicker do not). */
+  openHand: z.boolean().catch(false),
   /** Short tone when a slide changes. */
   sound: z.boolean().catch(false),
   /** Turn the camera off after this many minutes without anyone in view (0 = never). */

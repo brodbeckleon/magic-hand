@@ -6,7 +6,7 @@ import { useEngineInstance } from "../engine/context.ts";
 import { useEngine } from "../state/engine.ts";
 import { useSettings } from "../state/settings.ts";
 
-type Result = { id: number; kind: "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_not_speaker"; swipe?: "left" | "right" };
+type Result = { id: number; kind: "next" | "prev" | "ignored_dir" | "ignored_closed" | "ignored_return" | "ignored_not_speaker"; swipe?: "left" | "right" };
 
 /**
  * "Try it now" inside Help: swipe in front of the camera and see what Magic Hand understood, with
@@ -25,7 +25,7 @@ export function TryIt() {
     if (!active) return;
     const release = engine.suppressKeys();
     const off = engine.events.subscribe((e) => {
-      if (e.kind === "next" || e.kind === "prev" || e.kind === "ignored_dir" || e.kind === "ignored_return" || e.kind === "ignored_not_speaker") {
+      if (e.kind === "next" || e.kind === "prev" || e.kind === "ignored_dir" || e.kind === "ignored_closed" || e.kind === "ignored_return" || e.kind === "ignored_not_speaker") {
         setResult({ id: e.id, kind: e.kind, swipe: e.swipe });
         if (e.kind === "next" || e.kind === "prev") setCount((c) => c + 1);
       }

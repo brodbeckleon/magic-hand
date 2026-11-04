@@ -237,3 +237,15 @@ test("a pause shortcut owned by another app is not advertised", async ({ page })
   await page.getByTestId("open-help").click();
   await expect(page.getByTestId("help")).toContainText("with the button on the bar while presenting");
 });
+
+test("'only with an open hand': a swipe without stretched fingers changes nothing and is explained", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-preferences").click();
+  await page.getByRole("switch", { name: "Only with an open hand" }).click();
+  await page.keyboard.press("Escape");
+  // The synthetic hands have no stretched fingers.
+  await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
+  expect(await sentKeys(page)).toEqual([]);
+  await expect(page.getByTestId("toast")).toHaveText("Not recognised: swipe with an open hand");
+});

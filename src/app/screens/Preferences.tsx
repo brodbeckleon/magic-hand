@@ -81,6 +81,10 @@ function GestureSection() {
         />
         <small className="field-hint">{t(`prefs.sensHint.${s.sensitivity}`)}</small>
       </div>
+
+      <Row label={t("prefs.openHand")} hint={t("prefs.openHandHint")} htmlFor="pref-open-hand">
+        <Switch id="pref-open-hand" label={t("prefs.openHand")} checked={s.openHand} onChange={(openHand) => s.update({ openHand })} />
+      </Row>
     </Section>
   );
 }
