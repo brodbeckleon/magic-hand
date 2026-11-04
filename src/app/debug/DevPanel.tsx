@@ -3,7 +3,7 @@ import type { PipelineSnapshot } from "../../core/pipeline/GesturePipeline.ts";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SWIPE_PARAMS, SWIPE_PARAM_RANGES, type SwipeParams } from "../../core/swipe/params.ts";
 import { Icon } from "../design/Icon.tsx";
-import { Segmented } from "../design/controls.tsx";
+import { Segmented, Switch } from "../design/controls.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { percentile, useDev } from "../state/dev.ts";
 import { useEngine } from "../state/engine.ts";
@@ -94,9 +94,16 @@ function Params() {
   const { t } = useTranslation();
   const swipe = useSettings((s) => s.swipe);
   const updateSwipe = useSettings((s) => s.updateSwipe);
+  const smoothing = useSettings((s) => s.dev.smoothing);
+  const update = useSettings((s) => s.update);
   const keys = Object.keys(SWIPE_PARAM_RANGES) as (keyof SwipeParams)[];
   return (
     <div className="dev-body" data-testid="dev-params">
+      <label className="param param-switch">
+        <span className="param-name">{t("dev.smoothing")}</span>
+        <Switch label={t("dev.smoothing")} checked={smoothing} onChange={(v) => update({ dev: { smoothing: v } })} />
+      </label>
+      <p className="dev-note">{t("dev.smoothingHint")}</p>
       {keys.map((k) => {
         const r = SWIPE_PARAM_RANGES[k];
         return (

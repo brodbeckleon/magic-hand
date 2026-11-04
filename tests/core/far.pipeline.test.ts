@@ -18,7 +18,7 @@ function pose(shoulder: number, wx: number, wy: number): PoseObs {
 }
 
 /** Pose-only frames (hand model finds nothing): hold, swipe the wrist left in the mirrored view. */
-function run(shoulder: number, opts: { farAssist?: boolean } = {}, W = 640) {
+function run(shoulder: number, opts: { farAssist?: boolean; openHand?: boolean } = {}, W = 640) {
   const H = (W * 3) / 4;
   const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, ...opts });
   const events: string[] = [];
@@ -57,6 +57,10 @@ describe("far-distance assist", () => {
     for (const w of [320, 640, 1280]) expect(run(0.12, {}, w).snap.persons[0]!.far).toBe(true);
     // A near presenter is near even at 320 px (0.25 x 320 = 80 px was "far" in absolute pixels).
     expect(run(0.25, {}, 320).snap.persons[0]!.far).toBe(false);
+  });
+
+  it("with 'open hand only', a palm from the pose (no fingers visible) can still swipe", () => {
+    expect(run(0.08, { openHand: true }).events).toContain("next");
   });
 
   it("can be switched off", () => {

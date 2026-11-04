@@ -155,6 +155,8 @@ export class Engine {
   private anyFar = false;
   private wristCrops: Rect[] = [];
   private numHands = 2;
+  /** numPoses last sent to the vision backend (null: a new backend, not sent yet). */
+  private posesApplied: number | null = null;
   private fewPeopleSince = 0;
 
   /**
@@ -164,7 +166,12 @@ export class Engine {
   private adaptNumHands(t: number): void {
     const worker = this.vision?.backend;
     if (!worker) return;
-    if (this.personCount >= 2) {
+    const maxPeople = useSettings.getState().maxPeople;
+    if (this.posesApplied !== maxPeople) worker.setNumPoses((this.posesApplied = maxPeople));
+    if (maxPeople === 1) {
+      // One presenter: never search for a second person's hands.
+      if (this.numHands !== 2) worker.setNumHands((this.numHands = 2));
+    } else if (this.personCount >= 2) {
       this.fewPeopleSince = t;
       if (this.numHands !== 4) worker.setNumHands((this.numHands = 4));
     } else if (this.numHands !== 2 && t - this.fewPeopleSince > 3) {
@@ -204,6 +211,7 @@ export class Engine {
     this.vision?.backend.terminate();
     this.vision = null;
     this.numHands = 2;
+    this.posesApplied = null;
   }
 
   /**
@@ -338,7 +346,7 @@ export class Engine {
     const header: RecHeader = {
       type: "header", schema: SCHEMA, app: `magic-hand ${__APP_VERSION__}`, created: localIsoTimestamp(new Date()),
       platform: navigator.userAgent, src: this.lastSize, mirror: true, handednessSwap: HANDEDNESS_SWAP,
-      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist },
+      zone: s.zone, settings: { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist, openHand: s.openHand, smoothing: s.dev.smoothing, maxPeople: s.maxPeople },
     };
     this.recorder = new Recorder();
     this.recorder.write(header);
@@ -427,7 +435,7 @@ export class Engine {
   }
 
   private applySettings(s: Settings): void {
-    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist };
+    const patch = { swipe: s.swipe, reverse: s.reverse, preferredHand: s.preferredHand, speaker: s.speaker, farAssist: s.farAssist, openHand: s.openHand, smoothing: s.dev.smoothing, maxPeople: s.maxPeople };
     this.pipeline.updateSettings(patch);
     this.recorder?.write({ type: "settings", t: this.lastT, patch });
     // A different camera or resolution needs a new stream.

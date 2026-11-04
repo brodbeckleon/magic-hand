@@ -25,6 +25,7 @@
     "next": "Next slide",
     "prev": "Previous slide",
     "ignored_dir": "Ignored: not horizontal",
+    "ignored_closed": "Ignored: hand not open",
     "ignored_return": "Ignored: return time",
     "missed": "Missed (logged)",
     "false": "False trigger (logged)",
@@ -139,8 +140,14 @@
       "high": "Good for small movements or standing far from the camera.",
       "custom": "Values from your calibration."
     },
-    "presenters": "Multiple presenters",
-    "presentersHint": "Who may change slides when several people are in view?",
+    "presenters": "Presenters",
+    "presentersHint": "How many people may present, and who changes the slides?",
+    "maxPeople": "People recognised",
+    "maxPeopleOne": "Only me",
+    "maxPeopleHint": {
+      "one": "Fastest: Magic Hand follows one person and ignores everyone else in the picture.",
+      "more": "Up to {{n}} people are recognised. Fewer is faster."
+    },
     "speakerMode": "Speaker selection",
     "speakerManual": "By hand sign",
     "speakerAuto": "Automatic",
@@ -194,6 +201,8 @@
     "deleted": "Deleted. No data is stored anymore.",
     "farAssist": "Help at a distance",
     "farAssistHint": "When you stand far away, Magic Hand searches for your hand near your wrist and, if needed, uses your arm movement.",
+    "openHand": "Only with an open hand",
+    "openHandHint": "A swipe counts only with stretched fingers, however your hand is turned. A fist, a pointing finger or a clicker in your hand do not change slides.",
     "sound": "Sound on slide change",
     "soundHint": "A short, quiet tone so you know it worked without looking.",
     "autoPause": "Turn the camera off when nobody is there",
@@ -231,6 +240,8 @@
     "reactionHint": "Start of the movement until key sent (includes the gesture itself, target < 500 ms)",
     "dropped": "{{n}} dropped",
     "resetParams": "Defaults",
+    "smoothing": "Smoothing",
+    "smoothingHint": "One Euro filter on the palm position: less jitter when still, at most one frame later on a swipe. Compare with a recording before turning it on for real.",
     "recordPrivacy": "Only hand points (coordinates) are recorded, never images. Only with the consent of everyone in view.",
     "recordConsent": "Everyone in view has agreed.",
     "startRecording": "Start recording",
@@ -317,6 +328,7 @@
         "next": "Recognised: next slide",
         "prev": "Recognised: previous slide",
         "ignored_dir": "Too diagonal: swipe more horizontally",
+        "ignored_closed": "Hand not open: swipe with stretched fingers",
         "ignored_return": "Return movement: ignored on purpose",
         "ignored_not_speaker": "Someone else is the speaker"
       },
@@ -326,6 +338,7 @@
   },
   "toast": {
     "ignored_dir": "Not recognised: swipe more horizontally",
+    "ignored_closed": "Not recognised: swipe with an open hand",
     "ignored_return": "Return movement ignored",
     "ignored_not_speaker": "Person {{n}} is not the speaker. Raise an open hand for 1 s to take over.",
     "speaker": "Person {{n}} now changes the slides"

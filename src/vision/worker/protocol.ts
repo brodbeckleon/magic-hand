@@ -5,7 +5,7 @@ export type ToWorker =
   | { type: "init"; delegate: Delegate; numHands: number }
   | ({ type: "frame"; id: number } & DetectRequest)
   | { type: "reset" }
-  | { type: "options"; numHands: number };
+  | { type: "options"; numHands?: number; numPoses?: number };
 
 export type FromWorker =
   | { type: "ready"; delegate: Delegate }

@@ -81,6 +81,10 @@ function GestureSection() {
         />
         <small className="field-hint">{t(`prefs.sensHint.${s.sensitivity}`)}</small>
       </div>
+
+      <Row label={t("prefs.openHand")} hint={t("prefs.openHandHint")} htmlFor="pref-open-hand">
+        <Switch id="pref-open-hand" label={t("prefs.openHand")} checked={s.openHand} onChange={(openHand) => s.update({ openHand })} />
+      </Row>
     </Section>
   );
 }
@@ -88,37 +92,58 @@ function GestureSection() {
 function PresenterSection() {
   const { t } = useTranslation();
   const speaker = useSettings((s) => s.speaker);
+  const maxPeople = useSettings((s) => s.maxPeople);
   const update = useSettings((s) => s.update);
   return (
     <Section title={t("prefs.presenters")} icon="people" hint={t("prefs.presentersHint")}>
-      <Segmented
-        label={t("prefs.speakerMode")}
-        testId="pref-speaker"
-        value={speaker.mode}
-        onChange={(mode) => update({ speaker: { mode } })}
-        options={[
-          { value: "manual", label: t("prefs.speakerManual"), icon: <Icon name="hand" size={16} /> },
-          { value: "auto", label: t("prefs.speakerAuto"), icon: <Icon name="people" size={16} /> },
-        ]}
-      />
-      <small className="field-hint">{t(`prefs.speakerHint.${speaker.mode}`)}</small>
-      {speaker.mode === "auto" && (
-        <div className="field">
-          <span className="field-label">{t("prefs.autoSignal")}</span>
+      <div className="field">
+        <span className="field-label">{t("prefs.maxPeople")}</span>
+        <Segmented
+          label={t("prefs.maxPeople")}
+          testId="pref-max-people"
+          value={String(maxPeople) as "1" | "2" | "3" | "4"}
+          onChange={(v) => update({ maxPeople: Number(v) as 1 | 2 | 3 | 4 })}
+          options={[
+            { value: "1", label: t("prefs.maxPeopleOne") },
+            { value: "2", label: "2" },
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+          ]}
+        />
+        <small className="field-hint">{t(maxPeople === 1 ? "prefs.maxPeopleHint.one" : "prefs.maxPeopleHint.more", { n: maxPeople })}</small>
+      </div>
+      {maxPeople > 1 && (
+        <>
           <Segmented
-            label={t("prefs.autoSignal")}
-            testId="pref-signal"
-            large
-            value={speaker.autoSignal}
-            onChange={(autoSignal) => update({ speaker: { autoSignal } })}
+            label={t("prefs.speakerMode")}
+            testId="pref-speaker"
+            value={speaker.mode}
+            onChange={(mode) => update({ speaker: { mode } })}
             options={[
-              { value: "mouth", label: t("prefs.signalMouth"), icon: <Icon name="mic" size={20} /> },
-              { value: "movement", label: t("prefs.signalMovement"), icon: <Icon name="move" size={20} /> },
-              { value: "both", label: t("prefs.signalBoth"), icon: <span className="two-hands"><Icon name="mic" size={18} /><Icon name="move" size={18} /></span> },
+              { value: "manual", label: t("prefs.speakerManual"), icon: <Icon name="hand" size={16} /> },
+              { value: "auto", label: t("prefs.speakerAuto"), icon: <Icon name="people" size={16} /> },
             ]}
           />
-          <small className="field-hint">{t(`prefs.autoSignalHint.${speaker.autoSignal}`)}</small>
-        </div>
+          <small className="field-hint">{t(`prefs.speakerHint.${speaker.mode}`)}</small>
+          {speaker.mode === "auto" && (
+            <div className="field">
+              <span className="field-label">{t("prefs.autoSignal")}</span>
+              <Segmented
+                label={t("prefs.autoSignal")}
+                testId="pref-signal"
+                large
+                value={speaker.autoSignal}
+                onChange={(autoSignal) => update({ speaker: { autoSignal } })}
+                options={[
+                  { value: "mouth", label: t("prefs.signalMouth"), icon: <Icon name="mic" size={20} /> },
+                  { value: "movement", label: t("prefs.signalMovement"), icon: <Icon name="move" size={20} /> },
+                  { value: "both", label: t("prefs.signalBoth"), icon: <span className="two-hands"><Icon name="mic" size={18} /><Icon name="move" size={18} /></span> },
+                ]}
+              />
+              <small className="field-hint">{t(`prefs.autoSignalHint.${speaker.autoSignal}`)}</small>
+            </div>
+          )}
+        </>
       )}
     </Section>
   );

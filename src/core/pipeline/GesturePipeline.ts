@@ -1,5 +1,6 @@
 import { atWidth, FAR_SHOULDER_PX, HandRatio, poseHand, shoulderPx, SMALL_HAND_PX, wristCrop } from "../far/wrist.ts";
-import { handFeatures } from "../features.ts";
+import { handFeatures, isHandOpen } from "../features.ts";
+import { HandSmoother } from "../filter/OneEuro.ts";
 import { MotionEnergy, MouthActivity } from "../speaker/activity.ts";
 import { Arbiter, type AutoSignal, type SpeakerMode, type SwitchReason } from "../speaker/Arbiter.ts";
 import { ClaimDetector } from "../speaker/ClaimDetector.ts";
@@ -20,6 +21,12 @@ export interface PipelineSettings {
   speaker?: { mode: SpeakerMode; autoSignal: AutoSignal };
   /** Far away (MHR03/MHR04): hand model on wrist crops, pose wrists when no hand is found. */
   farAssist?: boolean;
+  /** Only swipes made with an open hand (fingers stretched) change slides (MHR07). */
+  openHand?: boolean;
+  /** Smooth palm positions (One Euro filter) before swipe detection. */
+  smoothing?: boolean;
+  /** At most this many people are tracked: the largest in the picture (closest to the camera). */
+  maxPeople?: number;
 }
 
 export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
@@ -28,7 +35,18 @@ export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
   preferredHand: "either",
   speaker: { mode: "manual", autoSignal: "both" },
   farAssist: true,
+  openHand: false,
+  smoothing: false,
+  maxPeople: 4,
 };
+
+/**
+ * Share of a swipe's frames in which the hand must look open. Not every frame: fast movement blurs
+ * the fingers, so single frames often look curled.
+ */
+export const OPEN_SHARE = 0.6;
+/** How long hand shapes are kept (longer than the longest swipe window). */
+const SHAPE_KEEP_S = 2;
 
 /** Person id used while no pose data is available (one presenter, like the prototype). */
 export const SOLO = 0;
@@ -48,7 +66,7 @@ export type PipelineEvent =
       /** When the movement started (for the reaction time). */
       onset: number;
     }
-  | { type: "ignored_dir" | "ignored_return" | "ignored_not_speaker"; t: number; side: Side; person: number }
+  | { type: "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "ignored_closed"; t: number; side: Side; person: number }
   | { type: "speaker"; t: number; person: number | null; reason: SwitchReason };
 
 export interface HandView {
@@ -107,6 +125,9 @@ interface PersonState {
   ratio: HandRatio;
   /** Where each side's position came from last frame (switching sources restarts the swipe). */
   source: Record<Side, "hand" | "pose" | null>;
+  /** Recent hand shapes per side: open or not; null = no finger landmarks (palm from the pose). */
+  shapes: Record<Side, { t: number; open: boolean | null }[]>;
+  smooth: Record<Side, HandSmoother>;
 }
 
 /**
@@ -145,6 +166,7 @@ export class GesturePipeline {
     for (const p of this.people.values()) {
       p.lock.setParams(this.settings.swipe);
       p.lock.setPreferred(this.settings.preferredHand);
+      if (patch.swipe) p.smooth = { left: this.smoother(), right: this.smoother() };
     }
   }
 
@@ -160,7 +182,8 @@ export class GesturePipeline {
   }
 
   /** `paused`: draw the hands but do not detect gestures (prototype key p). */
-  step(frame: FrameObs, paused = false): { events: PipelineEvent[]; snapshot: PipelineSnapshot } {
+  step(input: FrameObs, paused = false): { events: PipelineEvent[]; snapshot: PipelineSnapshot } {
+    const frame = limitPeople(input, this.settings.maxPeople ?? 4);
     const { t, width, height } = frame;
     const aspect = width / height;
     const features = frame.hands.map((obs) => handFeatures(obs.landmarks, width, height));
@@ -189,10 +212,12 @@ export class GesturePipeline {
     // Which person and side each hand belongs to.
     const assigned = tracks.map((tr) => ({ tr, ...this.ownerOf(tr, persons, aspect) }));
     const byPerson = new Map<number, Partial<Record<Side, Hand>>>();
+    const openBy = new Map<number, Partial<Record<Side, boolean>>>();
     for (const a of assigned) {
       const m = byPerson.get(a.person) ?? {};
       m[a.side] = a.tr.hand;
       byPerson.set(a.person, m);
+      if (this.settings.openHand) openBy.set(a.person, { ...openBy.get(a.person), [a.side]: isHandOpen(a.tr.obs.landmarks, aspect) });
     }
 
     // Far away: learn each person's hand size, and fall back to the pose wrists where no hand is found.
@@ -272,10 +297,19 @@ export class GesturePipeline {
         if (this.armed && !st.lock.calibrated) st.lock.forceCalibrated(t);
         for (const side of ["left", "right"] as const) {
           const src = !hands[side] ? null : poseHands.some((ph) => ph.person === person && ph.side === side) ? "pose" : "hand";
-          if (src && st.source[side] && src !== st.source[side]) st.lock.detectors[side].clearHistory();
+          if (src && st.source[side] && src !== st.source[side]) {
+            st.lock.detectors[side].clearHistory();
+            st.smooth[side].reset();
+          }
           if (src) st.source[side] = src;
+          if (this.settings.openHand && src) {
+            const shapes = st.shapes[side];
+            shapes.push({ t, open: src === "hand" ? (openBy.get(person)?.[side] ?? false) : null });
+            while (shapes.length && shapes[0]!.t < t - SHAPE_KEEP_S) shapes.shift();
+          }
         }
-        for (const { side, event, detector } of st.lock.update(t, hands)) {
+        const fed = this.settings.smoothing ? smoothed(st, t, hands) : hands;
+        for (const { side, event, detector } of st.lock.update(t, fed)) {
           if (event === "calibrated") {
             if (this.armed) continue;
             this.armed = true;
@@ -289,6 +323,10 @@ export class GesturePipeline {
           } else if (event === "next" || event === "prev") {
             if (person !== speaker) {
               events.push({ type: "ignored_not_speaker", t, side, person });
+              continue;
+            }
+            if (this.settings.openHand && !madeOpen(st.shapes[side], detector.onset, t)) {
+              events.push({ type: "ignored_closed", t, side, person });
               continue;
             }
             const command: Command = this.settings.reverse ? (event === "next" ? "prev" : "next") : event;
@@ -372,10 +410,14 @@ export class GesturePipeline {
     if (!this.people.has(owner)) this.people.set(owner, solo);
   }
 
+  private smoother(): HandSmoother {
+    return new HandSmoother(this.settings.swipe.maxGap, this.settings.swipe.maxJump);
+  }
+
   private state(person: number): PersonState {
     let st = this.people.get(person);
     if (!st) {
-      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy(), ratio: new HandRatio(), source: { left: null, right: null } };
+      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy(), ratio: new HandRatio(), source: { left: null, right: null }, shapes: { left: [], right: [] }, smooth: { left: this.smoother(), right: this.smoother() } };
       this.people.set(person, st);
     }
     return st;
@@ -392,4 +434,35 @@ export class GesturePipeline {
       Math.hypot((a.cx - w.x) * aspect, a.cy - w.y) - Math.hypot((b.cx - w.x) * aspect, b.cy - w.y))[0]!;
     return { person: nearest.id, side: tr.side };
   }
+}
+
+/**
+ * Was the swipe from `onset` to `t` made with an open hand? Frames without finger landmarks (palm
+ * estimated from the pose, far away) cannot tell and do not count; a swipe seen only that way passes.
+ */
+export function madeOpen(shapes: readonly { t: number; open: boolean | null }[], onset: number, t: number): boolean {
+  const seen = shapes.filter((s) => s.t >= onset - 1e-6 && s.t <= t && s.open !== null);
+  if (!seen.length) return true;
+  return seen.filter((s) => s.open).length >= OPEN_SHARE * seen.length;
+}
+
+function smoothed(st: PersonState, t: number, hands: Partial<Record<Side, Hand>>): Partial<Record<Side, Hand>> {
+  const out: Partial<Record<Side, Hand>> = {};
+  for (const side of ["left", "right"] as const) {
+    const h = hands[side];
+    if (h) out[side] = st.smooth[side].apply(t, h);
+  }
+  return out;
+}
+
+/**
+ * Keeps the `max` people with the widest shoulders in the picture (closest to the camera), and
+ * their faces, which are matched to the poses by index.
+ */
+export function limitPeople(frame: FrameObs, max: number): FrameObs {
+  const { poses, faces, width, height } = frame;
+  if (!poses || poses.length <= max) return frame;
+  const size = (i: number) => shoulderPx(poses[i]!, width, height) ?? 0;
+  const keep = poses.map((_, i) => i).sort((a, b) => size(b) - size(a)).slice(0, max).sort((a, b) => a - b);
+  return { ...frame, poses: keep.map((i) => poses[i]!), faces: faces && keep.map((i) => faces[i] ?? null) };
 }

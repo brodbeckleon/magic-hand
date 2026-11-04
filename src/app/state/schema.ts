@@ -44,6 +44,8 @@ export const settingsSchema = z.object({
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
+  /** Only swipes with stretched fingers count (a fist, a pointing finger or a clicker do not). */
+  openHand: z.boolean().catch(false),
   /** Short tone when a slide changes. */
   sound: z.boolean().catch(false),
   /** Turn the camera off after this many minutes without anyone in view (0 = never). */
@@ -55,6 +57,12 @@ export const settingsSchema = z.object({
       resolution: z.enum(RESOLUTIONS).catch("640x480"),
     })
     .catch({ deviceId: null, resolution: "640x480" }),
+
+  /**
+   * How many people are looked for. Fewer is faster: the models stop searching once that many are
+   * tracked. 1 = a single presenter, others in the picture are ignored.
+   */
+  maxPeople: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).catch(4),
 
   speaker: z
     .object({
@@ -77,8 +85,10 @@ export const settingsSchema = z.object({
       unlocked: z.boolean().catch(false),
       dryRun: z.boolean().catch(false),
       showEvents: z.boolean().catch(true),
+      /** Smooth palm positions (One Euro filter) before swipe detection; for comparing with recordings. */
+      smoothing: z.boolean().catch(false),
     })
-    .catch({ unlocked: false, dryRun: false, showEvents: true }),
+    .catch({ unlocked: false, dryRun: false, showEvents: true, smoothing: false }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

@@ -25,6 +25,7 @@
     "next": "Nächste Folie",
     "prev": "Vorherige Folie",
     "ignored_dir": "Ignoriert: nicht waagrecht",
+    "ignored_closed": "Ignoriert: Hand nicht offen",
     "ignored_return": "Ignoriert: Rückholzeit",
     "missed": "Verpasst (protokolliert)",
     "false": "Fehlauslösung (protokolliert)",
@@ -139,8 +140,14 @@
       "high": "Gut für kleine Bewegungen oder grossen Abstand zur Kamera.",
       "custom": "Werte aus deiner Kalibrierung."
     },
-    "presenters": "Mehrere Vortragende",
-    "presentersHint": "Wer darf Folien wechseln, wenn mehrere Personen im Bild sind?",
+    "presenters": "Vortragende",
+    "presentersHint": "Wie viele Personen präsentieren, und wer wechselt die Folien?",
+    "maxPeople": "Erkannte Personen",
+    "maxPeopleOne": "Nur ich",
+    "maxPeopleHint": {
+      "one": "Am schnellsten: Magic Hand folgt einer Person und ignoriert alle anderen im Bild.",
+      "more": "Bis zu {{n}} Personen werden erkannt. Weniger ist schneller."
+    },
     "speakerMode": "Sprecherwahl",
     "speakerManual": "Per Handzeichen",
     "speakerAuto": "Automatisch",
@@ -194,6 +201,8 @@
     "deleted": "Gelöscht. Es sind keine Daten mehr gespeichert.",
     "farAssist": "Hilfe auf Distanz",
     "farAssistHint": "Wenn du weit weg stehst, sucht Magic Hand deine Hand gezielt beim Handgelenk und nutzt notfalls die Armbewegung.",
+    "openHand": "Nur mit offener Hand",
+    "openHandHint": "Ein Swipe zählt nur mit gestreckten Fingern, egal wie die Hand gedreht ist. Mit Faust, Zeigefinger oder einem Clicker in der Hand wechselt keine Folie.",
     "sound": "Ton beim Folienwechsel",
     "soundHint": "Kurzer, leiser Ton, damit du ohne Hinsehen weisst, dass es geklappt hat.",
     "autoPause": "Kamera ausschalten, wenn niemand da ist",
@@ -231,6 +240,8 @@
     "reactionHint": "Beginn der Bewegung bis Taste gesendet (enthält die Geste selbst, Ziel < 500 ms)",
     "dropped": "{{n}} ausgelassen",
     "resetParams": "Standardwerte",
+    "smoothing": "Glättung",
+    "smoothingHint": "One-Euro-Filter auf der Handposition: weniger Zittern in Ruhe, beim Swipe höchstens ein Frame später. Vor dem Einsatz mit einer Aufnahme vergleichen.",
     "recordPrivacy": "Aufgezeichnet werden nur Handpunkte (Koordinaten), keine Bilder. Nur mit Einverständnis aller Personen im Bild.",
     "recordConsent": "Alle Personen im Bild sind einverstanden.",
     "startRecording": "Aufnahme starten",
@@ -317,6 +328,7 @@
         "next": "Erkannt: nächste Folie",
         "prev": "Erkannt: vorherige Folie",
         "ignored_dir": "Zu schräg: eher waagrecht wischen",
+        "ignored_closed": "Hand nicht offen: mit gestreckten Fingern wischen",
         "ignored_return": "Rückholbewegung: wird bewusst ignoriert",
         "ignored_not_speaker": "Eine andere Person ist am Wort"
       },
@@ -326,6 +338,7 @@
   },
   "toast": {
     "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
+    "ignored_closed": "Nicht erkannt: mit offener Hand wischen",
     "ignored_return": "Rückholbewegung ignoriert",
     "ignored_not_speaker": "Person {{n}} ist nicht am Wort. Offene Hand 1 s heben, um zu übernehmen.",
     "speaker": "Person {{n}} wechselt jetzt die Folien"
