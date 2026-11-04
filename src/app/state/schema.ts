@@ -41,6 +41,8 @@ export const settingsSchema = z.object({
   reverse: z.boolean().catch(false),
   sensitivity: z.enum(["low", "normal", "high", "custom"]).catch("normal"),
   swipe: z.object(swipeShape).catch({ ...DEFAULT_SWIPE_PARAMS }),
+  /** The last custom (calibrated) values, kept while a preset is chosen so they can be picked again. */
+  customSwipe: z.object(swipeShape).nullable().catch(null),
   keyMapping: z.enum(["arrows", "page"]).catch("arrows"),
   /** Help for presenters far from the camera (MHR03/MHR04). */
   farAssist: z.boolean().catch(true),
@@ -116,7 +118,10 @@ function migrate(raw: Record<string, unknown>): Record<string, unknown> {
 /** Parses stored data; anything unusable becomes the default. */
 export function parseSettings(raw: unknown): Settings {
   const r = settingsSchema.safeParse(raw && typeof raw === "object" ? migrate(raw as Record<string, unknown>) : {});
-  return r.success ? r.data : DEFAULT_SETTINGS;
+  if (!r.success) return DEFAULT_SETTINGS;
+  // Stored before customSwipe existed: the current values are the custom ones.
+  if (r.data.sensitivity === "custom" && !r.data.customSwipe) return { ...r.data, customSwipe: { ...r.data.swipe } };
+  return r.data;
 }
 
 /** Which preset the current swipe parameters correspond to. */

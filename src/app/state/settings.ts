@@ -13,7 +13,8 @@ interface SettingsStore extends Settings {
   /** Shallow-merges top-level fields and one level of nested objects. */
   update(patch: DeepPartial<Settings>): void;
   updateSwipe(patch: Partial<SwipeParams>): void;
-  setSensitivity(s: Exclude<Sensitivity, "custom">): void;
+  /** A preset, or "custom" to go back to the kept custom values. */
+  setSensitivity(s: Sensitivity): void;
   /** Deletes the stored settings and calibration (MHR08) and returns to defaults. */
   reset(): Promise<void>;
 }
@@ -39,10 +40,14 @@ export const useSettings = create<SettingsStore>()((set, get) => ({
   updateSwipe: (patch) =>
     set((s) => {
       const swipe = { ...s.swipe, ...patch };
-      return { swipe, sensitivity: sensitivityOf(swipe) };
+      const sensitivity = sensitivityOf(swipe);
+      return { swipe, sensitivity, ...(sensitivity === "custom" && { customSwipe: { ...swipe } }) };
     }),
   setSensitivity: (sensitivity) =>
-    set((s) => ({ sensitivity, swipe: { ...s.swipe, ...SENSITIVITY_PRESETS[sensitivity] } })),
+    set((s) => {
+      if (sensitivity !== "custom") return { sensitivity, swipe: { ...s.swipe, ...SENSITIVITY_PRESETS[sensitivity] } };
+      return s.customSwipe ? { sensitivity, swipe: { ...s.customSwipe } } : {};
+    }),
   reset: async () => {
     resetting = true;
     try {

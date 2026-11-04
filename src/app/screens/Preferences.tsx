@@ -70,13 +70,14 @@ function GestureSection() {
         <Segmented
           label={t("prefs.sensitivity")}
           testId="pref-sensitivity"
-          value={s.sensitivity === "custom" ? ("custom" as const) : s.sensitivity}
-          onChange={(v) => v !== "custom" && s.setSensitivity(v)}
+          value={s.sensitivity}
+          onChange={(v) => s.setSensitivity(v)}
           options={[
             { value: "low", label: t("prefs.sensLow"), hint: t("prefs.sensLowHint") },
             { value: "normal", label: t("prefs.sensNormal") },
             { value: "high", label: t("prefs.sensHigh"), hint: t("prefs.sensHighHint") },
-            ...(s.sensitivity === "custom" ? [{ value: "custom" as const, label: t("prefs.sensCustom") }] : []),
+            // Kept after choosing a preset, so the calibrated values can be picked again.
+            ...(s.customSwipe ? [{ value: "custom" as const, label: t("prefs.sensCustom") }] : []),
           ]}
         />
         <small className="field-hint">{t(`prefs.sensHint.${s.sensitivity}`)}</small>
