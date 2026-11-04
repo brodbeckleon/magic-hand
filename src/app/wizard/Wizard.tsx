@@ -53,8 +53,8 @@ export function Wizard({ kind }: { kind: WizardKind }) {
   return (
     <motion.aside className="wizard glass" role="dialog" aria-label={t(`wizard.${kind}.name`)} data-testid={`wizard-${kind}`}
       data-step={step} initial={{ x: "105%" }} animate={{ x: 0 }} transition={spring}>
-      <header className="wizard-head">
-        <span className="wizard-name">{t(`wizard.${kind}.name`)}</span>
+      <header className="wizard-head" data-tauri-drag-region>
+        <span className="wizard-name" data-tauri-drag-region>{t(`wizard.${kind}.name`)}</span>
         <ol className="dots" aria-label={t("wizard.progress", { n: index + 1, total: steps.length })}>
           {steps.map((s, i) => <li key={s} data-state={i < index ? "done" : i === index ? "current" : "todo"} />)}
         </ol>

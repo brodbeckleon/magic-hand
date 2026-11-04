@@ -2,14 +2,21 @@
 //! hidden behind the presentation, and hidden webviews throttle the camera loop.
 
 use std::sync::Mutex;
+use std::time::Duration;
 use tauri::{
-    LogicalSize, Manager, PhysicalPosition, PhysicalSize, Position, Runtime, Size, State,
-    WebviewWindow,
+    AppHandle, LogicalSize, Manager, Monitor, PhysicalPosition, PhysicalSize, Position, Runtime,
+    Size, State, WebviewWindow,
 };
 
-/// Window geometry before switching to the pill, restored afterwards.
 #[derive(Default)]
-pub struct WindowState(Mutex<Option<(PhysicalPosition<i32>, PhysicalSize<u32>)>>);
+struct Inner {
+    pill: bool,
+    /// Window geometry before switching to the pill, restored afterwards.
+    saved: Option<(PhysicalPosition<i32>, PhysicalSize<u32>)>,
+}
+
+#[derive(Default)]
+pub struct WindowState(Mutex<Inner>);
 
 const MIN_SIZE: LogicalSize<f64> = LogicalSize::new(640.0, 480.0);
 /// Distance of the pill from the top edge of the screen (below the macOS menu bar).
@@ -23,10 +30,13 @@ pub fn set_pill_mode<R: Runtime>(
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let r = if pill {
-        enter_pill(&window, &state, width, height)
-    } else {
-        leave_pill(&window, &state)
+    // Leaving a pill we are not in would rebuild the window style for nothing (on macOS this
+    // reset the normal window so it could no longer be moved or resized).
+    let was_pill = std::mem::replace(&mut state.0.lock().unwrap().pill, pill);
+    let r = match (was_pill, pill) {
+        (_, true) => enter_pill(&window, &state, width, height),
+        (true, false) => leave_pill(&window, &state),
+        (false, false) => Ok(()),
     };
     r.map_err(|e| e.to_string())
 }
@@ -38,9 +48,9 @@ fn enter_pill<R: Runtime>(
     height: f64,
 ) -> tauri::Result<()> {
     {
-        let mut saved = state.0.lock().unwrap();
-        if saved.is_none() {
-            *saved = Some((w.outer_position()?, w.outer_size()?));
+        let mut inner = state.0.lock().unwrap();
+        if inner.saved.is_none() {
+            inner.saved = Some((w.outer_position()?, w.outer_size()?));
         }
     }
     w.set_decorations(false)?;
@@ -49,12 +59,7 @@ fn enter_pill<R: Runtime>(
     w.set_min_size(None::<Size>)?;
     w.set_size(LogicalSize::new(width, height))?;
     if let Some(monitor) = w.current_monitor()? {
-        let scale = monitor.scale_factor();
-        let mpos = monitor.position();
-        let msize = monitor.size();
-        let x = mpos.x + ((msize.width as f64 - width * scale) / 2.0) as i32;
-        let y = mpos.y + (PILL_TOP * scale) as i32;
-        w.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
+        place_pill(w, &monitor, width)?;
     }
     // On GTK a non-resizable window snaps back to its natural size request, undoing the shrink.
     #[cfg(not(target_os = "linux"))]
@@ -79,13 +84,102 @@ fn leave_pill<R: Runtime>(w: &WebviewWindow<R>, state: &WindowState) -> tauri::R
     w.set_shadow(true)?;
     w.set_resizable(true)?;
     w.set_min_size(Some(Size::Logical(MIN_SIZE)))?;
-    if let Some((pos, size)) = state.0.lock().unwrap().take() {
+    let saved = state.0.lock().unwrap().saved.take();
+    if let Some((pos, size)) = saved {
         w.set_size(Size::Physical(size))?;
         w.set_position(Position::Physical(pos))?;
+    }
+    // The screen may have changed while presenting (projector unplugged, other resolution).
+    if let Some(monitor) = monitor_of(w) {
+        fit_into(w, &monitor)?;
     }
     w.show()?;
     w.set_focus()?;
     Ok(())
+}
+
+/// Top centre of the monitor, below the macOS menu bar. `width` is logical.
+fn place_pill<R: Runtime>(
+    w: &WebviewWindow<R>,
+    monitor: &Monitor,
+    width: f64,
+) -> tauri::Result<()> {
+    let scale = monitor.scale_factor();
+    let mpos = monitor.position();
+    let msize = monitor.size();
+    let x = mpos.x + ((msize.width as f64 - width * scale) / 2.0) as i32;
+    let y = mpos.y + (PILL_TOP * scale) as i32;
+    w.set_position(Position::Physical(PhysicalPosition::new(x, y)))
+}
+
+/// The monitor the window is on, or the primary one when it is on none (a display went away).
+fn monitor_of<R: Runtime>(w: &WebviewWindow<R>) -> Option<Monitor> {
+    w.current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| w.primary_monitor().ok().flatten())
+}
+
+/// Shrinks the window to the monitor's work area if needed and moves it fully onto it.
+fn fit_into<R: Runtime>(w: &WebviewWindow<R>, monitor: &Monitor) -> tauri::Result<()> {
+    let area = monitor.work_area();
+    let (ax, ay) = (area.position.x, area.position.y);
+    let (aw, ah) = (area.size.width, area.size.height);
+    let mut size = w.outer_size()?;
+    if size.width > aw || size.height > ah {
+        size = PhysicalSize::new(size.width.min(aw), size.height.min(ah));
+        w.set_size(Size::Physical(size))?;
+    }
+    let pos = w.outer_position()?;
+    let x = pos.x.clamp(ax, ax + (aw - size.width) as i32);
+    let y = pos.y.clamp(ay, ay + (ah - size.height) as i32);
+    if (x, y) != (pos.x, pos.y) {
+        w.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
+    }
+    Ok(())
+}
+
+/// Follows display changes (resolution, scaling, a projector plugged in or out): Tauri reports
+/// none of them, so the monitor the window is on is checked once a second. On a change the pill
+/// goes back to the top centre and the normal window is kept fully on screen.
+pub fn watch_screens<R: Runtime>(app: &AppHandle<R>) {
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let mut last = None;
+        loop {
+            std::thread::sleep(Duration::from_secs(1));
+            let Some(w) = app.get_webview_window("main") else {
+                continue;
+            };
+            if !w.is_visible().unwrap_or(false) || w.is_minimized().unwrap_or(false) {
+                continue;
+            }
+            let Some(m) = monitor_of(&w) else { continue };
+            let a = m.work_area();
+            let key = (
+                *m.position(),
+                *m.size(),
+                a.position,
+                a.size,
+                m.scale_factor().to_bits(),
+            );
+            if last.as_ref() == Some(&key) {
+                continue;
+            }
+            let changed = last.is_some();
+            last = Some(key);
+            if !changed {
+                continue;
+            }
+            let pill = app.state::<WindowState>().0.lock().unwrap().pill;
+            let _ = if pill {
+                w.outer_size()
+                    .and_then(|s| place_pill(&w, &m, s.to_logical::<f64>(m.scale_factor()).width))
+            } else {
+                fit_into(&w, &m)
+            };
+        }
+    });
 }
 
 /// Gives keyboard focus back to the app behind us (the presentation), so the arrow keys land there.

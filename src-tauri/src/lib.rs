@@ -27,6 +27,7 @@ pub fn run() {
                 )?;
             }
             tray::manage(app.handle())?;
+            window::watch_screens(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
