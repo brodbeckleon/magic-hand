@@ -14,8 +14,8 @@ const run = (n: number, o: Partial<Parameters<typeof schedule>[0]> = {}, fps = 3
 };
 
 describe("scheduler", () => {
-  it("runs pose every 4th frame for one person, every 2nd for several", () => {
-    expect(run(12).filter((s) => s.pose)).toHaveLength(3);
+  it("runs pose every 6th frame for one person, every 2nd for several", () => {
+    expect(run(12).filter((s) => s.pose)).toHaveLength(2);
     expect(run(12, { persons: 2 }).filter((s) => s.pose)).toHaveLength(6);
   });
 
