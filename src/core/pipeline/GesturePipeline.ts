@@ -25,6 +25,8 @@ export interface PipelineSettings {
   openHand?: boolean;
   /** Smooth palm positions (One Euro filter) before swipe detection. */
   smoothing?: boolean;
+  /** At most this many people are tracked: the largest in the picture (closest to the camera). */
+  maxPeople?: number;
 }
 
 export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
@@ -35,6 +37,7 @@ export const DEFAULT_PIPELINE_SETTINGS: PipelineSettings = {
   farAssist: true,
   openHand: false,
   smoothing: false,
+  maxPeople: 4,
 };
 
 /**
@@ -179,7 +182,8 @@ export class GesturePipeline {
   }
 
   /** `paused`: draw the hands but do not detect gestures (prototype key p). */
-  step(frame: FrameObs, paused = false): { events: PipelineEvent[]; snapshot: PipelineSnapshot } {
+  step(input: FrameObs, paused = false): { events: PipelineEvent[]; snapshot: PipelineSnapshot } {
+    const frame = limitPeople(input, this.settings.maxPeople ?? 4);
     const { t, width, height } = frame;
     const aspect = width / height;
     const features = frame.hands.map((obs) => handFeatures(obs.landmarks, width, height));
@@ -449,4 +453,16 @@ function smoothed(st: PersonState, t: number, hands: Partial<Record<Side, Hand>>
     if (h) out[side] = st.smooth[side].apply(t, h);
   }
   return out;
+}
+
+/**
+ * Keeps the `max` people with the widest shoulders in the picture (closest to the camera), and
+ * their faces, which are matched to the poses by index.
+ */
+export function limitPeople(frame: FrameObs, max: number): FrameObs {
+  const { poses, faces, width, height } = frame;
+  if (!poses || poses.length <= max) return frame;
+  const size = (i: number) => shoulderPx(poses[i]!, width, height) ?? 0;
+  const keep = poses.map((_, i) => i).sort((a, b) => size(b) - size(a)).slice(0, max).sort((a, b) => a - b);
+  return { ...frame, poses: keep.map((i) => poses[i]!), faces: faces && keep.map((i) => faces[i] ?? null) };
 }

@@ -8,6 +8,7 @@ export interface VisionBackend {
   detect(req: DetectRequest): Promise<DetectResult>;
   reset(): void;
   setNumHands(n: number): void;
+  setNumPoses(n: number): void;
   terminate(): void;
 }
 
@@ -34,6 +35,10 @@ export class MainThreadVision implements VisionBackend {
 
   setNumHands(n: number): void {
     void this.runner.setNumHands(n);
+  }
+
+  setNumPoses(n: number): void {
+    void this.runner.setNumPoses(n);
   }
 
   terminate(): void {

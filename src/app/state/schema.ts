@@ -58,6 +58,12 @@ export const settingsSchema = z.object({
     })
     .catch({ deviceId: null, resolution: "640x480" }),
 
+  /**
+   * How many people are looked for. Fewer is faster: the models stop searching once that many are
+   * tracked. 1 = a single presenter, others in the picture are ignored.
+   */
+  maxPeople: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).catch(4),
+
   speaker: z
     .object({
       mode: z.enum(["manual", "auto"]).catch("manual"),

@@ -92,6 +92,10 @@ export class VisionWorker implements VisionBackend {
     this.send({ type: "options", numHands });
   }
 
+  setNumPoses(numPoses: number): void {
+    this.send({ type: "options", numPoses });
+  }
+
   terminate(): void {
     this.terminated = true;
     this.worker.terminate();

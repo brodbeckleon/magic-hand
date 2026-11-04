@@ -140,8 +140,14 @@
       "high": "Good for small movements or standing far from the camera.",
       "custom": "Values from your calibration."
     },
-    "presenters": "Multiple presenters",
-    "presentersHint": "Who may change slides when several people are in view?",
+    "presenters": "Presenters",
+    "presentersHint": "How many people may present, and who changes the slides?",
+    "maxPeople": "People recognised",
+    "maxPeopleOne": "Only me",
+    "maxPeopleHint": {
+      "one": "Fastest: Magic Hand follows one person and ignores everyone else in the picture.",
+      "more": "Up to {{n}} people are recognised. Fewer is faster."
+    },
     "speakerMode": "Speaker selection",
     "speakerManual": "By hand sign",
     "speakerAuto": "Automatic",

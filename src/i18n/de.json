@@ -140,8 +140,14 @@
       "high": "Gut für kleine Bewegungen oder grossen Abstand zur Kamera.",
       "custom": "Werte aus deiner Kalibrierung."
     },
-    "presenters": "Mehrere Vortragende",
-    "presentersHint": "Wer darf Folien wechseln, wenn mehrere Personen im Bild sind?",
+    "presenters": "Vortragende",
+    "presentersHint": "Wie viele Personen präsentieren, und wer wechselt die Folien?",
+    "maxPeople": "Erkannte Personen",
+    "maxPeopleOne": "Nur ich",
+    "maxPeopleHint": {
+      "one": "Am schnellsten: Magic Hand folgt einer Person und ignoriert alle anderen im Bild.",
+      "more": "Bis zu {{n}} Personen werden erkannt. Weniger ist schneller."
+    },
     "speakerMode": "Sprecherwahl",
     "speakerManual": "Per Handzeichen",
     "speakerAuto": "Automatisch",

@@ -21,7 +21,6 @@ const dynamicImport: (url: string) => Promise<{ default: unknown }> = import.met
 };
 
 const CROP_PX = 224;
-const POSES = 4;
 const FACE_PX = 256;
 
 export interface DetectRequest {
@@ -56,6 +55,8 @@ export class VisionRunner {
   private cropCanvas: OffscreenCanvas | null = null;
   private faceCanvas: OffscreenCanvas | null = null;
   private numHands = 2;
+  /** People the pose model looks for (fewer = it stops searching once they are tracked). */
+  private numPoses = 4;
   delegate: Delegate = "GPU";
 
   /** Loads the hand model on `delegate` (GPU in the app, see chosenDelegate); no fallback. */
@@ -90,9 +91,14 @@ export class VisionRunner {
     await this.hands?.setOptions({ numHands: n });
   }
 
+  async setNumPoses(n: number): Promise<void> {
+    this.numPoses = n;
+    await this.pose.current?.setOptions({ numPoses: n });
+  }
+
   /** The trackers' regions of interest refer to the old crop; restart tracking (hands and poses). */
   async reset(): Promise<void> {
-    await Promise.all([this.hands?.setOptions({ numHands: this.numHands }), this.pose.current?.setOptions({ numPoses: POSES })]);
+    await Promise.all([this.hands?.setOptions({ numHands: this.numHands }), this.pose.current?.setOptions({ numPoses: this.numPoses })]);
   }
 
   close(): void {
@@ -150,7 +156,7 @@ export class VisionRunner {
     return PoseLandmarker.createFromOptions(this.fileset!, {
       baseOptions: { modelAssetPath: MODEL_PATHS.pose, delegate: this.delegate },
       runningMode: "VIDEO",
-      numPoses: POSES,
+      numPoses: this.numPoses,
       minPoseDetectionConfidence: 0.5,
       minPosePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,

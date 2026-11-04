@@ -15,7 +15,8 @@ self.onmessage = async (e: MessageEvent<ToWorker>) => {
     if (msg.type === "init") {
       post({ type: "ready", delegate: await runner.init(msg.delegate, msg.numHands) });
     } else if (msg.type === "options") {
-      await runner.setNumHands(msg.numHands);
+      if (msg.numHands !== undefined) await runner.setNumHands(msg.numHands);
+      if (msg.numPoses !== undefined) await runner.setNumPoses(msg.numPoses);
     } else if (msg.type === "reset") {
       await runner.reset();
     } else if (msg.type === "frame") {

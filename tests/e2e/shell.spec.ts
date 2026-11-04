@@ -249,3 +249,15 @@ test("'only with an open hand': a swipe without stretched fingers changes nothin
   expect(await sentKeys(page)).toEqual([]);
   await expect(page.getByTestId("toast")).toHaveText("Not recognised: swipe with an open hand");
 });
+
+test("'only me' as the number of people hides the speaker selection", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-preferences").click();
+  await expect(page.getByTestId("pref-speaker")).toBeVisible();
+  await page.getByTestId("pref-max-people").getByRole("radio", { name: "Only me" }).click();
+  await expect(page.getByTestId("pref-speaker")).toHaveCount(0);
+  await expect(page.getByTestId("preferences")).toContainText("follows one person");
+  await page.getByTestId("pref-max-people").getByRole("radio", { name: "3" }).click();
+  await expect(page.getByTestId("pref-speaker")).toBeVisible();
+});
