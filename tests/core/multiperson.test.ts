@@ -181,14 +181,16 @@ describe("activity signals", () => {
 describe("Arbiter", () => {
   const c = (id: number, o: Partial<Candidate> = {}): Candidate => ({ id, present: true, claimed: false, claimStart: null, mouth: null, motion: 0, midSwipe: false, ...o });
 
-  it("a single person gets control automatically", () => {
+  it("nobody has control until someone arms, swipes or claims (grant)", () => {
     const a = new Arbiter();
-    expect(a.update(0, [c(1)], "manual", "both")).toEqual({ id: 1, reason: "only" });
+    expect(a.update(0, [c(1)], "manual", "both")).toBeNull();
+    expect(a.grant(1, 0.1, "swipe")).toEqual({ id: 1, reason: "swipe" });
+    expect(a.grant(2, 0.2, "swipe")).toBeNull(); // someone has it now
   });
 
   it("manual: only a palm claim changes the speaker", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1), c(2, { motion: 10 })], "manual", "both")).toBeNull();
     expect(a.update(2, [c(1), c(2, { claimed: true, claimStart: 1 })], "manual", "both")).toEqual({ id: 2, reason: "claim" });
     expect(a.active).toBe(2);
@@ -196,7 +198,7 @@ describe("Arbiter", () => {
 
   it("simultaneous claims: the speaker keeps control, otherwise the earlier claim wins", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1, { claimed: true, claimStart: 0.5 }), c(2, { claimed: true, claimStart: 0.1 })], "manual", "both")).toBeNull();
     expect(a.active).toBe(1);
     const b = new Arbiter();
@@ -206,17 +208,20 @@ describe("Arbiter", () => {
 
   it("never switches while the speaker is mid-swipe", () => {
     const a = new Arbiter();
-    a.update(0, [c(1)], "manual", "both");
+    a.grant(1, 0);
     expect(a.update(1, [c(1, { midSwipe: true }), c(2, { claimed: true, claimStart: 0.5 })], "manual", "both")).toBeNull();
     expect(a.active).toBe(1);
   });
 
-  it("a speaker out of view loses control after the grace period; the only remaining person takes over", () => {
+  it("a speaker out of view loses control after the grace period; nobody has it until the next swipe", () => {
     const a = new Arbiter();
     a.update(0, [c(1), c(2, { claimed: true, claimStart: 0 })], "manual", "both");
     expect(a.active).toBe(2);
     expect(a.update(2, [c(1), c(2, { present: false })], "manual", "both")).toBeNull();
-    expect(a.update(3.5, [c(1), c(2, { present: false })], "manual", "both")).toEqual({ id: 1, reason: "only" });
+    expect(a.update(3.5, [c(1), c(2, { present: false })], "manual", "both")).toEqual({ id: null, reason: "lost" });
+    // The one who stayed is not made speaker just for being there.
+    expect(a.update(4, [c(1)], "manual", "both")).toBeNull();
+    expect(a.active).toBeNull();
   });
 
   it("auto: switches to the clearly more active person after the hold time, with hysteresis", () => {
