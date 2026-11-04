@@ -18,6 +18,15 @@ export interface SwipeParams {
   maxJump: number;
   /** Hand lengths per s, for longer pauses between frames. */
   maxSpeed: number;
+  /**
+   * A recognised swipe is held back this long (s): if the hand turns around at once into a
+   * stronger swipe the other way, the first one was only a wind-up. 0 = send at once.
+   */
+  windupHold: number;
+  /** How far the hand must come back within the hold, as a share of `distance`, to count as turning around. */
+  windupReverse: number;
+  /** The swipe after the turn wins if its top speed is at least this many times the first one's. */
+  windupRatio: number;
 }
 
 /** The prototype's values (magic_hand.py); the golden tests compare against these. */
@@ -31,12 +40,15 @@ export const PROTOTYPE_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   maxGap: 0.2,
   maxJump: 1.5,
   maxSpeed: 40.0,
+  windupHold: 0,
+  windupReverse: 0.35,
+  windupRatio: 1.0,
 });
 
 /**
  * App defaults: the prototype's, except that swipes may be tilted up to 45° (the prototype allowed
  * ~31°, which rejected many natural, arc-shaped swipes). Explaining gestures are still filtered by
- * the required distance and speed.
+ * the required distance and speed. The prototype had no wind-up check.
  */
 export const DEFAULT_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   distance: 2.5,
@@ -48,6 +60,9 @@ export const DEFAULT_SWIPE_PARAMS: Readonly<SwipeParams> = Object.freeze({
   maxGap: 0.2,
   maxJump: 1.5,
   maxSpeed: 40.0,
+  windupHold: 0.18,
+  windupReverse: 0.35,
+  windupRatio: 1.0,
 });
 
 /** Slider ranges for the developer tools and bounds for auto-tuning. */
@@ -61,4 +76,7 @@ export const SWIPE_PARAM_RANGES: Readonly<Record<keyof SwipeParams, { min: numbe
   maxGap: { min: 0.0, max: 0.6, step: 0.02 },
   maxJump: { min: 0.5, max: 4.0, step: 0.1 },
   maxSpeed: { min: 10, max: 80, step: 1 },
+  windupHold: { min: 0, max: 0.35, step: 0.01 },
+  windupReverse: { min: 0.1, max: 1.0, step: 0.05 },
+  windupRatio: { min: 0.5, max: 2.0, step: 0.05 },
 };

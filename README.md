@@ -181,7 +181,7 @@ Mehr in der App unter **Hilfe → Probleme lösen**.
 | MHR04 | Niedrige Auflösung | Wie MHR03, Auflösung 320×240 wählbar | Property-Test, manuell |
 | MHR05 | Mehrere Vortragende | Personen-Tracking, Handzeichen, automatische Sprecherwahl | Unit-, Pipeline- und e2e-Tests, manuell |
 | MHR06 | Verzögerung < 0.5 s | Analyse im Hintergrund-Thread; Messwerte p50/p95 in den Entwicklerwerkzeugen | Studienmodus, Handyvideo (manuell) |
-| MHR07 | Erklärgesten unterscheiden | Mindestweite, Mindesttempo, Winkel, Rückholzeit, bevorzugte Hand | Golden- und Property-Tests, Studienmodus |
+| MHR07 | Erklärgesten unterscheiden | Mindestweite, Mindesttempo, Winkel, Rückholzeit, Ausholbewegung (Wischen kurz zurückgehalten: kehrt die Hand sofort schneller um, zählt nur die zweite Geste), bevorzugte Hand | Golden- und Property-Tests, Studienmodus |
 | MHR08 | Datenschutz | Nur lokal, keine Speicherung, kein Netzwerk, Kamera aus in der Pause | e2e prüft null Netzwerkanfragen, CI-Bundle-Prüfung |
 
 Das manuelle Testprotokoll steht in [docs/testing.md](docs/testing.md).

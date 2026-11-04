@@ -27,6 +27,7 @@
     "ignored_dir": "Ignored: not horizontal",
     "ignored_closed": "Ignored: hand not open",
     "ignored_return": "Ignored: return time",
+    "ignored_windup": "Ignored: wind-up before a swipe",
     "missed": "Missed (logged)",
     "false": "False trigger (logged)",
     "ignored_not_speaker": "Ignored: person {{n}} is not the speaker",

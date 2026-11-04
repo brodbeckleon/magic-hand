@@ -20,6 +20,7 @@ export type LogEvent =
   | "taste_fehlgeschlagen"
   | "ignored_dir"
   | "ignored_return"
+  | "ignored_windup"
   | "ignored_not_speaker"
   | "ignored_closed"
   | "verpasst"

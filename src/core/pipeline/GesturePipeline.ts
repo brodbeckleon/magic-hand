@@ -66,7 +66,7 @@ export type PipelineEvent =
       /** When the movement started (for the reaction time). */
       onset: number;
     }
-  | { type: "ignored_dir" | "ignored_return" | "ignored_not_speaker" | "ignored_closed"; t: number; side: Side; person: number }
+  | { type: "ignored_dir" | "ignored_return" | "ignored_windup" | "ignored_not_speaker" | "ignored_closed"; t: number; side: Side; person: number }
   | { type: "speaker"; t: number; person: number | null; reason: SwitchReason };
 
 export interface HandView {
@@ -309,7 +309,7 @@ export class GesturePipeline {
           }
         }
         const fed = this.settings.smoothing ? smoothed(st, t, hands) : hands;
-        for (const { side, event, detector } of st.lock.update(t, fed)) {
+        for (const { side, event, detector, onset = detector.onset, lastDx = detector.lastDx } of st.lock.update(t, fed)) {
           if (event === "calibrated") {
             if (this.armed) continue;
             this.armed = true;
@@ -325,16 +325,16 @@ export class GesturePipeline {
               events.push({ type: "ignored_not_speaker", t, side, person });
               continue;
             }
-            if (this.settings.openHand && !madeOpen(st.shapes[side], detector.onset, t)) {
+            if (this.settings.openHand && !madeOpen(st.shapes[side], onset, t)) {
               events.push({ type: "ignored_closed", t, side, person });
               continue;
             }
             const command: Command = this.settings.reverse ? (event === "next" ? "prev" : "next") : event;
             events.push({
               type: "trigger", t, side, person, command,
-              swipe: detector.lastDx < 0 ? "left" : "right",
-              distance: detector.lastDx,
-              onset: detector.onset,
+              swipe: lastDx < 0 ? "left" : "right",
+              distance: lastDx,
+              onset,
             });
           } else {
             events.push({ type: event, t, side, person });

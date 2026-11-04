@@ -2,7 +2,7 @@ import { clamp, dist, upperMedian } from "../geometry.ts";
 import type { Hand } from "../types.ts";
 import { DEFAULT_SWIPE_PARAMS, type SwipeParams } from "./params.ts";
 
-export type SwipeEvent = "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return";
+export type SwipeEvent = "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_windup";
 
 export interface HistoryEntry {
   readonly t: number;
@@ -91,6 +91,16 @@ export class SwipeDetector {
   enterReturn(t: number): void {
     this.returnUntil = t + this.params.returnTime;
     this._history = [];
+    this.progress = 0;
+  }
+
+  /**
+   * Ends the return period and continues from `history`: the swipe just triggered was a wind-up,
+   * and the movement back (already under way) may be the real swipe.
+   */
+  reopen(history: readonly HistoryEntry[]): void {
+    this.returnUntil = null;
+    this._history = history.slice();
     this.progress = 0;
   }
 
