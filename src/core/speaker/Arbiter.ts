@@ -14,7 +14,7 @@ export interface Candidate {
   midSwipe: boolean;
 }
 
-export type SwitchReason = "claim" | "auto" | "only" | "lost";
+export type SwitchReason = "claim" | "auto" | "swipe" | "lost";
 export interface SpeakerChange {
   id: number | null;
   reason: SwitchReason;
@@ -42,8 +42,9 @@ export const DEFAULT_ARBITER: ArbiterParams = { factor: 1.3, margin: 0.05, hold:
  * Decides who may change slides when several people are in view.
  *   - A completed palm claim always wins (ties: the current speaker keeps it, else the earlier claim).
  *   - Never switches while the current speaker is mid-swipe.
- *   - A speaker out of view for longer than `grace` loses control; with exactly one person left,
- *     that person takes over.
+ *   - A speaker out of view for longer than `grace` loses control, and nobody has it: the next
+ *     person to swipe gets it (`grant`, from the pipeline). Handing it to whoever happened to be left
+ *     locked out the speaker who came back (with a new id) until they raised their hand.
  *   - Auto mode: normalised activity scores with hysteresis (factor, hold, dwell) and a pin after claims.
  */
 export class Arbiter {
@@ -90,15 +91,12 @@ export class Arbiter {
       if (seen === undefined || t - seen > p.grace) {
         this.active = null;
         this.challenger = null;
-        const present = cands.filter((c) => c.present);
-        if (present.length === 1) return this.switchTo(present[0]!.id, t, "only");
         return { id: null, reason: "lost" };
       }
     }
 
-    const present = cands.filter((c) => c.present);
-    if (this.active === null && present.length === 1) return this.switchTo(present[0]!.id, t, "only");
     if (mode === "manual") return null;
+    const present = cands.filter((c) => c.present);
 
     // Auto mode with hysteresis.
     const best = [...this.scores.entries()].filter(([id]) => present.some((c) => c.id === id)).sort((a, b) => b[1] - a[1])[0];
@@ -118,10 +116,10 @@ export class Arbiter {
     return null;
   }
 
-  /** Gives control to `id` if nobody has it (e.g. the person who just armed gesture control). */
-  grant(id: number, t: number): SpeakerChange | null {
+  /** Gives control to `id` if nobody has it: the person who just armed gesture control, or swiped. */
+  grant(id: number, t: number, reason: SwitchReason = "claim"): SpeakerChange | null {
     if (this.active !== null) return null;
-    return this.switchTo(id, t, "claim");
+    return this.switchTo(id, t, reason);
   }
 
   /** Switches once `id` has been the best challenger for `hold` seconds. */

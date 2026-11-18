@@ -131,7 +131,8 @@ Kamerabild markiert, die anderen sind abgedunkelt.
 - Mit **Erkannte Personen: Nur ich** folgt Magic Hand nur der Person, die der Kamera am nächsten
   steht, und rechnet weniger.
 - Es wird nie mitten in einer Wischgeste gewechselt. Wer kurz aus dem Bild geht, behält das
-  Wort 3 Sekunden.
+  Wort 3 Sekunden. Danach hat niemand das Wort, bis jemand wischt: Die erste Wischgeste gibt
+  das Wort und wechselt die Folie (auch für die zurückkehrende Person).
 
 ### Tastenkürzel im Fenster
 

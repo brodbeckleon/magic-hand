@@ -27,12 +27,19 @@ export interface WorkerStats {
 }
 
 /**
+ * Frames in flight at once. The worker analyses one and has the next waiting: with only one, a
+ * result that came back just after a camera frame waited for the following one, and an analysis
+ * of 35 ms at 30 fps gave 15 fps instead of ~28. The main-thread fallback runs one at a time.
+ */
+const WORKER_IN_FLIGHT = 2;
+
+/**
  * Feeds camera frames to the vision backend (worker, or main thread as fallback): crops the presenter zone straight from the <video>
- * (only that part is ever analysed, MHR08), keeps at most one frame in flight and drops the rest.
+ * (only that part is ever analysed, MHR08), keeps at most two frames in flight and drops the rest.
  */
 export class WorkerSource implements LandmarkSource {
   private running = false;
-  private busy = false;
+  private inFlight = 0;
   private handle = 0;
   private lastTs = -1;
   private lastCrop = "";
@@ -56,11 +63,11 @@ export class WorkerSource implements LandmarkSource {
       this.schedule(tick);
       const v = this.video;
       if (v.readyState < 2 || !v.videoWidth) return;
-      if (this.busy || performance.now() < this.nextAllowed) {
+      if (this.inFlight >= (this.worker.inWorker ? WORKER_IN_FLIGHT : 1) || performance.now() < this.nextAllowed) {
         this.stats.dropped++;
         return;
       }
-      this.busy = true;
+      this.inFlight++;
       const tCap = performance.now();
       const W = v.videoWidth;
       const H = v.videoHeight;
@@ -92,7 +99,7 @@ export class WorkerSource implements LandmarkSource {
         })
         .catch((err) => console.error("frame failed", err))
         .finally(() => {
-          this.busy = false;
+          this.inFlight--;
           // On the main thread (Safari < 17 fallback) inference competes with the interface:
           // pause for half the time the frame took, so the UI stays responsive.
           if (!this.worker.inWorker) this.nextAllowed = performance.now() + 0.5 * (performance.now() - tCap);

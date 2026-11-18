@@ -322,8 +322,14 @@ export class GesturePipeline {
             }
           } else if (event === "next" || event === "prev") {
             if (person !== speaker) {
-              events.push({ type: "ignored_not_speaker", t, side, person });
-              continue;
+              // Nobody has control (e.g. the speaker left): whoever swipes first gets it.
+              const granted = speaker === null ? this.arbiter.grant(person, t, "swipe") : null;
+              if (!granted) {
+                events.push({ type: "ignored_not_speaker", t, side, person });
+                continue;
+              }
+              speaker = person;
+              events.push({ type: "speaker", t, person, reason: granted.reason });
             }
             if (this.settings.openHand && !madeOpen(st.shapes[side], onset, t)) {
               events.push({ type: "ignored_closed", t, side, person });
