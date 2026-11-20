@@ -117,15 +117,15 @@ try {
 
   // Pill: the same window shrinks to a small always-on-top bar and comes back.
   const before = await wd<Rect>("GET", S("/window/rect"));
-  check("set_pill_mode(true)", "ok" in (await invoke("set_pill_mode", { pill: true, width: 300, height: 64 })));
+  check("set_pill_mode(true)", "ok" in (await invoke("set_pill_mode", { pill: true, width: 364, height: 64 })));
   await sleep(800);
   const pill = await wd<Rect>("GET", S("/window/rect"));
-  check("window is pill-sized", Math.abs(pill.width - 300) < 40 && Math.abs(pill.height - 64) < 40, JSON.stringify(pill));
+  check("window is pill-sized", Math.abs(pill.width - 364) < 40 && Math.abs(pill.height - 64) < 40, JSON.stringify(pill));
   // Large floating camera (pillSize("large") for a 4:3 camera).
-  await invoke("set_pill_mode", { pill: true, width: 360, height: 338 });
+  await invoke("set_pill_mode", { pill: true, width: 380, height: 353 });
   await sleep(800);
   const large = await wd<Rect>("GET", S("/window/rect"));
-  check("window resizes to the large floating camera", Math.abs(large.width - 360) < 40 && Math.abs(large.height - 338) < 40, JSON.stringify(large));
+  check("window resizes to the large floating camera", Math.abs(large.width - 380) < 40 && Math.abs(large.height - 353) < 40, JSON.stringify(large));
   // Hidden bar: same window, same place, click-through, and the page keeps running (a hidden
   // window would stop the camera loop).
   const shown = await wd<Rect>("GET", S("/window/rect"));
