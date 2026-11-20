@@ -1,4 +1,5 @@
 import { GesturePipeline, type PipelineEvent, type PipelineSettings } from "../pipeline/GesturePipeline.ts";
+import { decimate, type Decimated } from "./decimate.ts";
 import type { Recording } from "./format.ts";
 
 export interface ReplayEvent {
@@ -18,12 +19,16 @@ export function replay(rec: Recording, override: Partial<PipelineSettings> = {})
   return replayDetailed(rec, override).events;
 }
 
-/** replay(), plus the pipeline afterwards (e.g. for how many person ids were handed out). */
-export function replayDetailed(rec: Recording, override: Partial<PipelineSettings> = {}): { events: ReplayEvent[]; pipeline: GesturePipeline } {
+/**
+ * replay(), plus the pipeline afterwards (e.g. for how many person ids were handed out). With
+ * `governor`, frames are skipped like the app's adaptive analysis rate would (what-if: does it
+ * lose a swipe?); `rate` then says how many frames were analysed.
+ */
+export function replayDetailed(rec: Recording, override: Partial<PipelineSettings> = {}, opts: { governor?: boolean } = {}): { events: ReplayEvent[]; pipeline: GesturePipeline; rate: Decimated | null } {
   const p = new GesturePipeline({ ...rec.header.settings, ...override, swipe: { ...rec.header.settings.swipe, ...override.swipe } });
   const changes = [...rec.settings];
   const out: ReplayEvent[] = [];
-  for (const f of rec.frames) {
+  const step = (f: Recording["frames"][number]) => {
     // A change is recorded with the time of the last frame processed before it, so it applies from
     // the next frame on, as it did live.
     while (changes.length && changes[0]!.t < f.t) {
@@ -31,9 +36,13 @@ export function replayDetailed(rec: Recording, override: Partial<PipelineSetting
       const swipe = patch.swipe || override.swipe ? { swipe: { ...patch.swipe!, ...override.swipe } } : {};
       p.updateSettings({ ...patch, ...override, ...swipe });
     }
-    for (const e of p.step(f).events) out.push(toReplayEvent(e));
-  }
-  return { events: out, pipeline: p };
+    const { events, snapshot } = p.step(f);
+    for (const e of events) out.push(toReplayEvent(e));
+    return { hands: snapshot.hands.length, persons: snapshot.persons.filter((x) => x.confirmed).length, pending: p.pending };
+  };
+  if (opts.governor) return { events: out, pipeline: p, rate: decimate(rec.frames, step) };
+  for (const f of rec.frames) step(f);
+  return { events: out, pipeline: p, rate: null };
 }
 
 /** Differences between two event lists (same events at the same frame times). */

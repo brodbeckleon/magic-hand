@@ -184,6 +184,12 @@ export class GesturePipeline {
     this.persons.setMaxSlots(this.settings.maxPeople ?? 4);
   }
 
+  /** A swipe is held back (wind-up check): the next frames decide it, so keep analysing. */
+  get pending(): boolean {
+    for (const st of this.people.values()) if (st.lock.holding) return true;
+    return false;
+  }
+
   /** The hand detectors of the presenter shown in the UI. */
   get lock(): HandLock {
     return this.state(this.arbiter.active ?? this.lastPersons[0]?.id ?? SOLO).lock;

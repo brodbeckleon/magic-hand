@@ -1,6 +1,7 @@
 import type { FrameObs } from "../../core/types.ts";
 import { cropRect, FULL_FRAME, pixelCrop, type Rect } from "../../core/zone/Zone.ts";
 import type { VisionBackend } from "../backend.ts";
+import { due } from "../../core/pipeline/governor.ts";
 import { workerTicker, type Ticker } from "./clock.ts";
 import type { FrameMeta, LandmarkSource } from "./types.ts";
 
@@ -22,6 +23,8 @@ export interface WorkerStats {
   analysed: number;
   /** Camera frames dropped because the analysis was still busy with earlier ones. */
   dropped: number;
+  /** Camera frames not analysed on purpose: the analysis rate was lowered (nobody, no hand). */
+  skipped: number;
   /** Frames the watchdog sent because video-frame callbacks had stopped (window not painted). */
   pumped: number;
   handMs: number;
@@ -56,6 +59,8 @@ export const PUMP_AFTER_MS = 500;
 export interface WorkerSourceOptions {
   /** Clock for the watchdog (tests pass a fake one). */
   ticker?: () => Ticker;
+  /** Least time between analysed frames, s (0 = every camera frame); the adaptive analysis rate. */
+  minInterval?: () => number;
 }
 
 /**
@@ -75,17 +80,21 @@ export class WorkerSource implements LandmarkSource {
   private lastCallback = 0;
   private ticker: Ticker | null = null;
   private onFrame: ((frame: FrameObs, meta: FrameMeta) => void) | null = null;
-  readonly stats: WorkerStats = { analysed: 0, dropped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0, lastModelMs: 0 };
+  readonly stats: WorkerStats = { analysed: 0, dropped: 0, skipped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0, lastModelMs: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionBackend;
   private readonly needs: () => WorkerSourceNeeds;
   private readonly makeTicker: () => Ticker;
+  private readonly minInterval: () => number;
+  /** Capture time of the last frame sent for analysis, s. */
+  private lastSent = -Infinity;
 
   constructor(video: HTMLVideoElement, worker: VisionBackend, needs: () => WorkerSourceNeeds, opts: WorkerSourceOptions = {}) {
     this.video = video;
     this.worker = worker;
     this.needs = needs;
     this.makeTicker = opts.ticker ?? workerTicker;
+    this.minInterval = opts.minInterval ?? (() => 0);
   }
 
   start(onFrame: (frame: FrameObs, meta: FrameMeta) => void): void {
@@ -111,6 +120,12 @@ export class WorkerSource implements LandmarkSource {
     if (!this.running || !onFrame) return;
     const v = this.video;
     if (v.readyState < 2 || !v.videoWidth) return;
+    // Lower analysis rate (nobody in view, no hand): checked first, so these frames do not count
+    // as dropped. Watchdog ticks are not camera frames and are not counted at all.
+    if (!due(performance.now() / 1000, this.lastSent, this.minInterval())) {
+      if (!pumped) this.stats.skipped++;
+      return;
+    }
     if (this.inFlight >= (this.worker.inWorker ? WORKER_IN_FLIGHT : 1) || performance.now() < this.nextAllowed) {
       // A watchdog tick is not a camera frame: only frames the camera delivered count as dropped.
       if (!pumped) this.stats.dropped++;
@@ -120,6 +135,7 @@ export class WorkerSource implements LandmarkSource {
     this.stats.analysed++;
     this.inFlight++;
     const tCap = performance.now();
+    this.lastSent = tCap / 1000;
     const W = v.videoWidth;
     const H = v.videoHeight;
     const need = this.needs();

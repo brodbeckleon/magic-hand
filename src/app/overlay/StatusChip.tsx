@@ -13,6 +13,7 @@ export function StatusChip() {
   const fps = useEngine((s) => s.fps);
   const inferenceMs = useEngine((s) => s.inferenceMs);
   const delegate = useEngine((s) => s.delegate);
+  const rate = useEngine((s) => s.rate);
   const dev = useSettings((s) => s.dev);
   const handRef = useRef<HTMLSpanElement>(null);
   const lockRef = useRef<HTMLSpanElement>(null);
@@ -51,7 +52,7 @@ export function StatusChip() {
       </div>
       {dev.unlocked && (
         <div className="dev-stats" data-testid="dev-stats">
-          <span>{t("status.fps", { fps: fps.toFixed(0) })}</span>
+          <span data-testid="dev-rate">{t("status.fps", { fps: fps.toFixed(0) })} · {rate}</span>
           <span>{inferenceMs.toFixed(0)} ms · {delegate ?? "–"}</span>
           <span ref={lockRef} className="lock" />
           {dev.dryRun && <span className="warn">{t("status.dryRun")}</span>}

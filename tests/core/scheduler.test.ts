@@ -6,7 +6,7 @@ const run = (n: number, o: Partial<Parameters<typeof schedule>[0]> = {}, fps = 3
   let lastPose = -Infinity;
   return Array.from({ length: n }, (_, frame) => {
     const t = frame / fps;
-    const s = schedule({ frame, persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, sincePose: t - lastPose, ...o });
+    const s = schedule({ persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, sincePose: t - lastPose, ...o });
     if (s.face) lastFace = t;
     if (s.pose) lastPose = t;
     return s;

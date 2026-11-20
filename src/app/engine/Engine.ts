@@ -6,6 +6,7 @@ import { classifyCameraError, closeCamera, openCamera } from "../../vision/camer
 import { MainThreadVision, type VisionBackend } from "../../vision/backend.ts";
 import { chosenDelegate, HANDEDNESS_SWAP, isNoGpuError, type Delegate } from "../../vision/landmarkers.ts";
 import { LoadMeter, schedule } from "../../core/pipeline/scheduler.ts";
+import { govern, INTERVAL_S, type GovernorState } from "../../core/pipeline/governor.ts";
 import type { Rect } from "../../core/zone/Zone.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
@@ -130,7 +131,7 @@ export class Engine {
         else v.backend.terminate();
         return this.loadVision(pref)(video);
       }
-      const src = new WorkerSource(video, v.backend, () => this.needs());
+      const src = new WorkerSource(video, v.backend, () => this.needs(), { minInterval: () => this.minInterval() });
       this.workerStats = src.stats;
       return src;
     };
@@ -182,7 +183,6 @@ export class Engine {
     }
   }
 
-  private scheduleFrame = 0;
   private lastFaceAt = -Infinity;
   private lastPoseAt = -Infinity;
   private readonly load = new LoadMeter();
@@ -195,7 +195,6 @@ export class Engine {
     const loadMs = st ? this.load.observe(st.results, st.lastModelMs) : 0;
     const now = performance.now() / 1000;
     const plan = schedule({
-      frame: this.scheduleFrame++,
       persons: this.personCount,
       wantFace: s.speaker.mode === "auto" && s.speaker.autoSignal !== "movement",
       loadMs,
@@ -203,6 +202,7 @@ export class Engine {
       far: this.anyFar,
       sinceFace: now - this.lastFaceAt,
       sincePose: now - this.lastPoseAt,
+      watching: this.governor?.mode !== "active",
     });
     if (plan.face) this.lastFaceAt = now;
     if (plan.pose) this.lastPoseAt = now;
@@ -266,6 +266,7 @@ export class Engine {
   useSource(source: LandmarkSource, followSettings = true): void {
     if (followSettings) this.followSettings();
     this.presenceReset = true; // a new source may run on a different clock (recordings)
+    this.governor = null; // likewise: the rate starts over
     source.start((frame, meta) => this.onFrame(frame, meta));
   }
 
@@ -451,19 +452,45 @@ export class Engine {
     }
   }
 
+  // ---- Adaptive analysis rate (see governor.ts) ------------------------------------------------
+
+  private governor: GovernorState | null = null;
+  private pinnedRate: "full" | null = null;
+
   /** Frames not analysed because the analysis rate was lowered (nobody in view, no hand). */
   get skippedFrames(): number {
-    return 0;
+    return this.workerStats?.skipped ?? 0;
   }
 
   /** Current analysis mode (developer metrics, benchmark). */
   get rateMode(): string {
-    return "full";
+    return this.forced() ? "full" : (this.governor?.mode ?? "watch");
   }
 
   /** Benchmark: fixes the analysis rate ("full" = every frame); null = adaptive. */
   pinRate(mode: "full" | null): void {
-    void mode;
+    this.pinnedRate = mode;
+  }
+
+  /**
+   * Every frame is analysed while a wizard or Try it is open (they wait for movements and poses),
+   * while recording (recordings must show what the camera saw) and when pinned.
+   */
+  private forced(): boolean {
+    return this.pinnedRate === "full" || this.awake > 0 || this.poseRequests > 0 || this.keySuppressions > 0 || this.recorder !== null;
+  }
+
+  /** Least time between analysed frames, s; asked by the frame source for every camera frame. */
+  private minInterval(): number {
+    return this.forced() ? 0 : INTERVAL_S[this.governor?.mode ?? "watch"];
+  }
+
+  private updateGovernor(t: number, snapshot: PipelineSnapshot): void {
+    const prev = this.governor?.mode;
+    this.governor = govern(this.governor, {
+      t, hands: snapshot.hands.length, persons: this.personCount, pending: this.pipeline.pending, force: this.forced(),
+    });
+    if (this.governor.mode !== prev) useEngine.getState().set({ rate: this.governor.mode });
   }
 
   private onFrame(input: FrameObs, meta: FrameMeta): void {
@@ -487,6 +514,7 @@ export class Engine {
     if (events.length && useSettings.getState().sound && this.keySuppressions === 0) this.cue(events);
     this.anyFar = snapshot.persons.some((p) => p.far);
     this.wristCrops = snapshot.wristCrops;
+    this.updateGovernor(frame.t, snapshot);
     this.adaptNumHands(frame.t);
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);
