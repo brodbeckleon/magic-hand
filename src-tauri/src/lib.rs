@@ -41,6 +41,8 @@ pub fn run() {
             export::save_binary_file,
             window::set_pill_mode,
             window::yield_focus,
+            window::set_pill_ghost,
+            window::quit_app,
             tray::update_tray,
             shortcuts::set_pause_shortcut,
             frontmost::frontmost_app,

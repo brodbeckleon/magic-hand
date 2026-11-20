@@ -75,6 +75,7 @@ function GettingStarted() {
           <li>{t("help.tip1")}</li>
           <li>{t("help.tip2")}</li>
           <li>{t(shortcutOk ? "help.tip3" : "help.tip3Bar", { shortcut })}</li>
+          <li>{t("help.tip4")}</li>
         </ul>
       </div>
       <button className="link" data-testid="replay-onboarding" onClick={() => { update({ firstRunDone: false }); close(); }}>

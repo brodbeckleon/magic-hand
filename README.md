@@ -91,6 +91,13 @@ waagrecht** (höchstens 45° geneigt). Die Handform spielt keine Rolle.
 Zeigt das schwebende Fenster **«Tasten gehen an: …»**, ist eine andere App im Vordergrund.
 Einmal in die Präsentation klicken.
 
+Die Leiste unter dem Kamerabild hat vier Tasten: **Pause**, **Ausblenden** (Auge),
+**Fenster öffnen** und **Beenden** (schaltet die Kamera aus und beendet Magic Hand).
+Ausgeblendet ist über der Präsentation nichts mehr zu sehen und Klicks gehen durch, die Gesten
+funktionieren aber weiter. Ein Klick auf das Magic-Hand-Symbol in der Menüleiste bzw. im
+Infobereich (oder dessen Menüpunkt «Leiste einblenden») zeigt die Leiste wieder. In den
+Einstellungen lässt sich wählen, dass das Präsentieren gleich mit ausgeblendeter Leiste beginnt.
+
 ### Pause
 
 - **⌘⌥P** (macOS) bzw. **Ctrl+Alt+P** (Windows) pausiert und setzt fort, auch während die
@@ -115,7 +122,7 @@ Einmal in die Präsentation klicken.
 | Gesten | Bevorzugte Hand (links / beide / rechts), Wischrichtung, Empfindlichkeit (Ruhig ~37° · Normal 45° · Empfindlich ~52°), nur mit offener Hand (gestreckte Finger, egal wie die Hand gedreht ist; Standard: an) |
 | Vortragende | Erkannte Personen (nur ich, 2, 3, 4; weniger ist schneller), per Handzeichen oder automatisch: sprechende Person, aktivste Person oder beides |
 | Kamera | Kamera, Auflösung, Hilfe auf Distanz |
-| Präsentation | Gesendete Tasten (Pfeiltasten oder Bild auf/ab), Kamerabild beim Präsentieren (aus / klein / gross), Ton beim Folienwechsel, Kamera bei Abwesenheit ausschalten |
+| Präsentation | Gesendete Tasten (Pfeiltasten oder Bild auf/ab), Kamerabild beim Präsentieren (aus / klein / gross), Leiste beim Start des Präsentierens (zeigen / ausgeblendet), Ton beim Folienwechsel, Kamera bei Abwesenheit ausschalten |
 | Sprache | System, Deutsch, English |
 | Datenschutz | Alle gespeicherten Daten löschen |
 

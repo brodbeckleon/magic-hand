@@ -20,6 +20,7 @@ export function Pill() {
   const paused = useEngine((s) => s.paused);
   const calibrated = useEngine((s) => s.calibrated);
   const setView = useUi((s) => s.setView);
+  const setPillHidden = useUi((s) => s.setPillHidden);
   const camera = useSettings((s) => s.pill.camera);
   const last = useRef<HTMLSpanElement>(null);
   const pill = useRef<HTMLDivElement>(null);
@@ -67,6 +68,12 @@ export function Pill() {
     void platform.yieldFocus();
   };
 
+  // Camera off first (LED off, MHR08), then the app ends.
+  const quit = () => {
+    engine.dispose();
+    void platform.quitApp();
+  };
+
   const state = paused ? "paused" : calibrated ? "active" : "calibrating";
   return (
     <>
@@ -88,18 +95,27 @@ export function Pill() {
       <RecBadge />
       {!platform.native && <span className="pill-preview" title={t("main.browserPreview")}>{t("main.preview")}</span>}
       {camera === "small" && <div className="pill-thumb-slot" data-tauri-drag-region />}
-      <button
-        className="icon-btn"
-        data-testid="pill-pause"
-        aria-label={paused ? t("pill.resume") : t("pill.pause")}
-        title={paused ? t("pill.resume") : t("pill.pause")}
-        onClick={act(() => engine.togglePause())}
-      >
-        <Icon name={paused ? "play" : "pause"} />
-      </button>
-      <button className="icon-btn" data-testid="pill-expand" aria-label={t("pill.expand")} title={t("pill.expand")} onClick={() => setView("main")}>
-        <Icon name="expand" />
-      </button>
+      <div className="pill-actions">
+        <button
+          className="icon-btn"
+          data-testid="pill-pause"
+          aria-label={paused ? t("pill.resume") : t("pill.pause")}
+          title={paused ? t("pill.resume") : t("pill.pause")}
+          onClick={act(() => engine.togglePause())}
+        >
+          <Icon name={paused ? "play" : "pause"} />
+        </button>
+        {/* The window keeps running invisibly (gestures work); the focus goes back via the effect. */}
+        <button className="icon-btn" data-testid="pill-hide" aria-label={t("pill.hide")} title={t("pill.hideHint")} onClick={() => setPillHidden(true)}>
+          <Icon name="hide" />
+        </button>
+        <button className="icon-btn" data-testid="pill-expand" aria-label={t("pill.expand")} title={t("pill.expand")} onClick={() => setView("main")}>
+          <Icon name="expand" />
+        </button>
+        <button className="icon-btn" data-testid="pill-quit" aria-label={t("pill.quit")} title={t("pill.quit")} onClick={quit}>
+          <Icon name="quit" />
+        </button>
+      </div>
     </div>
     </>
   );
@@ -146,12 +162,15 @@ function useYieldFocusAfterDrag() {
 export type PillCamera = "off" | "small" | "large";
 
 const BAR_H = 64;
-const LARGE_W = 360;
+const LARGE_W = 380;
 const GAP = 8;
 
-/** Window size in logical pixels while presenting; the large camera keeps the camera's aspect ratio. */
+/**
+ * Window size in logical pixels while presenting; the large camera keeps the camera's aspect ratio.
+ * The widths leave the status text about as much room as before the Hide and Quit buttons.
+ */
 export function pillSize(camera: PillCamera, aspect = 4 / 3): { width: number; height: number } {
-  if (camera === "off") return { width: 300, height: BAR_H };
-  if (camera === "small") return { width: 384, height: BAR_H };
+  if (camera === "off") return { width: 364, height: BAR_H };
+  if (camera === "small") return { width: 448, height: BAR_H };
   return { width: LARGE_W, height: Math.round((LARGE_W - 2 * GAP) / aspect) + 2 * GAP + BAR_H };
 }

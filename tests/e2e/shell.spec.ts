@@ -1,6 +1,6 @@
 import { TraceBuilder } from "../support/traces.ts";
 import { expect, test } from "./fixtures.ts";
-import { open, play, sentKeys, updateSettings, waitLive } from "./helpers.ts";
+import { open, play, sentKeys, trayAction, updateSettings, waitLive, type BrowserRecord } from "./helpers.ts";
 
 test.describe("app shell", () => {
   test.beforeEach(async ({ page }) => {
@@ -113,6 +113,55 @@ test.describe("app shell", () => {
     await expect(pill).toContainText("Ready");
     await page.getByTestId("pill-expand").click();
     await expect(page.getByTestId("toolbar")).toBeVisible();
+  });
+
+  test("the bar can be hidden: gestures keep working, the tray icon brings it back", async ({ page }) => {
+    await page.getByTestId("present").click();
+    const pill = page.getByTestId("pill");
+    await expect(pill).toBeVisible();
+    await page.getByTestId("pill-hide").click();
+    await expect(pill).toBeHidden();
+    await expect(page.getByTestId("pill-camera")).toBeHidden();
+    await expect(page.locator("html")).toHaveAttribute("data-pill-hidden", "true");
+    await expect.poll(() => page.evaluate(() => (window as unknown as BrowserRecord).__pillGhost)).toBe(true);
+    // Nothing is drawn: no element bigger than the 2 px video placeholder is visible.
+    const drawn = await page.locator(".stage *").evaluateAll((els) =>
+      els.filter((e) => { const r = e.getBoundingClientRect(); return getComputedStyle(e).visibility !== "hidden" && r.width > 2 && r.height > 2; }).length);
+    expect(drawn).toBe(0);
+
+    await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
+    expect(await sentKeys(page)).toEqual(["next"]);
+
+    await trayAction(page, "toggle");
+    await expect(pill).toBeVisible();
+    await expect(pill).toContainText("Next slide");
+    await expect.poll(() => page.evaluate(() => (window as unknown as BrowserRecord).__pillGhost)).toBe(false);
+    await trayAction(page, "toggle");
+    await expect(pill).toBeHidden();
+  });
+
+  test("presenting can start with the bar hidden (preference)", async ({ page }) => {
+    await page.getByTestId("open-preferences").click();
+    await page.getByTestId("pref-pill-start").getByRole("radio", { name: "Hidden" }).click();
+    await page.keyboard.press("Escape");
+    await page.getByTestId("present").click();
+    await expect(page.getByTestId("pill")).toBeHidden();
+    // "Show Magic Hand" in the tray (or a second launch) shows the bar.
+    await trayAction(page, "show");
+    await expect(page.getByTestId("pill")).toBeVisible();
+    await page.getByTestId("pill-expand").click();
+    await expect(page.locator("html")).toHaveAttribute("data-pill-hidden", "false");
+    await trayAction(page, "toggle"); // no bar to hide in the normal window
+    await expect(page.getByTestId("toolbar")).toBeVisible();
+    await page.getByTestId("present").click();
+    await expect(page.getByTestId("pill")).toBeHidden();
+  });
+
+  test("Quit on the bar turns the camera off and ends the app", async ({ page }) => {
+    await page.getByTestId("present").click();
+    await page.getByTestId("pill-quit").click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as BrowserRecord).__quit)).toBe(true);
+    expect(await page.locator("video.camera").evaluate((v: HTMLVideoElement) => v.srcObject)).toBeNull();
   });
 
   test("explains an ignored diagonal swipe a few times, then stops", async ({ page }) => {

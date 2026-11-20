@@ -1,13 +1,19 @@
 // Smoke test of the real native app (Linux, WebKitGTK) via tauri-driver:
 //   Xvfb :99 & DISPLAY=:99 tauri-driver & DISPLAY=:99 pnpm exec tsx tests/native/smoke.ts <app-binary>
 // Checks the Rust side the browser tests cannot: IPC commands, the settings store on disk, the
-// window morphing into the pill, and real keystrokes arriving (enigo -> X11).
-import { existsSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
+// window morphing into the pill (and hiding it without stopping the page), real keystrokes
+// arriving (enigo -> X11), and Quit ending the process cleanly.
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
-const app = process.argv[2];
-if (!app) throw new Error("usage: smoke.ts <path to magic-hand binary>");
+const binary = process.argv[2];
+if (!binary) throw new Error("usage: smoke.ts <path to magic-hand binary>");
+// The app runs through a wrapper that records its exit code, so the Quit check can read it.
+const exitFile = join(tmpdir(), `magic-hand-smoke-exit-${process.pid}`);
+const app = join(tmpdir(), `magic-hand-smoke-${process.pid}.sh`);
+rmSync(exitFile, { force: true });
+writeFileSync(app, `#!/bin/sh\n"${resolve(binary)}" "$@"\necho $? > "${exitFile}"\n`, { mode: 0o755 });
 const WD = "http://127.0.0.1:4444";
 
 /** One WebDriver command; T is the shape that command returns. */
@@ -91,7 +97,8 @@ try {
   check("accessibility_status", ax.ok === "not-needed", JSON.stringify(ax));
   const front = await invoke("frontmost_app");
   check("frontmost_app answers", "ok" in front, JSON.stringify(front));
-  check("update_tray", "ok" in (await invoke("update_tray", { labels: { pause: "P", show: "S", recalibrate: "R", quit: "Q", tooltip: "T" } })));
+  check("update_tray", "ok" in (await invoke("update_tray", { labels: { pause: "P", show: "S", toggle: "H", recalibrate: "R", quit: "Q", tooltip: "T" } })));
+  check("update_tray without the bar toggle (not presenting)", "ok" in (await invoke("update_tray", { labels: { pause: "P", show: "S", recalibrate: "R", quit: "Q", tooltip: "T" } })));
   const sc = await invoke("set_pause_shortcut", { accelerator: "CmdOrCtrl+Alt+P" });
   check("set_pause_shortcut", "ok" in sc || /already|register/i.test(sc.err ?? ""), JSON.stringify(sc));
   const bad = await invoke("set_pause_shortcut", { accelerator: "Nope+++" });
@@ -110,15 +117,27 @@ try {
 
   // Pill: the same window shrinks to a small always-on-top bar and comes back.
   const before = await wd<Rect>("GET", S("/window/rect"));
-  check("set_pill_mode(true)", "ok" in (await invoke("set_pill_mode", { pill: true, width: 300, height: 64 })));
+  check("set_pill_mode(true)", "ok" in (await invoke("set_pill_mode", { pill: true, width: 364, height: 64 })));
   await sleep(800);
   const pill = await wd<Rect>("GET", S("/window/rect"));
-  check("window is pill-sized", Math.abs(pill.width - 300) < 40 && Math.abs(pill.height - 64) < 40, JSON.stringify(pill));
+  check("window is pill-sized", Math.abs(pill.width - 364) < 40 && Math.abs(pill.height - 64) < 40, JSON.stringify(pill));
   // Large floating camera (pillSize("large") for a 4:3 camera).
-  await invoke("set_pill_mode", { pill: true, width: 360, height: 338 });
+  await invoke("set_pill_mode", { pill: true, width: 380, height: 353 });
   await sleep(800);
   const large = await wd<Rect>("GET", S("/window/rect"));
-  check("window resizes to the large floating camera", Math.abs(large.width - 360) < 40 && Math.abs(large.height - 338) < 40, JSON.stringify(large));
+  check("window resizes to the large floating camera", Math.abs(large.width - 380) < 40 && Math.abs(large.height - 353) < 40, JSON.stringify(large));
+  // Hidden bar: same window, same place, click-through, and the page keeps running (a hidden
+  // window would stop the camera loop).
+  const shown = await wd<Rect>("GET", S("/window/rect"));
+  check("set_pill_ghost(true)", "ok" in (await invoke("set_pill_ghost", { ghost: true })));
+  await sleep(500);
+  const ghost = await wd<Rect>("GET", S("/window/rect"));
+  check("hidden bar keeps the window rect", (["x", "y", "width", "height"] as const).every((k) => Math.abs(ghost[k] - shown[k]) <= 2), `${JSON.stringify(shown)} -> ${JSON.stringify(ghost)}`);
+  await exec("window.__raf = 0; const f = () => { window.__raf++; requestAnimationFrame(f); }; requestAnimationFrame(f);");
+  await sleep(1000);
+  const frames = await exec<number>("return window.__raf");
+  check("hidden bar keeps rendering (requestAnimationFrame)", frames >= 10, `${frames} frames in 1 s`);
+  check("set_pill_ghost(false)", "ok" in (await invoke("set_pill_ghost", { ghost: false })));
   await invoke("set_pill_mode", { pill: false, width: 0, height: 0 });
   await sleep(800);
   const after = await wd<Rect>("GET", S("/window/rect"));
@@ -128,10 +147,22 @@ try {
   const status = await find("[data-testid=status], [data-testid=camera-error], .loading-chip", 30000);
   check("camera state shown (live or a helpful error)", !!status);
   check("delete-data UI reachable", !!(await find("[data-testid=open-preferences]")));
+  check("set_pill_ghost outside the bar is ignored", "ok" in (await invoke("set_pill_ghost", { ghost: true })));
+
+  // Last: Quit ends the app (its answer never arrives, the process is gone).
+  await exec("window.__TAURI_INTERNALS__.invoke('quit_app'); return true").catch(() => undefined);
+  let code: string | null = null;
+  for (let t = 0; t < 10_000 && code === null; t += 250) {
+    await sleep(250);
+    code = existsSync(exitFile) ? readFileSync(exitFile, "utf8").trim() : null;
+  }
+  check("quit_app ends the app with exit code 0", code === "0", `exit code ${code ?? "none (still running?)"}`);
 } catch (err) {
   check("smoke run", false, String(err));
 } finally {
   await wd("DELETE", S("")).catch(() => undefined);
+  rmSync(app, { force: true });
+  rmSync(exitFile, { force: true });
 }
 
 const failed = results.filter((r) => !r[1]);

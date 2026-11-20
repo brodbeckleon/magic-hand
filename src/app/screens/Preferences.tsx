@@ -239,6 +239,20 @@ function PresentationSection() {
         />
         <small className="field-hint">{t(`prefs.pillCameraHint.${s.pill.camera}`)}</small>
       </div>
+      <div className="field">
+        <span className="field-label">{t("prefs.pillStart")}</span>
+        <Segmented
+          label={t("prefs.pillStart")}
+          testId="pref-pill-start"
+          value={s.pill.start}
+          onChange={(start) => s.update({ pill: { start } })}
+          options={[
+            { value: "bar", label: t("prefs.pillStartBar") },
+            { value: "hidden", label: t("prefs.pillStartHidden") },
+          ]}
+        />
+        <small className="field-hint">{t(`prefs.pillStartHint.${s.pill.start}`)}</small>
+      </div>
       <Row label={t("prefs.pauseShortcut")} hint={t(shortcutOk ? "prefs.pauseShortcutHint" : "prefs.pauseShortcutTaken")}>
         <kbd className="kbd" data-testid="pref-shortcut" data-unavailable={!shortcutOk}>{shortcut}</kbd>
       </Row>

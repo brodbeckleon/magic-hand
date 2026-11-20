@@ -89,8 +89,9 @@
 .event-list { top: 70px; }
 
 /* ---------- Pill ---------- */
+/* Small thumbnail: over .pill-thumb-slot, left of the buttons (padding 10 + .pill-actions 142 + gap 10). */
 .view-pill .frame {
-  position: absolute; right: 92px; top: 8px; width: 64px; height: 48px; aspect-ratio: auto; border-radius: 8px; z-index: 2;
+  position: absolute; right: 162px; top: 8px; width: 64px; height: 48px; aspect-ratio: auto; border-radius: 8px; z-index: 2;
 }
 html[data-view="pill"] .stage { display: block; }
 .view-pill .hand-layer { display: none; }
@@ -112,6 +113,7 @@ html[data-view="pill"] .stage { display: block; }
 .pill-thumb-slot { flex: none; width: 64px; height: 48px; }
 html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .pill .icon-btn { color: var(--text); flex: none; }
+.pill-actions { flex: none; display: flex; gap: 2px; }
 
 /* ---------- Preferences ---------- */
 .field { display: grid; gap: 8px; }
@@ -230,3 +232,15 @@ html[data-view="pill"][data-pill-camera="off"] .view-pill .frame { opacity: 0.01
 
 .side-card .ax-steps { margin-top: 10px; }
 .side-card .actions { flex-wrap: wrap; }
+
+/*
+ * Hidden bar: the window stays on screen and click-through (a hidden webview stops the camera
+ * loop), so nothing may be drawn. The video stays a 2x2 px, nearly transparent element so the
+ * browser keeps decoding frames (as with the camera off).
+ */
+html[data-pill-hidden="true"] .pill,
+html[data-pill-hidden="true"] .pill-camera-drag,
+html[data-pill-hidden="true"] .stage::before { display: none; }
+html[data-view="pill"][data-pill-hidden="true"] .view-pill .frame { opacity: 0.01; width: 2px; height: 2px; }
+html[data-view="pill"][data-pill-hidden="true"] .view-pill .hand-layer,
+html[data-view="pill"][data-pill-hidden="true"] .view-pill .person-layer { display: none; }

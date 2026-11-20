@@ -48,3 +48,18 @@ describe("presenter zone", () => {
     expect(parseSettings({ zone: { x: "a" } }).zone).toBeNull();
   });
 });
+
+describe("presenting bar", () => {
+  it("starts shown by default", () => {
+    expect(DEFAULT_SETTINGS.pill).toEqual({ camera: "large", start: "bar" });
+  });
+
+  it("settings stored before the hidden bar existed keep their camera choice", () => {
+    expect(parseSettings({ version: 3, pill: { camera: "small" } }).pill).toEqual({ camera: "small", start: "bar" });
+  });
+
+  it("an invalid start value falls back to the shown bar", () => {
+    expect(parseSettings({ pill: { camera: "off", start: "gone" } }).pill).toEqual({ camera: "off", start: "bar" });
+    expect(parseSettings({ pill: { camera: "off", start: "hidden" } }).pill.start).toBe("hidden");
+  });
+});
