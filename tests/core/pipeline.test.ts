@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { GesturePipeline, DEFAULT_PIPELINE_SETTINGS } from "../../src/core/pipeline/GesturePipeline.ts";
+import { GesturePipeline, DEFAULT_PIPELINE_SETTINGS, EXPLANATIONS } from "../../src/core/pipeline/GesturePipeline.ts";
 import { PROTOTYPE_SWIPE_PARAMS } from "../../src/core/swipe/params.ts";
 import type { Hand, Side } from "../../src/core/types.ts";
 import { toFrames } from "../support/landmarks.ts";
@@ -18,7 +18,8 @@ describe("GesturePipeline", () => {
   it.each(golden.map((g) => [g.name, g] as const))("single hand reproduces golden %s", (_n, g) => {
     const p = new GesturePipeline({ ...DEFAULT_PIPELINE_SETTINGS, swipe: { ...PROTOTYPE_SWIPE_PARAMS } });
     const frames = toFrames(g.frames);
-    const got = frames.flatMap((f) => p.step(f).events.map(typeOf));
+    // Explanations for the user ("almost a swipe") are not decisions: the prototype has none.
+    const got = frames.flatMap((f) => p.step(f).events.map(typeOf)).filter((e) => !EXPLANATIONS.has(e));
     const want = g.expected.map((e) => e.event).filter((e): e is string => e !== null);
     expect(got).toEqual(want);
   });

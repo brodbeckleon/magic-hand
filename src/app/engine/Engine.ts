@@ -145,11 +145,9 @@ export class Engine {
     }
   }
 
+  /** Speaker changes; a slide change sounds once its key was actually sent (see handle). */
   private cue(events: PipelineEvent[]): void {
-    for (const e of events) {
-      if (e.type === "trigger") playCue(e.command);
-      else if (e.type === "speaker" && e.person !== null) playCue("speaker");
-    }
+    for (const e of events) if (e.type === "speaker" && e.person !== null) playCue("speaker");
   }
 
   private anyFar = false;
@@ -474,21 +472,23 @@ export class Engine {
 
   private handle(e: PipelineEvent, meta: FrameMeta): void {
     if (e.type === "speaker") {
-      this.emit("speaker", { person: e.person });
+      this.emit("speaker", { person: e.person, slot: this.pipeline.persons.slotOf(e.person) });
       this.addLog({ ereignis: "sprecher_gewechselt", person: e.person ?? undefined });
       return;
     }
     if (e.type !== "trigger") {
-      this.emit(e.type, e.type === "ignored_not_speaker" ? { person: e.person } : {});
+      this.emit(e.type, { person: e.person, slot: this.pipeline.persons.slotOf(e.person), side: e.side });
       this.addLog({ ereignis: e.type, person: e.person || undefined, hand: e.side });
       return;
     }
     const { dev, keyMapping } = useSettings.getState();
     const wischrichtung = e.swipe === "left" ? "links" : "rechts";
+    const who = { person: e.person, slot: this.pipeline.persons.slotOf(e.person), side: e.side };
     const finish = () => {
+      if (useSettings.getState().sound && this.keySuppressions === 0) playCue(e.command);
       const tKey = performance.now() / 1000;
       const reactionMs = (tKey - e.onset) * 1000;
-      this.emit(e.command, { swipe: e.swipe, reactionMs, detectMs: (tKey - meta.captureTime) * 1000 });
+      this.emit(e.command, { ...who, swipe: e.swipe, reactionMs, detectMs: (tKey - meta.captureTime) * 1000 });
       useDev.getState().addTrigger({ detectMs: (tKey - meta.captureTime) * 1000, reactionMs });
       this.addLog({
         ereignis: "ausgeloest", richtung: e.command, wischrichtung, strecke: e.distance,
@@ -496,12 +496,20 @@ export class Engine {
         person: e.person || undefined, detectMs: (tKey - meta.captureTime) * 1000,
       });
     };
-    // With our own window focused the key would land in our UI (e.g. flip a segmented control);
-    // the "focus" hint tells the user to click the presentation.
-    if (dev.dryRun || this.keySuppressions > 0 || (platform.native && document.hasFocus())) return finish();
+    if (dev.dryRun || this.keySuppressions > 0) return finish();
+    // With our own window focused the key would land in our UI (e.g. flip a segmented control):
+    // not sent, and not shown as a slide change. The "focus" hint tells the user to click the
+    // presentation.
+    if (platform.native && document.hasFocus()) {
+      this.emit("key_focus", { ...who, swipe: e.swipe });
+      this.addLog({ ereignis: "nicht_gesendet_fokus", richtung: e.command, wischrichtung, hand: e.side, person: e.person || undefined });
+      return;
+    }
     platform.sendKey(e.command, keyMapping).then(finish, (err) => {
-      // E.g. no Accessibility permission on macOS: not a slide change, so not counted as one.
+      // E.g. no Accessibility permission on macOS: not a slide change, so not counted as one,
+      // but shown, so nobody waits for a slide that does not come.
       console.error("send_key failed", err);
+      this.emit("key_failed", { ...who, swipe: e.swipe });
       this.addLog({ ereignis: "taste_fehlgeschlagen", richtung: e.command, wischrichtung, hand: e.side, person: e.person || undefined });
     });
   }

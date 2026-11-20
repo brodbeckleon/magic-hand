@@ -51,6 +51,18 @@ const SHAPE_KEEP_S = 2;
 /** Person id used while no pose data is available (one presenter, like the prototype). */
 export const SOLO = 0;
 
+/**
+ * "Almost a swipe": the movement reached this share of the swipe distance, then stopped without
+ * triggering (too slow or too short). A guess, not tuned on real recordings yet.
+ */
+export const WEAK_SHARE = 0.6;
+/** The movement counts as stopped once its progress fell below this share again. */
+const WEAK_SETTLED = 0.25;
+/** At most one "almost a swipe" / "other hand" explanation per this many seconds. */
+export const EXPLAIN_EVERY_S = 3;
+/** Events that only explain a movement to the user; they decide nothing (the prototype has none). */
+export const EXPLANATIONS: ReadonlySet<string> = new Set(["ignored_weak", "ignored_other_hand"]);
+
 export type PipelineEvent =
   | { type: "calibrated"; t: number; side: Side; person: number }
   | {
@@ -67,6 +79,10 @@ export type PipelineEvent =
       onset: number;
     }
   | { type: "ignored_dir" | "ignored_return" | "ignored_windup" | "ignored_not_speaker" | "ignored_closed"; t: number; side: Side; person: number }
+  /** The speaker's movement reached WEAK_SHARE of a swipe and stopped (too slow / too short). */
+  | { type: "ignored_weak"; t: number; side: Side; person: number }
+  /** The speaker made a swipe-sized movement with the hand that is not the preferred one. */
+  | { type: "ignored_other_hand"; t: number; side: Side; person: number }
   | { type: "speaker"; t: number; person: number | null; reason: SwitchReason };
 
 export interface HandView {
@@ -133,6 +149,10 @@ interface PersonState {
   /** Recent hand shapes per side: open or not; null = no finger landmarks (palm from the pose). */
   shapes: Record<Side, { t: number; open: boolean | null }[]>;
   smooth: Record<Side, HandSmoother>;
+  /** The current movement reached WEAK_SHARE of a swipe (watching whether it stops short). */
+  weak: Record<Side, boolean>;
+  /** Recent palm positions of a hand that may not trigger (preferred hand set to the other one). */
+  other: Record<Side, HistoryEntry[]>;
 }
 
 /**
@@ -156,6 +176,8 @@ export class GesturePipeline {
   private claims = new Map<number, ClaimDetector>();
   private armed = false;
   private lastPersons: PersonTrack[] = [];
+  private lastWeakAt = -Infinity;
+  private lastOtherAt = -Infinity;
 
   constructor(settings: PipelineSettings = DEFAULT_PIPELINE_SETTINGS) {
     this.settings = { ...DEFAULT_PIPELINE_SETTINGS, ...settings, swipe: { ...settings.swipe } };
@@ -315,7 +337,9 @@ export class GesturePipeline {
           }
         }
         const fed = this.settings.smoothing ? smoothed(st, t, hands) : hands;
+        const sidesWithEvents = new Set<Side>();
         for (const { side, event, detector, onset = detector.onset, lastDx = detector.lastDx } of st.lock.update(t, fed)) {
+          sidesWithEvents.add(side);
           if (event === "calibrated") {
             if (this.armed) continue;
             this.armed = true;
@@ -352,9 +376,15 @@ export class GesturePipeline {
             events.push({ type: event, t, side, person });
           }
         }
+        if (person === speaker) this.explain(st, t, person, hands, sidesWithEvents, events);
       }
       // Hands of people that left the frame: let their detectors notice the gap.
-      for (const [person, st] of this.people) if (!byPerson.has(person)) st.lock.update(t, {});
+      for (const [person, st] of this.people) {
+        if (byPerson.has(person)) continue;
+        st.lock.update(t, {});
+        st.weak = { left: false, right: false };
+        st.other = { left: [], right: [] };
+      }
     }
 
     const shown = this.state(speaker ?? persons[0]?.id ?? SOLO).lock;
@@ -389,6 +419,45 @@ export class GesturePipeline {
         poseHands,
       },
     };
+  }
+
+  /**
+   * Explains movements that changed nothing although they were meant to (at most every
+   * EXPLAIN_EVERY_S): a swipe that stopped short, or a swipe with the hand that may not trigger.
+   */
+  private explain(st: PersonState, t: number, person: number, hands: Partial<Record<Side, Hand>>, sidesWithEvents: Set<Side>, events: PipelineEvent[]): void {
+    const { lock } = st;
+    const p = this.settings.swipe;
+    for (const side of ["left", "right"] as const) {
+      const det = lock.detectors[side];
+      // Anything that already explained or ended the movement (a trigger, also one held back for
+      // the wind-up check, an ignored swipe) and the return period do not count.
+      if (sidesWithEvents.has(side) || lock.holding || !det.calibrated || det.isReturning(t) || det.isBlocked(t)) {
+        st.weak[side] = false;
+      } else if (Math.abs(det.progress) >= WEAK_SHARE) {
+        st.weak[side] = true;
+      } else if (st.weak[side] && Math.abs(det.progress) < WEAK_SETTLED) {
+        st.weak[side] = false;
+        if (t - this.lastWeakAt >= EXPLAIN_EVERY_S) {
+          this.lastWeakAt = t;
+          events.push({ type: "ignored_weak", t, side, person });
+        }
+      }
+
+      const trail = st.other[side];
+      const h = hands[side];
+      if (lock.isAllowed(side) || !h || !lock.calibrated) {
+        trail.length = 0;
+        continue;
+      }
+      trail.push({ t, hand: h });
+      while (trail.length && trail[0]!.t < t - p.window) trail.shift();
+      if (Math.abs(h.cx - trail[0]!.hand.cx) >= WEAK_SHARE * p.distance * h.scale && t - this.lastOtherAt >= EXPLAIN_EVERY_S) {
+        this.lastOtherAt = t;
+        trail.length = 0;
+        events.push({ type: "ignored_other_hand", t, side, person });
+      }
+    }
   }
 
   /** Crops for the next frame: the speaker's (or only person's) wrists if far and the hand is missing or tiny. */
@@ -429,7 +498,7 @@ export class GesturePipeline {
   private state(person: number): PersonState {
     let st = this.people.get(person);
     if (!st) {
-      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy(), ratio: new HandRatio(), source: { left: null, right: null }, shapes: { left: [], right: [] }, smooth: { left: this.smoother(), right: this.smoother() } };
+      st = { lock: new HandLock(this.settings.preferredHand, this.settings.swipe), mouth: new MouthActivity(), motion: new MotionEnergy(), ratio: new HandRatio(), source: { left: null, right: null }, shapes: { left: [], right: [] }, smooth: { left: this.smoother(), right: this.smoother() }, weak: { left: false, right: false }, other: { left: [], right: [] } };
       this.people.set(person, st);
     }
     return st;
