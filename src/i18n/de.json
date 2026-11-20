@@ -100,6 +100,9 @@
     "expand": "Fenster öffnen",
     "pause": "Pausieren",
     "resume": "Fortsetzen",
+    "hide": "Leiste ausblenden",
+    "hideHint": "Leiste ausblenden. Gesten funktionieren weiter; ein Klick auf das Magic-Hand-Symbol in der Menüleiste (Windows: Infobereich) zeigt sie wieder.",
+    "quit": "Magic Hand beenden",
     "ready": "Bereit",
     "waiting": "Hand ruhig halten",
     "paused": "Pausiert",
@@ -111,6 +114,8 @@
     "pause": "Pausieren",
     "resume": "Fortsetzen",
     "show": "Magic Hand anzeigen",
+    "hideBar": "Leiste ausblenden",
+    "showBar": "Leiste einblenden",
     "recalibrate": "Neu kalibrieren",
     "quit": "Beenden",
     "tooltipActive": "Magic Hand: aktiv",
@@ -222,6 +227,13 @@
       "off": "Nur die schmale Leiste schwebt über der Präsentation.",
       "small": "Kleines Vorschaubild in der Leiste.",
       "large": "Grosses Kamerabild mit erkannter Hand schwebt über der Präsentation. Ziehen zum Verschieben."
+    },
+    "pillStart": "Beim Start des Präsentierens",
+    "pillStartBar": "Leiste zeigen",
+    "pillStartHidden": "Ausgeblendet",
+    "pillStartHint": {
+      "bar": "Die Leiste schwebt über der Präsentation. Mit ihrer Augen-Taste lässt sie sich ausblenden.",
+      "hidden": "Über der Präsentation schwebt nichts, Gesten funktionieren trotzdem. Ein Klick auf das Magic-Hand-Symbol in der Menüleiste (Windows: Infobereich) zeigt die Leiste."
     }
   },
   "dev": {
@@ -288,6 +300,7 @@
     "tip2": "Wische mit offener Hand (Finger gestreckt). Eine Faust oder ein Klicker in der Hand wechseln keine Folien; das lässt sich in den Einstellungen abschalten.",
     "tip3": "Mit {{shortcut}} pausierst du jederzeit, auch während der Präsentation.",
     "tip3Bar": "Pausieren kannst du beim Präsentieren jederzeit mit der Taste auf der Leiste ({{shortcut}} verwendet eine andere App).",
+    "tip4": "Die Augen-Taste auf der Leiste blendet sie ganz aus; Gesten funktionieren weiter. Ein Klick auf das Magic-Hand-Symbol in der Menüleiste (Windows: Infobereich) holt sie zurück. Die Ein/Aus-Taste beendet Magic Hand und schaltet die Kamera aus.",
     "replayOnboarding": "Einführung erneut zeigen",
     "trouble": {
       "noSlideTitle": "Die Folie wechselt nicht",

@@ -100,6 +100,9 @@
     "expand": "Open window",
     "pause": "Pause",
     "resume": "Resume",
+    "hide": "Hide bar",
+    "hideHint": "Hide the bar. Gestures keep working; click the Magic Hand icon in the menu bar (Windows: notification area) to show it again.",
+    "quit": "Quit Magic Hand",
     "ready": "Ready",
     "waiting": "Hold your hand still",
     "paused": "Paused",
@@ -111,6 +114,8 @@
     "pause": "Pause",
     "resume": "Resume",
     "show": "Show Magic Hand",
+    "hideBar": "Hide bar",
+    "showBar": "Show bar",
     "recalibrate": "Recalibrate",
     "quit": "Quit",
     "tooltipActive": "Magic Hand: active",
@@ -222,6 +227,13 @@
       "off": "Only the slim bar floats above the presentation.",
       "small": "Small preview in the bar.",
       "large": "A large camera view with your tracked hand floats above the presentation. Drag to move it."
+    },
+    "pillStart": "When presenting starts",
+    "pillStartBar": "Show the bar",
+    "pillStartHidden": "Hidden",
+    "pillStartHint": {
+      "bar": "The bar floats above the presentation. You can hide it with its eye button.",
+      "hidden": "Nothing floats above the presentation, gestures still work. Click the Magic Hand icon in the menu bar (Windows: notification area) to show the bar."
     }
   },
   "dev": {
@@ -288,6 +300,7 @@
     "tip2": "Swipe with an open hand (fingers stretched). A fist or a clicker in your hand does not change slides; you can switch this off in the preferences.",
     "tip3": "Press {{shortcut}} to pause at any time, even during the presentation.",
     "tip3Bar": "Pause at any time with the button on the bar while presenting ({{shortcut}} is used by another app).",
+    "tip4": "The eye button on the bar hides it completely; gestures keep working. Click the Magic Hand icon in the menu bar (Windows: notification area) to bring it back. The power button quits Magic Hand and turns the camera off.",
     "replayOnboarding": "Show the introduction again",
     "trouble": {
       "noSlideTitle": "The slide does not change",

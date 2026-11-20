@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { systemLanguage } from "../i18n/index.ts";
 import { platform } from "../platform/index.ts";
@@ -16,6 +16,9 @@ export function useNativeIntegration(engine: Engine): void {
   const shortcut = useSettings((s) => s.pauseShortcut);
   const pillCamera = useSettings((s) => s.pill.camera);
   const view = useUi((s) => s.view);
+  const pillHidden = useUi((s) => s.pillHidden);
+  /** The last window-mode change: hiding the bar has to wait until the window is the pill. */
+  const pillMode = useRef<Promise<void>>(Promise.resolve());
   const paused = useEngine((s) => s.paused);
   const calibrated = useEngine((s) => s.calibrated);
   const live = useEngine((s) => s.status.kind === "live");
@@ -48,21 +51,35 @@ export function useNativeIntegration(engine: Engine): void {
       const video = document.querySelector<HTMLVideoElement>("video.camera");
       const aspect = video?.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 4 / 3;
       const { width, height } = pillSize(pillCamera, aspect);
-      void platform.setPillMode(true, width, height).then(() => platform.yieldFocus());
+      pillMode.current = platform.setPillMode(true, width, height).catch(logError);
+      void pillMode.current.then(() => platform.yieldFocus());
     } else {
-      void platform.setPillMode(false, 0, 0);
+      pillMode.current = platform.setPillMode(false, 0, 0).catch(logError);
     }
   }, [view, pillCamera]);
+
+  // Hidden bar: nothing is drawn (CSS) and the window lets clicks through, but it stays on screen so
+  // the camera keeps delivering frames and gestures keep working.
+  useEffect(() => {
+    const hidden = view === "pill" && pillHidden;
+    document.documentElement.dataset.pillHidden = String(hidden);
+    if (view !== "pill") return;
+    void pillMode.current
+      .then(() => platform.setPillGhost(hidden))
+      .then(() => platform.yieldFocus())
+      .catch(logError);
+  }, [view, pillHidden]);
 
   useEffect(() => {
     void platform.updateTray({
       pause: t(paused ? "tray.resume" : "tray.pause"),
       show: t("tray.show"),
+      toggle: view === "pill" ? t(pillHidden ? "tray.showBar" : "tray.hideBar") : "",
       recalibrate: t("tray.recalibrate"),
       quit: t("tray.quit"),
       tooltip: t(paused ? "tray.tooltipPaused" : calibrated ? "tray.tooltipActive" : "tray.tooltipCalibrating"),
     });
-  }, [t, paused, calibrated]);
+  }, [t, paused, calibrated, view, pillHidden]);
 
   useEffect(() => {
     const setOk = useUi.getState().setPauseShortcutOk;
@@ -76,7 +93,13 @@ export function useNativeIntegration(engine: Engine): void {
   }, [shortcut]);
 
   useEffect(() => {
-    const offTray = platform.onTrayAction((a) => (a === "pause" ? engine.togglePause() : engine.recalibrate()));
+    const offTray = platform.onTrayAction((a) => {
+      const ui = useUi.getState();
+      if (a === "pause") engine.togglePause();
+      else if (a === "recalibrate") engine.recalibrate();
+      else if (a === "toggle") ui.setPillHidden(!ui.pillHidden);
+      else ui.setPillHidden(false); // "show": the window was asked to come back (tray, second launch)
+    });
     const offShortcut = platform.onPauseShortcut(() => engine.togglePause());
     return () => {
       offTray();
@@ -84,3 +107,5 @@ export function useNativeIntegration(engine: Engine): void {
     };
   }, [engine]);
 }
+
+const logError = (err: unknown) => console.error("window mode failed", err);

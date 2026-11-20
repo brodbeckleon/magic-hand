@@ -42,3 +42,11 @@ export async function updateSettings(page: Page, patch: object): Promise<void> {
 export async function playFrames(page: Page, frames: FrameObs[]): Promise<void> {
   await page.evaluate((f) => (window as unknown as { __magicHand: { play(f: FrameObs[]): Promise<void> } }).__magicHand.play(f), frames);
 }
+
+/** What the browser stand-in of the native shell records (src/platform/index.ts). */
+export type BrowserRecord = { __pillGhost?: boolean; __quit?: boolean };
+
+/** Clicks the tray / menu-bar icon or one of its menu items, as the native shell would report it. */
+export async function trayAction(page: Page, action: "pause" | "recalibrate" | "toggle" | "show"): Promise<void> {
+  await page.evaluate((a) => (window as unknown as { __trayAction(a: string): void }).__trayAction(a), action);
+}

@@ -7,11 +7,14 @@ import type { Command } from "../core/types.ts";
 
 export type KeyMapping = "arrows" | "page";
 export type PermissionState = "granted" | "denied" | "not-needed";
-export type TrayAction = "pause" | "recalibrate";
+/** "toggle": hide or show the bar (tray click while presenting); "show": show it (it was asked to). */
+export type TrayAction = "pause" | "recalibrate" | "toggle" | "show";
 
 export interface TrayLabels {
   pause: string;
   show: string;
+  /** "Hide bar" / "Show bar" while presenting, "" otherwise (the menu item is then disabled). */
+  toggle: string;
   recalibrate: string;
   quit: string;
   tooltip: string;
@@ -31,6 +34,13 @@ export interface Platform {
   saveBinaryFile(defaultName: string, bytes: Uint8Array): Promise<string | null>;
   /** Morphs the main window into the presenter pill (or back). */
   setPillMode(pill: boolean, width: number, height: number): Promise<void>;
+  /**
+   * Hidden bar: the window stays where it is (a hidden window stops the camera loop) but lets every
+   * click through. Only applies while presenting.
+   */
+  setPillGhost(ghost: boolean): Promise<void>;
+  /** Ends the app. Close the camera first. */
+  quitApp(): Promise<void>;
   /** Gives keyboard focus back to the app behind us (the presentation). */
   yieldFocus(): Promise<void>;
   updateTray(labels: TrayLabels): Promise<void>;
@@ -65,6 +75,8 @@ const native: Platform = {
     invoke("save_text_file", { defaultName, extension, contents }),
   saveBinaryFile: (defaultName, bytes) => invoke("save_binary_file", bytes, { headers: { "x-file-name": defaultName } }),
   setPillMode: (pill, width, height) => invoke("set_pill_mode", { pill, width, height }),
+  setPillGhost: (ghost) => invoke("set_pill_ghost", { ghost }),
+  quitApp: () => invoke("quit_app"),
   yieldFocus: () => invoke("yield_focus"),
   updateTray: (labels) => invoke("update_tray", { labels }),
   setPauseShortcut: (accelerator) => invoke("set_pause_shortcut", { accelerator }),
@@ -75,6 +87,10 @@ const native: Platform = {
 
 /** Keys sent in browser mode, for tests (window.__sentKeys). */
 const sentKeys: Command[] = [];
+/** Tray listeners in browser mode; tests click the tray with window.__trayAction(action). */
+const trayListeners = new Set<(action: TrayAction) => void>();
+/** What the browser stand-ins record for tests (window.__pillGhost, window.__quit). */
+type BrowserRecord = { __pillGhost?: boolean; __quit?: boolean };
 
 const browser: Platform = {
   native: false,
@@ -101,6 +117,12 @@ const browser: Platform = {
     return defaultName;
   },
   setPillMode: async () => {},
+  setPillGhost: async (ghost) => {
+    (window as BrowserRecord).__pillGhost = ghost;
+  },
+  quitApp: async () => {
+    (window as BrowserRecord).__quit = true;
+  },
   yieldFocus: async () => {},
   updateTray: async () => {},
   // e2e tests set window.__shortcutTaken to simulate another app owning the shortcut.
@@ -109,10 +131,17 @@ const browser: Platform = {
   },
   // e2e tests set window.__frontmostApp to simulate another app in front.
   frontmostApp: async () => (window as unknown as { __frontmostApp?: FrontApp }).__frontmostApp ?? null,
-  onTrayAction: () => () => {},
+  onTrayAction: (fn) => {
+    trayListeners.add(fn);
+    return () => void trayListeners.delete(fn);
+  },
   onPauseShortcut: () => () => {},
 };
 
 export const platform: Platform = isTauri() ? native : browser;
 
-if (import.meta.env.MODE === "e2e") (window as unknown as { __sentKeys: Command[] }).__sentKeys = sentKeys;
+if (import.meta.env.MODE === "e2e") {
+  const w = window as unknown as { __sentKeys: Command[]; __trayAction: (a: TrayAction) => void };
+  w.__sentKeys = sentKeys;
+  w.__trayAction = (a) => trayListeners.forEach((fn) => fn(a));
+}
