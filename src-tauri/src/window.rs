@@ -4,8 +4,8 @@
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{
-    AppHandle, LogicalSize, Manager, Monitor, PhysicalPosition, PhysicalSize, Position, Runtime,
-    Size, State, WebviewWindow,
+    AppHandle, Emitter, LogicalSize, Manager, Monitor, PhysicalPosition, PhysicalSize, Position,
+    Runtime, Size, State, WebviewWindow,
 };
 
 #[derive(Default)]
@@ -72,6 +72,8 @@ fn enter_pill<R: Runtime>(
 }
 
 fn leave_pill<R: Runtime>(w: &WebviewWindow<R>, state: &WindowState) -> tauri::Result<()> {
+    // A hidden (click-through) bar must take clicks again as the normal window.
+    w.set_ignore_cursor_events(false)?;
     platform::float_over_fullscreen(w, false);
     w.set_always_on_top(false)?;
     w.set_visible_on_all_workspaces(false)?;
@@ -182,6 +184,39 @@ pub fn watch_screens<R: Runtime>(app: &AppHandle<R>) {
     });
 }
 
+/// Hides the pill without hiding the window: a hidden or minimised webview stops delivering video
+/// frames (requestVideoFrameCallback), and with them the gestures. The window stays where it is,
+/// the page draws nothing and clicks go through to the presentation. Only applies in pill mode.
+#[tauri::command]
+pub fn set_pill_ghost<R: Runtime>(
+    window: WebviewWindow<R>,
+    state: State<'_, WindowState>,
+    ghost: bool,
+) -> Result<(), String> {
+    if !state.0.lock().unwrap().pill {
+        return Ok(());
+    }
+    window
+        .set_ignore_cursor_events(ghost)
+        .map_err(|e| e.to_string())?;
+    // tao rewrites the extended window style on every flag change, which drops WS_EX_NOACTIVATE:
+    // without it, clicking the bar would take the focus from the presentation.
+    #[cfg(target_os = "windows")]
+    platform::float_over_fullscreen(&window, true);
+    Ok(())
+}
+
+/// True while the window is the presenter pill.
+pub fn is_pill<R: Runtime, M: Manager<R>>(manager: &M) -> bool {
+    manager.state::<WindowState>().0.lock().unwrap().pill
+}
+
+/// Ends the app (Quit button on the bar). The frontend closes the camera first.
+#[tauri::command]
+pub fn quit_app<R: Runtime>(app: AppHandle<R>) {
+    app.exit(0);
+}
+
 /// Gives keyboard focus back to the app behind us (the presentation), so the arrow keys land there.
 #[tauri::command]
 pub fn yield_focus<R: Runtime>(window: WebviewWindow<R>) -> Result<(), String> {
@@ -191,11 +226,22 @@ pub fn yield_focus<R: Runtime>(window: WebviewWindow<R>) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Brings the main window back (tray, second app launch).
-pub fn show_main<R: Runtime, M: Manager<R>>(manager: &M) {
-    if let Some(w) = manager.get_webview_window("main") {
-        let _ = w.show();
-        let _ = w.unminimize();
+/// Brings the main window back (tray, second app launch). While presenting, the bar is shown
+/// (also when it was hidden) without taking the focus from the presentation.
+pub fn show_main<R: Runtime, M: Manager<R> + Emitter<R>>(manager: &M) {
+    let Some(w) = manager.get_webview_window("main") else {
+        return;
+    };
+    let pill = is_pill(manager);
+    let _ = w.set_ignore_cursor_events(false);
+    let _ = w.show();
+    let _ = w.unminimize();
+    if pill {
+        // set_ignore_cursor_events rebuilt the window style (Windows: WS_EX_NOACTIVATE is gone).
+        platform::float_over_fullscreen(&w, true);
+        // The frontend owns whether the bar is hidden: tell it to draw the bar again.
+        let _ = manager.emit("tray-action", "show");
+    } else {
         let _ = w.set_focus();
     }
 }

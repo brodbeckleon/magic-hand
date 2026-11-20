@@ -22,7 +22,8 @@
         "center": true,
         "transparent": true,
         "titleBarStyle": "Overlay",
-        "hiddenTitle": true
+        "hiddenTitle": true,
+        "backgroundThrottling": "disabled"
       }
     ],
     "security": {
