@@ -17,6 +17,27 @@ export interface TestHooks {
   /** Requests the privacy guard had to block (must stay empty). */
   blocked(): string[];
   workerStats(): Engine["workerStats"];
+  /**
+   * Benchmark: replaces the detections of every live camera frame with a looped scene (the models
+   * still run on the real frames). Poses only where the pose model ran. null = the camera's own.
+   */
+  scene(frames: Pick<FrameObs, "hands" | "poses">[] | null, fps?: number): void;
+  /** Benchmark counters: frames analysed, skipped (lower analysis rate), dropped, model time. */
+  benchStats(): BenchStats;
+  /** Benchmark: fixes the analysis rate ("full" = every frame, as before the governor); null = adaptive. */
+  pinRate(mode: "full" | null): void;
+}
+
+export interface BenchStats {
+  analysed: number;
+  skipped: number;
+  dropped: number;
+  pumped: number;
+  modelMsTotal: number;
+  results: number;
+  /** Analysis mode right now (adaptive rate), or "full". */
+  mode: string;
+  fps: number;
 }
 
 /**
@@ -55,6 +76,26 @@ export function installTestHooks(engine: Engine): void {
     log: () => engine.log,
     blocked: () => blockedRequests.slice(),
     workerStats: () => engine.workerStats,
+    scene: (frames, fps = 30) => {
+      if (!frames?.length) {
+        engine.sceneOverride = null;
+        return;
+      }
+      let t0: number | null = null;
+      engine.sceneOverride = (f) => {
+        t0 ??= f.t;
+        const s = frames[Math.floor((f.t - t0) * fps) % frames.length]!;
+        return { ...f, hands: s.hands, poses: f.poses ? (s.poses ?? []) : null, faces: null };
+      };
+    },
+    benchStats: () => {
+      const w = engine.workerStats;
+      return {
+        analysed: w?.analysed ?? 0, skipped: engine.skippedFrames, dropped: w?.dropped ?? 0, pumped: w?.pumped ?? 0,
+        modelMsTotal: w?.modelMsTotal ?? 0, results: w?.results ?? 0, mode: engine.rateMode, fps: useEngine.getState().fps,
+      };
+    },
+    pinRate: (mode) => engine.pinRate(mode),
   };
   (window as unknown as { __magicHand: TestHooks }).__magicHand = hooks;
 }

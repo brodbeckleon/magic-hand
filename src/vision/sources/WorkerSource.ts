@@ -18,6 +18,9 @@ export interface WorkerSourceNeeds {
 }
 
 export interface WorkerStats {
+  /** Frames sent for analysis. */
+  analysed: number;
+  /** Camera frames dropped because the analysis was still busy with earlier ones. */
   dropped: number;
   /** Frames the watchdog sent because video-frame callbacks had stopped (window not painted). */
   pumped: number;
@@ -27,6 +30,9 @@ export interface WorkerStats {
   cropMs: number;
   /** Capture -> result, ms. */
   pipelineMs: number;
+  /** Sum of the model times of all results so far, ms (average = modelMsTotal / results). */
+  modelMsTotal: number;
+  results: number;
 }
 
 /**
@@ -67,7 +73,7 @@ export class WorkerSource implements LandmarkSource {
   private lastCallback = 0;
   private ticker: Ticker | null = null;
   private onFrame: ((frame: FrameObs, meta: FrameMeta) => void) | null = null;
-  readonly stats: WorkerStats = { dropped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0 };
+  readonly stats: WorkerStats = { analysed: 0, dropped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionBackend;
   private readonly needs: () => WorkerSourceNeeds;
@@ -109,6 +115,7 @@ export class WorkerSource implements LandmarkSource {
       return;
     }
     if (pumped) this.stats.pumped++;
+    this.stats.analysed++;
     this.inFlight++;
     const tCap = performance.now();
     const W = v.videoWidth;
@@ -134,6 +141,8 @@ export class WorkerSource implements LandmarkSource {
         if (r.faces) this.stats.faceMs = r.faceMs;
         this.stats.cropMs = r.cropMs;
         this.stats.pipelineMs = tDone - tCap;
+        this.stats.modelMsTotal += r.handMs + r.poseMs + r.faceMs + r.cropMs;
+        this.stats.results++;
         onFrame(
           { t: tCap / 1000, width: W, height: H, hands: r.hands, poses: r.poses, faces: r.faces },
           { captureTime: tCap / 1000, inferenceMs: r.handMs + r.poseMs + r.faceMs + r.cropMs },

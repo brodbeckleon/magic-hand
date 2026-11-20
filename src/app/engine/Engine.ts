@@ -39,6 +39,11 @@ export class Engine {
   readonly log: LogEntry[] = [];
   /** Vision timings (developer metrics). */
   workerStats: WorkerStats | null = null;
+  /**
+   * e2e builds only (benchmark, tests): replaces the detections of live camera frames while the
+   * models still run, e.g. a person or a swiping hand in front of the fake camera.
+   */
+  sceneOverride: ((frame: FrameObs) => FrameObs) | null = null;
 
   private video: HTMLVideoElement | null = null;
   private stream: MediaStream | null = null;
@@ -446,7 +451,23 @@ export class Engine {
     }
   }
 
-  private onFrame(frame: FrameObs, meta: FrameMeta): void {
+  /** Frames not analysed because the analysis rate was lowered (nobody in view, no hand). */
+  get skippedFrames(): number {
+    return 0;
+  }
+
+  /** Current analysis mode (developer metrics, benchmark). */
+  get rateMode(): string {
+    return "full";
+  }
+
+  /** Benchmark: fixes the analysis rate ("full" = every frame); null = adaptive. */
+  pinRate(mode: "full" | null): void {
+    void mode;
+  }
+
+  private onFrame(input: FrameObs, meta: FrameMeta): void {
+    const frame = import.meta.env.MODE === "e2e" && this.sceneOverride ? this.sceneOverride(input) : input;
     this.lastT = frame.t;
     this.lastSize = { w: frame.width, h: frame.height };
     this.observations.publish(frame);
