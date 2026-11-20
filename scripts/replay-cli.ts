@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import type { PipelineSettings } from "../src/core/pipeline/GesturePipeline.ts";
 import { parseRecording } from "../src/core/recording/format.ts";
-import { diffEvents, replay } from "../src/core/recording/replay.ts";
+import { diffEvents, replayDetailed } from "../src/core/recording/replay.ts";
 
 const args = process.argv.slice(2);
 const check = args.includes("--check");
@@ -24,13 +24,16 @@ for (const file of files) {
   const raw = readFileSync(file);
   const text = (file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8");
   const rec = parseRecording(text);
-  const events = replay(rec, override);
+  const { events, pipeline } = replayDetailed(rec, override);
   const t0 = rec.frames[0]?.t ?? 0;
   const dur = (rec.frames.at(-1)?.t ?? t0) - t0;
   const triggers = events.filter((e) => e.event === "trigger");
   console.log(`\n${file}: ${rec.frames.length} frames, ${dur.toFixed(1)} s, ${triggers.length} triggers, ${rec.marks.length} marks`);
   for (const e of events) console.log(`  ${(e.t - t0).toFixed(3).padStart(8)} s  ${e.command ?? e.event}`);
   for (const m of rec.marks) console.log(`  ${(m.t - t0).toFixed(3).padStart(8)} s  [marked ${m.kind}]`);
+  // Id churn: a stable scene hands out one id per person; more means people were lost and re-found.
+  const { issued } = pipeline.persons;
+  if (issued) console.log(`  person ids: ${issued} issued, ${pipeline.persons.idsPerMinute().toFixed(1)} per minute`);
   if (check) {
     const diff = diffEvents(rec.events, events);
     if (diff.length) {

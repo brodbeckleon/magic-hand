@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { useEngineInstance } from "../engine/context.ts";
 import { useSettings } from "../state/settings.ts";
 import type { UiEvent } from "../state/engine.ts";
+import { eventText } from "../state/eventText.ts";
 
 /** How often each explanation is shown before the user is assumed to know it. */
-const MAX_SHOWS: Partial<Record<UiEvent["kind"], number>> = { ignored_dir: 5, ignored_closed: 5, ignored_return: 3, ignored_not_speaker: 5, speaker: Infinity };
+const MAX_SHOWS: Partial<Record<UiEvent["kind"], number>> = { ignored_dir: 5, ignored_closed: 5, ignored_return: 3, ignored_not_speaker: 5, speaker: Infinity, key_failed: Infinity };
 
 /**
  * Explains why a movement did not change the slide, a few times only (guided, not nagging).
@@ -51,7 +52,7 @@ export function ActionToast() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
           >
-            {t(`toast.${toast.kind}`, { n: toast.person ?? "–" })}
+            {eventText(t, "toast", toast)}
           </motion.div>
         )}
       </AnimatePresence>
