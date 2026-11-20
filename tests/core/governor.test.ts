@@ -42,19 +42,32 @@ describe("governor: modes", () => {
     expect(step(empty, { t: 10.1, force: true }).mode).toBe("active");
   });
 
-  it("due(): 15 fps is every 2nd and 5 fps every 6th frame of a jittery 30 fps camera", () => {
-    for (const [mode, every] of [["watch", 2], ["empty", 6], ["active", 1]] as const) {
-      let last = -Infinity;
-      const analysed: number[] = [];
-      for (let i = 0; i < 300; i++) {
-        const t = i * DT + (((i * 7919) % 11) - 5) * 0.0008; // ±4 ms jitter
-        if (due(t, last, INTERVAL_S[mode])) {
-          analysed.push(i);
-          last = t;
-        }
+  /** Analysed frames per second for a camera at `fps` (±10 % jitter) in a mode. */
+  const analysedFps = (fps: number, mode: keyof typeof INTERVAL_S) => {
+    let last = -Infinity;
+    let n = 0;
+    for (let i = 0; i < fps * 20; i++) {
+      const t = i / fps + (((i * 7919) % 11) - 5) * (0.02 / fps); // ±10 % of a frame
+      if (due(t, last, INTERVAL_S[mode], 1 / fps)) {
+        n++;
+        last = t;
       }
-      expect(Math.round(300 / analysed.length)).toBe(every);
     }
+    return n / 20;
+  };
+
+  it("due(): a 30 fps camera is analysed at 15 fps watching (every 2nd frame) and 5 fps empty (every 6th)", () => {
+    expect(analysedFps(30, "watch")).toBeGreaterThanOrEqual(15);
+    expect(analysedFps(30, "watch")).toBeLessThan(17); // jitter lets a few extra frames through
+    expect(analysedFps(30, "empty")).toBeCloseTo(5, 1);
+    expect(analysedFps(30, "active")).toBe(30);
+  });
+
+  it("due(): never below 15 fps while watching, whatever the camera delivers", () => {
+    for (const fps of [15, 18, 20, 24, 25, 27, 30, 50, 60]) expect(analysedFps(fps, "watch"), `${fps} fps camera`).toBeGreaterThanOrEqual(14.9);
+    expect(analysedFps(20, "watch")).toBe(20); // skipping one frame of 20 would mean 10 fps
+    expect(analysedFps(20, "empty")).toBeGreaterThanOrEqual(5);
+    expect(analysedFps(20, "empty")).toBeLessThan(6);
   });
 });
 

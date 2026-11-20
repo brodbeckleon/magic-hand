@@ -59,10 +59,20 @@ export function govern(prev: GovernorState | null, i: GovernorInput): GovernorSt
 }
 
 /**
- * Is a frame at `t` due when the last analysed one was at `last`? Camera frames are not perfectly
- * spaced: allowing 15 ms early keeps 15 fps at every 2nd frame of a 30 fps camera instead of every
- * 3rd, and 5 fps at every 6th.
+ * Is a camera frame at `t` due when the last analysed one was at `last`? `period` is the camera's
+ * frame period. A frame is taken when waiting for the next one would leave a gap longer than the
+ * interval, so the analysed rate never drops below the mode's rate whatever the camera delivers:
+ * a 30 fps camera gives 15 fps (every 2nd frame) and 5 fps (every 6th); a 20 or 24 fps camera
+ * gives every frame while watching (skipping one would mean 10 or 12 fps). 15 % of a period of
+ * slack absorbs timing jitter (with ±10 % jitter the rate still never drops below 15 fps; 20 %
+ * would, for 27 fps cameras).
  */
-export function due(t: number, last: number, interval: number): boolean {
-  return interval <= 0 || t - last >= interval - 0.015;
+export function due(t: number, last: number, interval: number, period = 1 / 30): boolean {
+  return interval <= 0 || t - last >= interval - 0.85 * period;
+}
+
+/** Smoothed camera frame period from the time between frames, s (clamped to 5..120 fps). */
+export function nextPeriod(prev: number, dt: number): number {
+  if (!(dt > 0)) return prev;
+  return 0.9 * prev + 0.1 * Math.min(Math.max(dt, 1 / 120), 1 / 5);
 }

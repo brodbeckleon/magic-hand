@@ -1,7 +1,7 @@
 import type { FrameObs } from "../../core/types.ts";
 import { cropRect, FULL_FRAME, pixelCrop, type Rect } from "../../core/zone/Zone.ts";
 import type { VisionBackend } from "../backend.ts";
-import { due } from "../../core/pipeline/governor.ts";
+import { due, nextPeriod } from "../../core/pipeline/governor.ts";
 import { workerTicker, type Ticker } from "./clock.ts";
 import type { FrameMeta, LandmarkSource } from "./types.ts";
 
@@ -90,6 +90,9 @@ export class WorkerSource implements LandmarkSource {
   private readonly minInterval: () => number;
   /** Capture time of the last frame sent for analysis, s. */
   private lastSent = -Infinity;
+  /** The camera's frame period (smoothed time between video-frame callbacks), s. */
+  private period = 1 / 30;
+  private lastFrameAt = 0;
 
   constructor(video: HTMLVideoElement, worker: VisionBackend, needs: () => WorkerSourceNeeds, opts: WorkerSourceOptions = {}) {
     this.video = video;
@@ -105,7 +108,10 @@ export class WorkerSource implements LandmarkSource {
     this.lastCallback = performance.now();
     const onVideoFrame = () => {
       if (!this.running) return;
-      this.lastCallback = performance.now();
+      const now = performance.now();
+      if (this.lastFrameAt) this.period = nextPeriod(this.period, (now - this.lastFrameAt) / 1000);
+      this.lastFrameAt = now;
+      this.lastCallback = now;
       this.stats.cameraFrames++;
       this.schedule(onVideoFrame);
       this.tick(false);
@@ -125,7 +131,7 @@ export class WorkerSource implements LandmarkSource {
     if (v.readyState < 2 || !v.videoWidth) return;
     // Lower analysis rate (nobody in view, no hand): checked first, so these frames do not count
     // as dropped. Watchdog ticks are not camera frames and are not counted at all.
-    if (!due(performance.now() / 1000, this.lastSent, this.minInterval())) {
+    if (!due(performance.now() / 1000, this.lastSent, this.minInterval(), this.period)) {
       if (!pumped) this.stats.skipped++;
       return;
     }

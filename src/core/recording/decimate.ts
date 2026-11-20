@@ -1,4 +1,4 @@
-import { due, govern, initialGovernor, INTERVAL_S, type GovernorState, type RateMode } from "../pipeline/governor.ts";
+import { due, govern, initialGovernor, INTERVAL_S, nextPeriod, type GovernorState, type RateMode } from "../pipeline/governor.ts";
 import type { FrameObs } from "../types.ts";
 
 /** What the governor needs from an analysed frame. */
@@ -24,9 +24,13 @@ export function decimate(frames: readonly FrameObs[], analyse: (f: FrameObs) => 
   const out: Decimated = { analysed: 0, skipped: 0, modes: { active: 0, watch: 0, empty: 0 } };
   let gov: GovernorState | null = null;
   let last = -Infinity;
+  let period = 1 / 30;
+  let prevT: number | null = null;
   for (const f of frames) {
+    if (prevT !== null) period = nextPeriod(period, f.t - prevT);
+    prevT = f.t;
     const mode = (gov ?? initialGovernor(f.t)).mode;
-    if (!due(f.t, last, INTERVAL_S[mode])) {
+    if (!due(f.t, last, INTERVAL_S[mode], period)) {
       out.skipped++;
       continue;
     }
