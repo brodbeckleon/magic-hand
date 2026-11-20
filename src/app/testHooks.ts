@@ -92,7 +92,7 @@ export function installTestHooks(engine: Engine): void {
       const w = engine.workerStats;
       return {
         analysed: w?.analysed ?? 0, skipped: engine.skippedFrames, dropped: w?.dropped ?? 0, pumped: w?.pumped ?? 0,
-        modelMsTotal: w?.modelMsTotal ?? 0, results: w?.results ?? 0, mode: engine.rateMode, fps: useEngine.getState().fps,
+        modelMsTotal: w?.modelMsTotal ?? 0, results: w?.results ?? 0, mode: engine.rateMode, fps: engine.analysedFps,
       };
     },
     pinRate: (mode) => engine.pinRate(mode),

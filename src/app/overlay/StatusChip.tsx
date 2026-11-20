@@ -10,10 +10,6 @@ export function StatusChip() {
   const { t } = useTranslation();
   const engine = useEngineInstance();
   const calibrated = useEngine((s) => s.calibrated);
-  const fps = useEngine((s) => s.fps);
-  const inferenceMs = useEngine((s) => s.inferenceMs);
-  const delegate = useEngine((s) => s.delegate);
-  const rate = useEngine((s) => s.rate);
   const dev = useSettings((s) => s.dev);
   const handRef = useRef<HTMLSpanElement>(null);
   const lockRef = useRef<HTMLSpanElement>(null);
@@ -50,14 +46,24 @@ export function StatusChip() {
           <Icon name="hand" size={16} />
         </span>
       </div>
-      {dev.unlocked && (
-        <div className="dev-stats" data-testid="dev-stats">
-          <span data-testid="dev-rate">{t("status.fps", { fps: fps.toFixed(0) })} · {rate}</span>
-          <span>{inferenceMs.toFixed(0)} ms · {delegate ?? "–"}</span>
-          <span ref={lockRef} className="lock" />
-          {dev.dryRun && <span className="warn">{t("status.dryRun")}</span>}
-        </div>
-      )}
+      {dev.unlocked && <DevStats lockRef={lockRef} dryRun={dev.dryRun} />}
+    </div>
+  );
+}
+
+/** Developer numbers; only these follow the 4 Hz stats, so the chip does not re-render for them. */
+function DevStats({ lockRef, dryRun }: { lockRef: React.RefObject<HTMLSpanElement | null>; dryRun: boolean }) {
+  const { t } = useTranslation();
+  const fps = useEngine((s) => s.fps);
+  const inferenceMs = useEngine((s) => s.inferenceMs);
+  const delegate = useEngine((s) => s.delegate);
+  const rate = useEngine((s) => s.rate);
+  return (
+    <div className="dev-stats" data-testid="dev-stats">
+      <span data-testid="dev-rate">{t("status.fps", { fps: fps.toFixed(0) })} · {rate}</span>
+      <span>{inferenceMs.toFixed(0)} ms · {delegate ?? "–"}</span>
+      <span ref={lockRef} className="lock" />
+      {dryRun && <span className="warn">{t("status.dryRun")}</span>}
     </div>
   );
 }

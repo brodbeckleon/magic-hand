@@ -23,6 +23,7 @@ export function Pill() {
   const calibrated = useEngine((s) => s.calibrated);
   const setView = useUi((s) => s.setView);
   const setPillHidden = useUi((s) => s.setPillHidden);
+  const hidden = useUi((s) => s.pillHidden);
   const camera = useSettings((s) => s.pill.camera);
   const last = useRef<HTMLSpanElement>(null);
   const pill = useRef<HTMLDivElement>(null);
@@ -31,7 +32,9 @@ export function Pill() {
   const [focus, setFocus] = useState<FrontApp | null>(null);
 
   // Warn when the slide keys would go to another app (a chat window popped up, wrong window clicked).
+  // Not while paused (no keys are sent) or hidden (nobody would see the warning).
   useEffect(() => {
+    if (paused || hidden) return;
     let alive = true;
     const poll = () => void platform.frontmostApp().then((a) => alive && setFocus(a), () => undefined);
     poll();
@@ -40,8 +43,9 @@ export function Pill() {
       alive = false;
       window.clearInterval(id);
     };
-  }, []);
-  const focusKind = classifyFocus(focus);
+  }, [paused, hidden]);
+  // A stale answer from before the pause must not show a warning.
+  const focusKind = classifyFocus(paused || hidden ? null : focus);
 
   // Second line: what Magic Hand sees right now, briefly replaced by what just happened. Direct DOM
   // writes, and only when something changed (this runs on every analysed frame).

@@ -121,6 +121,10 @@ html[data-view="pill"] .stage { display: block; }
 .pill-thumb-slot { flex: none; width: 64px; height: 48px; }
 html[data-view="pill"] .pill-thumb-slot { width: 64px; }
 .pill .icon-btn { color: var(--text); flex: none; }
+/* Nearly opaque anyway: a blur of what is behind would only cost GPU time on every frame. */
+.pill.glass { backdrop-filter: none; -webkit-backdrop-filter: none; }
+/* The overlays redraw on every analysed frame; glow filters there are the expensive part. */
+html[data-view="pill"] .overlay :is(.trail, .arm-ring-fill, .claim-fill, .person-halo) { filter: none; }
 .pill-actions { flex: none; display: flex; gap: 2px; }
 
 /* ---------- Preferences ---------- */

@@ -574,11 +574,19 @@ export class Engine {
     this.log.push({ zeit: localIsoTimestamp(new Date()), ...entry });
   }
 
+  /** Analysed frames per second (smoothed). */
+  get analysedFps(): number {
+    return this.fps;
+  }
+
   private updateStats(t: number, meta: FrameMeta, calibrated: boolean): void {
     if (this.lastFrameAt) this.fps = 0.9 * this.fps + 0.1 / Math.max(t - this.lastFrameAt, 1e-6);
     this.lastFrameAt = t;
     const s = useEngine.getState();
     if (calibrated !== s.calibrated) s.set({ calibrated });
+    // The 4 Hz numbers are only shown in the developer tools: no store updates (and re-renders)
+    // for them otherwise.
+    if (!useSettings.getState().dev.unlocked) return;
     if (t - this.lastStatsAt > 0.25) {
       this.lastStatsAt = t;
       s.set({ fps: this.fps, inferenceMs: meta.inferenceMs });

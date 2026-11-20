@@ -4,6 +4,7 @@ import { mirrorRect } from "../../core/zone/Zone.ts";
 import type { PipelineSnapshot } from "../../core/pipeline/GesturePipeline.ts";
 import { useEngineInstance } from "../engine/context.ts";
 import type { UiEventKind } from "../state/engine.ts";
+import { attr, useOverlayVisible } from "./svg.ts";
 
 const MAX = 4;
 /** How long the short reason next to the hand stays, ms. */
@@ -17,11 +18,6 @@ const REASONS: Partial<Record<UiEventKind, string>> = {
   ignored_not_speaker: "turn",
   ignored_other_hand: "otherHand",
 };
-
-/** Sets an attribute only when it changes (this runs on every analysed frame). */
-function attr(el: Element, name: string, value: string): void {
-  if (el.getAttribute(name) !== value) el.setAttribute(name, value);
-}
 
 /** Text of a label chip; the chip's width follows the text (measured only when the text changes). */
 function setChip(chip: SVGGElement, text: string, x: number, y: number, unit: number): void {
@@ -60,8 +56,10 @@ export function PersonLayer() {
   const people = useRef<(SVGGElement | null)[]>([]);
   const claims = useRef<(SVGGElement | null)[]>([]);
   const reason = useRef<SVGGElement>(null);
+  const visible = useOverlayVisible();
 
   useEffect(() => {
+    if (!visible) return;
     let shown: { text: string; person: number | null; side: string | undefined; until: number } | null = null;
     let last: PipelineSnapshot | null = null;
     let timer = 0;
@@ -176,7 +174,7 @@ export function PersonLayer() {
       offFrames();
       clearTimeout(timer);
     };
-  }, [engine, t]);
+  }, [engine, t, visible]);
 
   return (
     <svg ref={svg} className="overlay person-layer" preserveAspectRatio="none" aria-hidden data-testid="person-layer">
