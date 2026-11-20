@@ -4,6 +4,7 @@ import { Icon } from "../design/Icon.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { useEngine } from "../state/engine.ts";
 import { useSettings } from "../state/settings.ts";
+import { isLowCameraFps } from "../hints/registry.ts";
 
 /** Mode and whether a hand is seen; developers also get frame rate, model time and lock state. */
 export function StatusChip() {
@@ -58,9 +59,13 @@ function DevStats({ lockRef, dryRun }: { lockRef: React.RefObject<HTMLSpanElemen
   const inferenceMs = useEngine((s) => s.inferenceMs);
   const delegate = useEngine((s) => s.delegate);
   const rate = useEngine((s) => s.rate);
+  const cameraFps = useEngine((s) => s.cameraFps);
   return (
     <div className="dev-stats" data-testid="dev-stats">
       <span data-testid="dev-rate">{t("status.fps", { fps: fps.toFixed(0) })} · {rate}</span>
+      <span data-testid="dev-camera-fps" className={isLowCameraFps(cameraFps) ? "warn" : undefined}>
+        {t("status.cameraFps", { fps: cameraFps === null ? "–" : cameraFps.toFixed(0) })}
+      </span>
       <span>{inferenceMs.toFixed(0)} ms · {delegate ?? "–"}</span>
       <span ref={lockRef} className="lock" />
       {dryRun && <span className="warn">{t("status.dryRun")}</span>}

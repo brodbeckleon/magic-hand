@@ -47,6 +47,8 @@ interface EngineStore {
   inferenceMs: number;
   /** Analysis rate: every frame (active), 15 fps (watch: someone, no hand), 5 fps (empty). */
   rate: RateMode;
+  /** Frames per second the camera delivers (developer tools only; null = not measured). */
+  cameraFps: number | null;
   delegate: Delegate | null;
   /** Inference runs in the vision worker (false: main-thread fallback). */
   worker: boolean;
@@ -64,6 +66,7 @@ export const useEngine = create<EngineStore>()((set) => ({
   fps: 0,
   inferenceMs: 0,
   rate: "watch",
+  cameraFps: null,
   delegate: null,
   worker: false,
   recent: [],

@@ -265,6 +265,10 @@ export class Engine {
   /** Feeds frames from any source (live camera, recording replay, tests). */
   useSource(source: LandmarkSource, followSettings = true): void {
     if (followSettings) this.followSettings();
+    // Camera frame rate only for the live camera (a replay has none).
+    this.cameraStats = source instanceof WorkerSource ? source.stats : null;
+    this.camWindow = null;
+    this.camFps = null;
     this.presenceReset = true; // a new source may run on a different clock (recordings)
     this.governor = null; // likewise: the rate starts over
     source.start((frame, meta) => this.onFrame(frame, meta));
@@ -579,17 +583,39 @@ export class Engine {
     return this.fps;
   }
 
+  private cameraStats: WorkerStats | null = null;
+  private camWindow: { t: number; frames: number } | null = null;
+  private camFps: number | null = null;
+
+  /** Frames per second the camera delivers (null: not measured yet, or no live camera). */
+  get cameraFps(): number | null {
+    return this.camFps;
+  }
+
+  /** Camera frame rate over windows of at least 2 s (dim light makes cameras slow down). */
+  private measureCamera(t: number): void {
+    const st = this.cameraStats;
+    if (!st) return;
+    if (!this.camWindow || t < this.camWindow.t) {
+      this.camWindow = { t, frames: st.cameraFrames };
+    } else if (t - this.camWindow.t >= 2) {
+      this.camFps = (st.cameraFrames - this.camWindow.frames) / (t - this.camWindow.t);
+      this.camWindow = { t, frames: st.cameraFrames };
+    }
+  }
+
   private updateStats(t: number, meta: FrameMeta, calibrated: boolean): void {
     if (this.lastFrameAt) this.fps = 0.9 * this.fps + 0.1 / Math.max(t - this.lastFrameAt, 1e-6);
     this.lastFrameAt = t;
     const s = useEngine.getState();
     if (calibrated !== s.calibrated) s.set({ calibrated });
+    this.measureCamera(t);
     // The 4 Hz numbers are only shown in the developer tools: no store updates (and re-renders)
     // for them otherwise.
     if (!useSettings.getState().dev.unlocked) return;
     if (t - this.lastStatsAt > 0.25) {
       this.lastStatsAt = t;
-      s.set({ fps: this.fps, inferenceMs: meta.inferenceMs });
+      s.set({ fps: this.fps, inferenceMs: meta.inferenceMs, cameraFps: this.camFps });
       const w = this.workerStats;
       useDev.getState().addSample({ fps: this.fps, handMs: w ? w.handMs : meta.inferenceMs, pipelineMs: w ? w.pipelineMs : meta.inferenceMs }, w?.dropped ?? 0);
     }

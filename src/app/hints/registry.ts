@@ -1,7 +1,14 @@
 // Contextual hints: guided, not nagging. Each hint has a condition, a maximum number of showings and
 // a "learned" signal after which it never appears again. Counters persist in settings.hints.
 
-export type HintId = "noHand" | "focus" | "present" | "takeover" | "far";
+export type HintId = "noHand" | "focus" | "present" | "takeover" | "far" | "lowFps";
+
+/** Below this many camera frames per second fast swipes get lost (dim light slows cameras down). */
+export const LOW_CAMERA_FPS = 20;
+/** Whether a measured camera rate counts as low (rounded as shown: a 20 fps camera measuring 19.6 is fine). */
+export const isLowCameraFps = (fps: number | null): boolean => fps !== null && Math.round(fps) < LOW_CAMERA_FPS;
+/** The camera has to stay that slow this long before the hint appears, s. */
+export const LOW_CAMERA_FOR_S = 10;
 
 export interface HintDef {
   id: HintId;
@@ -24,6 +31,8 @@ export const HINTS: Record<HintId, HintDef> = {
   takeover: { id: "takeover", maxShows: 2, cooldown: 120 },
   /** Someone far away: keep movements big. */
   far: { id: "far", maxShows: 2, cooldown: 120 },
+  /** The camera delivers fewer than LOW_CAMERA_FPS frames per second for a while. */
+  lowFps: { id: "lowFps", maxShows: 2, cooldown: 300 },
 };
 
 export const shownKey = (id: HintId) => `hint.${id}.shown`;

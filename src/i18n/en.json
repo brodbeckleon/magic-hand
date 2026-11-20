@@ -13,7 +13,8 @@
     "handSeen": "Hand detected",
     "blocked": "Briefly locked",
     "returning": "Return time {{s}} s",
-    "fps": "{{fps}} fps"
+    "fps": "{{fps}} fps",
+    "cameraFps": "camera {{fps}} fps"
   },
   "hint": {
     "holdStill": "Hold your hand still for about 1 s",
@@ -297,6 +298,7 @@
     "detectHint": "Threshold frame captured until key sent",
     "reactionHint": "Start of the movement until key sent (includes the gesture itself, target < 500 ms)",
     "dropped": "{{n}} dropped",
+    "analysedOfCamera": "{{fps}} of {{camera}} fps analysed",
     "resetParams": "Defaults",
     "smoothing": "Smoothing",
     "smoothingHint": "One Euro filter on the palm position: less jitter when still, at most one frame later on a swipe. Compare with a recording before turning it on for real.",
@@ -506,7 +508,8 @@
     "focus": "The key went to Magic Hand itself. Click into your presentation or on “Present”.",
     "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
     "takeover": "Several people in view: to take over, hold up an open palm (fingers up) for about a second. In front of your chest is fine.",
-    "far": "You are far away: swipe with big, clear arm movements."
+    "far": "You are far away: swipe with big, clear arm movements.",
+    "lowFps": "The camera delivers fewer than 20 images per second, so fast swipes can be missed. More light in front of you helps."
   },
   "study": {
     "intro": "Test session: Magic Hand asks for swipes in alternating directions, then measures false triggers while you talk freely. No keys are sent.",

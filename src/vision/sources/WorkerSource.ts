@@ -19,6 +19,8 @@ export interface WorkerSourceNeeds {
 }
 
 export interface WorkerStats {
+  /** Frames the camera delivered (video-frame callbacks). */
+  cameraFrames: number;
   /** Frames sent for analysis. */
   analysed: number;
   /** Camera frames dropped because the analysis was still busy with earlier ones. */
@@ -80,7 +82,7 @@ export class WorkerSource implements LandmarkSource {
   private lastCallback = 0;
   private ticker: Ticker | null = null;
   private onFrame: ((frame: FrameObs, meta: FrameMeta) => void) | null = null;
-  readonly stats: WorkerStats = { analysed: 0, dropped: 0, skipped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0, lastModelMs: 0 };
+  readonly stats: WorkerStats = { cameraFrames: 0, analysed: 0, dropped: 0, skipped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0, lastModelMs: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionBackend;
   private readonly needs: () => WorkerSourceNeeds;
@@ -104,6 +106,7 @@ export class WorkerSource implements LandmarkSource {
     const onVideoFrame = () => {
       if (!this.running) return;
       this.lastCallback = performance.now();
+      this.stats.cameraFrames++;
       this.schedule(onVideoFrame);
       this.tick(false);
     };

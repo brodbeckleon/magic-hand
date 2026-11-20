@@ -13,7 +13,8 @@
     "handSeen": "Hand erkannt",
     "blocked": "Kurz gesperrt",
     "returning": "Rückholzeit {{s}} s",
-    "fps": "{{fps}} fps"
+    "fps": "{{fps}} fps",
+    "cameraFps": "Kamera {{fps}} fps"
   },
   "hint": {
     "holdStill": "Hand ca. 1 s ruhig halten",
@@ -297,6 +298,7 @@
     "detectHint": "Schwellen-Bild aufgenommen bis Taste gesendet",
     "reactionHint": "Beginn der Bewegung bis Taste gesendet (enthält die Geste selbst, Ziel < 500 ms)",
     "dropped": "{{n}} ausgelassen",
+    "analysedOfCamera": "{{fps}} von {{camera}} fps analysiert",
     "resetParams": "Standardwerte",
     "smoothing": "Glättung",
     "smoothingHint": "One-Euro-Filter auf der Handposition: weniger Zittern in Ruhe, beim Swipe höchstens ein Frame später. Vor dem Einsatz mit einer Aufnahme vergleichen.",
@@ -506,7 +508,8 @@
     "focus": "Die Taste ging an Magic Hand selbst. Klicke in deine Präsentation oder auf «Präsentieren».",
     "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
     "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hält die offene Hand (Finger nach oben) ca. 1 Sekunde still. Vor der Brust genügt.",
-    "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
+    "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen.",
+    "lowFps": "Die Kamera liefert weniger als 20 Bilder pro Sekunde, schnelle Wischgesten können verloren gehen. Mehr Licht von vorne hilft."
   },
   "study": {
     "intro": "Testsitzung: Magic Hand fordert abwechselnd Wischgesten an und misst danach Fehlauslösungen beim freien Reden. Es werden keine Tasten gesendet.",
