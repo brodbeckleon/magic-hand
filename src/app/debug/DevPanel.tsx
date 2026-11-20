@@ -69,6 +69,9 @@ function Metrics() {
   const dropped = useDev((s) => s.dropped);
   const delegate = useEngine((s) => s.delegate);
   const worker = useEngine((s) => s.worker);
+  const fps = useEngine((s) => s.fps);
+  const cameraFps = useEngine((s) => s.cameraFps);
+  const rate = useEngine((s) => s.rate);
   const detect = triggers.map((x) => x.detectMs);
   const reaction = triggers.map((x) => x.reactionMs);
   const fmt = (v: number) => (Number.isNaN(v) ? "–" : `${v.toFixed(0)} ms`);
@@ -85,7 +88,10 @@ function Metrics() {
             <td data-warn={percentile(reaction, 95) > 500}>{fmt(percentile(reaction, 95))}</td></tr>
         </tbody>
       </table>
-      <p className="dev-meta">{delegate ?? "–"} · {worker ? "worker" : "main thread"} · {t("dev.dropped", { n: dropped })} · n={triggers.length}</p>
+      <p className="dev-meta">
+        {t("dev.analysedOfCamera", { fps: fps.toFixed(0), camera: cameraFps === null ? "–" : cameraFps.toFixed(0) })} ({rate}) ·{" "}
+        {delegate ?? "–"} · {worker ? "worker" : "main thread"} · {t("dev.dropped", { n: dropped })} · n={triggers.length}
+      </p>
     </div>
   );
 }

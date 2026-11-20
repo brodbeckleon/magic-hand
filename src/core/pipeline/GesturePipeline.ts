@@ -4,7 +4,7 @@ import { HandSmoother } from "../filter/OneEuro.ts";
 import { MotionEnergy, MouthActivity } from "../speaker/activity.ts";
 import { Arbiter, type AutoSignal, type SpeakerMode, type SwitchReason } from "../speaker/Arbiter.ts";
 import { ClaimDetector } from "../speaker/ClaimDetector.ts";
-import { HandLock, LOCK_PROGRESS } from "../swipe/HandLock.ts";
+import { HandLock, LOCK_PROGRESS, type SideEvent } from "../swipe/HandLock.ts";
 import { DEFAULT_SWIPE_PARAMS, type SwipeParams } from "../swipe/params.ts";
 import type { HistoryEntry } from "../swipe/SwipeDetector.ts";
 import { HandAssociator } from "../tracking/associate.ts";
@@ -184,6 +184,12 @@ export class GesturePipeline {
     this.persons.setMaxSlots(this.settings.maxPeople ?? 4);
   }
 
+  /** A swipe is held back (wind-up check): the next frames decide it, so keep analysing. */
+  get pending(): boolean {
+    for (const st of this.people.values()) if (st.lock.holding) return true;
+    return false;
+  }
+
   /** The hand detectors of the presenter shown in the UI. */
   get lock(): HandLock {
     return this.state(this.arbiter.active ?? this.lastPersons[0]?.id ?? SOLO).lock;
@@ -338,50 +344,14 @@ export class GesturePipeline {
         }
         const fed = this.settings.smoothing ? smoothed(st, t, hands) : hands;
         const sidesWithEvents = new Set<Side>();
-        for (const { side, event, detector, onset = detector.onset, lastDx = detector.lastDx } of st.lock.update(t, fed)) {
-          sidesWithEvents.add(side);
-          if (event === "calibrated") {
-            if (this.armed) continue;
-            this.armed = true;
-            events.push({ type: "calibrated", t, side, person });
-            // Whoever arms gesture control gets it if nobody has it yet.
-            const granted = persons.length ? this.arbiter.grant(person, t) : null;
-            if (granted) {
-              speaker = person;
-              events.push({ type: "speaker", t, person, reason: granted.reason });
-            }
-          } else if (event === "next" || event === "prev") {
-            if (person !== speaker) {
-              // Nobody has control (e.g. the speaker left): whoever swipes first gets it.
-              const granted = speaker === null ? this.arbiter.grant(person, t, "swipe") : null;
-              if (!granted) {
-                events.push({ type: "ignored_not_speaker", t, side, person });
-                continue;
-              }
-              speaker = person;
-              events.push({ type: "speaker", t, person, reason: granted.reason });
-            }
-            if (this.settings.openHand && !madeOpen(st.shapes[side], onset, t)) {
-              events.push({ type: "ignored_closed", t, side, person });
-              continue;
-            }
-            const command: Command = this.settings.reverse ? (event === "next" ? "prev" : "next") : event;
-            events.push({
-              type: "trigger", t, side, person, command,
-              swipe: lastDx < 0 ? "left" : "right",
-              distance: lastDx,
-              onset,
-            });
-          } else {
-            events.push({ type: event, t, side, person });
-          }
-        }
+        speaker = this.handleLock(st.lock.update(t, fed), { t, person, st, persons, speaker, events, sidesWithEvents });
         if (person === speaker) this.explain(st, t, person, hands, sidesWithEvents, events);
       }
-      // Hands of people that left the frame: let their detectors notice the gap.
+      // Hands of people that left the frame: let their detectors notice the gap. A swipe held back
+      // by the wind-up check is released here if the hand left before the hold ended.
       for (const [person, st] of this.people) {
         if (byPerson.has(person)) continue;
-        st.lock.update(t, {});
+        speaker = this.handleLock(st.lock.update(t, {}), { t, person, st, persons, speaker, events, sidesWithEvents: new Set() });
         st.weak = { left: false, right: false };
         st.other = { left: [], right: [] };
       }
@@ -419,6 +389,57 @@ export class GesturePipeline {
         poseHands,
       },
     };
+  }
+
+  /**
+   * Turns one person's swipe events into pipeline events: arming, speaker checks, open hand,
+   * direction. Returns the speaker (a swipe may give control to someone when nobody has it).
+   */
+  private handleLock(
+    sideEvents: readonly SideEvent[],
+    c: { t: number; person: number; st: PersonState; persons: readonly PersonTrack[]; speaker: number | null; events: PipelineEvent[]; sidesWithEvents: Set<Side> },
+  ): number | null {
+    const { t, person, st, persons, events, sidesWithEvents } = c;
+    let { speaker } = c;
+    for (const { side, event, detector, onset = detector.onset, lastDx = detector.lastDx } of sideEvents) {
+      sidesWithEvents.add(side);
+      if (event === "calibrated") {
+        if (this.armed) continue;
+        this.armed = true;
+        events.push({ type: "calibrated", t, side, person });
+        // Whoever arms gesture control gets it if nobody has it yet.
+        const granted = persons.length ? this.arbiter.grant(person, t) : null;
+        if (granted) {
+          speaker = person;
+          events.push({ type: "speaker", t, person, reason: granted.reason });
+        }
+      } else if (event === "next" || event === "prev") {
+        if (person !== speaker) {
+          // Nobody has control (e.g. the speaker left): whoever swipes first gets it.
+          const granted = speaker === null ? this.arbiter.grant(person, t, "swipe") : null;
+          if (!granted) {
+            events.push({ type: "ignored_not_speaker", t, side, person });
+            continue;
+          }
+          speaker = person;
+          events.push({ type: "speaker", t, person, reason: granted.reason });
+        }
+        if (this.settings.openHand && !madeOpen(st.shapes[side], onset, t)) {
+          events.push({ type: "ignored_closed", t, side, person });
+          continue;
+        }
+        const command: Command = this.settings.reverse ? (event === "next" ? "prev" : "next") : event;
+        events.push({
+          type: "trigger", t, side, person, command,
+          swipe: lastDx < 0 ? "left" : "right",
+          distance: lastDx,
+          onset,
+        });
+      } else {
+        events.push({ type: event, t, side, person });
+      }
+    }
+    return speaker;
   }
 
   /**

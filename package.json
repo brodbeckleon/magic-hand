@@ -1,7 +1,7 @@
 {
   "name": "magic-hand",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.2.0",
   "type": "module",
   "packageManager": "pnpm@9.12.3",
   "scripts": {
@@ -17,6 +17,7 @@
     "e2e": "playwright test",
     "check-bundle": "tsx scripts/check-bundle.ts",
     "replay": "tsx scripts/replay-cli.ts",
+    "bench": "tsx scripts/bench.ts",
     "version:set": "tsx scripts/version.ts set",
     "version:check": "tsx scripts/version.ts check"
   },

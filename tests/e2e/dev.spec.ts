@@ -18,6 +18,16 @@ test.describe("developer tools", () => {
     await expect(page.getByTestId("dev-metrics")).toContainText(/worker|main thread/);
   });
 
+  test("stats show the camera frame rate and the analysis rate: lower without a hand, every frame with one", async ({ page }) => {
+    await unlockDev(page);
+    await expect(page.getByTestId("dev-camera-fps")).toHaveText(/camera [1-9]\d* fps/, { timeout: 15_000 });
+    // The fake camera shows nobody: after a few seconds only some frames are analysed.
+    await expect(page.getByTestId("dev-rate")).toContainText(/watch|empty/, { timeout: 15_000 });
+    const playing = play(page, new TraceBuilder().calibrated().hold(0.5));
+    await expect(page.getByTestId("dev-rate")).toContainText("active");
+    await playing;
+  });
+
   test("metrics show trigger latency; sliders change parameters live", async ({ page }) => {
     await unlockDev(page);
     await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));

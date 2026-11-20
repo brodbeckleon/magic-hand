@@ -1,4 +1,4 @@
-import { HINTS, learnedKey, mayShow, shownKey } from "../src/app/hints/registry.ts";
+import { HINTS, isLowCameraFps, learnedKey, mayShow, shownKey } from "../src/app/hints/registry.ts";
 
 describe("hint registry", () => {
   it("shows a hint at most maxShows times", () => {
@@ -14,5 +14,15 @@ describe("hint registry", () => {
   it("respects the cooldown between showings", () => {
     expect(mayShow("noHand", {}, 100, 100 + HINTS.noHand.cooldown - 1)).toBe(false);
     expect(mayShow("noHand", {}, 100, 100 + HINTS.noHand.cooldown)).toBe(true);
+  });
+});
+
+describe("low camera frame rate", () => {
+  it("counts as low below 20 fps as shown (a 20 fps camera measuring 19.6 is fine)", () => {
+    expect(isLowCameraFps(null)).toBe(false);
+    expect(isLowCameraFps(19.6)).toBe(false);
+    expect(isLowCameraFps(19.4)).toBe(true);
+    expect(isLowCameraFps(12)).toBe(true);
+    expect(isLowCameraFps(30)).toBe(false);
   });
 });

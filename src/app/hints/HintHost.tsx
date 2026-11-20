@@ -6,7 +6,7 @@ import { useEngineInstance } from "../engine/context.ts";
 import { useEngine } from "../state/engine.ts";
 import { useSettings } from "../state/settings.ts";
 import { useUi } from "../state/ui.ts";
-import { HINTS, learnedKey, mayShow, shownKey, type HintId } from "./registry.ts";
+import { HINTS, isLowCameraFps, learnedKey, LOW_CAMERA_FOR_S, mayShow, shownKey, type HintId } from "./registry.ts";
 
 const SHOW_S = 7;
 
@@ -34,6 +34,7 @@ export function HintHost() {
     let noHandSince: number | null = null;
     let seenMulti = false;
     let seenFar = false;
+    let slowSince: number | null = null;
     const queue: HintId[] = [];
     let current: HintId | null = null;
     const next = () => {
@@ -88,6 +89,12 @@ export function HintHost() {
       if (s.persons.filter((p) => p.confirmed).length >= 2 && !seenMulti) {
         seenMulti = true;
         show("takeover");
+      }
+      if (isLowCameraFps(engine.cameraFps)) {
+        slowSince ??= s.t;
+        if (s.t - slowSince > LOW_CAMERA_FOR_S) show("lowFps");
+      } else {
+        slowSince = null;
       }
       if (s.persons.some((p) => p.far && p.confirmed) && !seenFar) {
         seenFar = true;

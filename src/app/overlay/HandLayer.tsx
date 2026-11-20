@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { PipelineSnapshot } from "../../core/pipeline/GesturePipeline.ts";
 import type { Landmark } from "../../core/types.ts";
 import { useEngineInstance } from "../engine/context.ts";
+import { attr, useOverlayVisible } from "./svg.ts";
 
 export const HAND_CONNECTIONS: [number, number][] = [
   [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
@@ -38,20 +39,20 @@ function updateArmRing(g: SVGGElement | null, s: PipelineSnapshot, unit: number)
   if (!g) return;
   const active = s.hands.find((h) => h.side === s.activeSide) ?? s.hands[0];
   if (s.calibrated || !active || s.calibProgress <= 0) {
-    g.setAttribute("visibility", "hidden");
+    attr(g, "visibility", "hidden");
     return;
   }
   const r = active.hand.scale * 1.6;
   const [track, fill] = g.children as unknown as [SVGCircleElement, SVGCircleElement];
   for (const c of [track, fill]) {
-    c.setAttribute("cx", active.hand.cx.toFixed(1));
-    c.setAttribute("cy", active.hand.cy.toFixed(1));
-    c.setAttribute("r", r.toFixed(1));
-    c.setAttribute("stroke-width", String(6 * unit));
+    attr(c, "cx", active.hand.cx.toFixed(1));
+    attr(c, "cy", active.hand.cy.toFixed(1));
+    attr(c, "r", r.toFixed(1));
+    attr(c, "stroke-width", String(6 * unit));
   }
-  fill.setAttribute("stroke-dashoffset", String(100 - s.calibProgress * 100));
-  fill.setAttribute("transform", `rotate(-90 ${active.hand.cx.toFixed(1)} ${active.hand.cy.toFixed(1)})`);
-  g.setAttribute("visibility", "visible");
+  attr(fill, "stroke-dashoffset", String(Math.round(100 - s.calibProgress * 100)));
+  attr(fill, "transform", `rotate(-90 ${active.hand.cx.toFixed(1)} ${active.hand.cy.toFixed(1)})`);
+  attr(g, "visibility", "visible");
 }
 
 /**
@@ -66,51 +67,52 @@ export function HandLayer() {
   const ring = useRef<SVGGElement>(null);
   const poseHands = useRef<SVGPathElement>(null);
   const crops = useRef<SVGPathElement>(null);
+  const visible = useOverlayVisible();
 
-  useEffect(
-    () =>
-      engine.frames.subscribe((s: PipelineSnapshot) => {
-        const el = svg.current;
-        if (!el) return;
-        const vb = `0 0 ${s.width} ${s.height}`;
-        if (el.getAttribute("viewBox") !== vb) el.setAttribute("viewBox", vb);
-        const unit = Math.max(s.width, s.height) / 640; // stroke widths relative to a 640 px frame
-        for (let i = 0; i < MAX_HANDS; i++) {
-          const g = hands.current[i];
-          if (!g) continue;
-          const view = s.hands[i];
-          if (!view) {
-            g.setAttribute("visibility", "hidden");
-            continue;
-          }
-          g.setAttribute("visibility", "visible");
-          g.dataset.allowed = String(view.allowed);
-          g.dataset.side = view.side;
-          (g.children[0] as SVGPathElement).setAttribute("d", skeletonPath(view.obs.landmarks, s.width, s.height));
-          (g.children[0] as SVGPathElement).setAttribute("stroke-width", String(3 * unit));
-          (g.children[1] as SVGPathElement).setAttribute("d", jointsPath(view.obs.landmarks, s.width, s.height, 3.5 * unit));
+  useEffect(() => {
+    if (!visible) return;
+    return engine.frames.subscribe((s: PipelineSnapshot) => {
+      const el = svg.current;
+      if (!el) return;
+      attr(el, "viewBox", `0 0 ${s.width} ${s.height}`);
+      const unit = Math.max(s.width, s.height) / 640; // stroke widths relative to a 640 px frame
+      for (let i = 0; i < MAX_HANDS; i++) {
+        const g = hands.current[i];
+        if (!g) continue;
+        const view = s.hands[i];
+        if (!view) {
+          attr(g, "visibility", "hidden");
+          continue;
         }
-        // The trail shows a movement; a hand at rest would only leave an orange dot on the palm.
-        const first = s.trail[0]?.hand;
-        const lastPt = s.trail[s.trail.length - 1]?.hand;
-        const moving = !!first && !!lastPt && Math.hypot(lastPt.cx - first.cx, lastPt.cy - first.cy) > 0.5 * lastPt.scale;
-        const pts = moving ? s.trail.map((e) => `${e.hand.cx.toFixed(1)} ${e.hand.cy.toFixed(1)}`) : [];
-        trail.current?.setAttribute("d", pts.length > 1 ? `M${pts.join("L")}` : "");
-        trail.current?.setAttribute("stroke-width", String(6 * unit));
-        updateArmRing(ring.current, s, unit);
-        // Far away: palms estimated from the pose (dashed), and (developers) the wrist crops searched.
-        poseHands.current?.setAttribute("d", s.poseHands.map(({ hand: h }) => {
-          const r = Math.max(h.scale * 1.2, 6 * unit);
-          return `M${(h.cx - r).toFixed(1)} ${h.cy.toFixed(1)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
-        }).join(""));
-        poseHands.current?.setAttribute("stroke-width", String(3 * unit));
-        crops.current?.setAttribute("d", s.wristCrops.map((c) => {
-          const x = (1 - c.x - c.w) * s.width;
-          return `M${x.toFixed(1)} ${(c.y * s.height).toFixed(1)}h${(c.w * s.width).toFixed(1)}v${(c.h * s.height).toFixed(1)}h${(-c.w * s.width).toFixed(1)}Z`;
-        }).join(""));
-      }),
-    [engine],
-  );
+        attr(g, "visibility", "visible");
+        attr(g, "data-allowed", String(view.allowed));
+        attr(g, "data-side", view.side);
+        attr(g.children[0]!, "d", skeletonPath(view.obs.landmarks, s.width, s.height));
+        attr(g.children[0]!, "stroke-width", String(3 * unit));
+        attr(g.children[1]!, "d", jointsPath(view.obs.landmarks, s.width, s.height, 3.5 * unit));
+      }
+      // The trail shows a movement; a hand at rest would only leave an orange dot on the palm.
+      const first = s.trail[0]?.hand;
+      const lastPt = s.trail[s.trail.length - 1]?.hand;
+      const moving = !!first && !!lastPt && Math.hypot(lastPt.cx - first.cx, lastPt.cy - first.cy) > 0.5 * lastPt.scale;
+      const pts = moving ? s.trail.map((e) => `${e.hand.cx.toFixed(1)} ${e.hand.cy.toFixed(1)}`) : [];
+      if (trail.current) {
+        attr(trail.current, "d", pts.length > 1 ? `M${pts.join("L")}` : "");
+        attr(trail.current, "stroke-width", String(6 * unit));
+      }
+      updateArmRing(ring.current, s, unit);
+      // Far away: palms estimated from the pose (dashed), and (developers) the wrist crops searched.
+      if (poseHands.current) attr(poseHands.current, "d", s.poseHands.map(({ hand: h }) => {
+        const r = Math.max(h.scale * 1.2, 6 * unit);
+        return `M${(h.cx - r).toFixed(1)} ${h.cy.toFixed(1)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+      }).join(""));
+      if (poseHands.current) attr(poseHands.current, "stroke-width", String(3 * unit));
+      if (crops.current) attr(crops.current, "d", s.wristCrops.map((c) => {
+        const x = (1 - c.x - c.w) * s.width;
+        return `M${x.toFixed(1)} ${(c.y * s.height).toFixed(1)}h${(c.w * s.width).toFixed(1)}v${(c.h * s.height).toFixed(1)}h${(-c.w * s.width).toFixed(1)}Z`;
+      }).join(""));
+    });
+  }, [engine, visible]);
 
   return (
     <svg ref={svg} className="overlay hand-layer" preserveAspectRatio="none" aria-hidden>

@@ -82,3 +82,21 @@ describe("swipe angle (app defaults)", () => {
     expect(run(-120, 208)).toContain("ignored_dir"); // 60 degrees
   });
 });
+
+describe("a swipe held back by the wind-up check", () => {
+  const windup = { ...DEFAULT_PIPELINE_SETTINGS, swipe: { ...DEFAULT_PIPELINE_SETTINGS.swipe, windupHold: 0.18 } };
+
+  it("still changes the slide when the hand leaves the picture before the hold ends", () => {
+    const p = new GesturePipeline(windup);
+    // The swipe crosses the threshold on its last frame, then the hand is gone at once.
+    const frames = toFrames(new TraceBuilder().calibrated().move(-160, 0, 0.25).gap(0.5).frames);
+    const got = frames.flatMap((f) => p.step(f).events.map(typeOf));
+    expect(got).toEqual(["calibrated", "next"]);
+  });
+
+  it("is sent once, after the hold, when the hand stays", () => {
+    const p = new GesturePipeline(windup);
+    const frames = toFrames(new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.5).frames);
+    expect(frames.flatMap((f) => p.step(f).events.map(typeOf))).toEqual(["calibrated", "next"]);
+  });
+});

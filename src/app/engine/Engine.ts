@@ -5,7 +5,8 @@ import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
 import { MainThreadVision, type VisionBackend } from "../../vision/backend.ts";
 import { chosenDelegate, HANDEDNESS_SWAP, isNoGpuError, type Delegate } from "../../vision/landmarkers.ts";
-import { schedule } from "../../core/pipeline/scheduler.ts";
+import { LoadMeter, schedule } from "../../core/pipeline/scheduler.ts";
+import { govern, INTERVAL_S, type GovernorState } from "../../core/pipeline/governor.ts";
 import type { Rect } from "../../core/zone/Zone.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
@@ -39,6 +40,11 @@ export class Engine {
   readonly log: LogEntry[] = [];
   /** Vision timings (developer metrics). */
   workerStats: WorkerStats | null = null;
+  /**
+   * e2e builds only (benchmark, tests): replaces the detections of live camera frames while the
+   * models still run, e.g. a person or a swiping hand in front of the fake camera.
+   */
+  sceneOverride: ((frame: FrameObs) => FrameObs) | null = null;
 
   private video: HTMLVideoElement | null = null;
   private stream: MediaStream | null = null;
@@ -125,7 +131,7 @@ export class Engine {
         else v.backend.terminate();
         return this.loadVision(pref)(video);
       }
-      const src = new WorkerSource(video, v.backend, () => this.needs());
+      const src = new WorkerSource(video, v.backend, () => this.needs(), { minInterval: () => this.minInterval() });
       this.workerStats = src.stats;
       return src;
     };
@@ -177,27 +183,26 @@ export class Engine {
     }
   }
 
-  private scheduleFrame = 0;
   private lastFaceAt = -Infinity;
   private lastPoseAt = -Infinity;
-  private loadMs = 0;
+  private readonly load = new LoadMeter();
   private personCount = 0;
 
   /** What the next camera frame should be analysed for (zone crop, which models). */
   private needs() {
     const s = useSettings.getState();
     const st = this.workerStats;
-    if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs + st.cropMs);
+    const loadMs = st ? this.load.observe(st.results, st.lastModelMs) : 0;
     const now = performance.now() / 1000;
     const plan = schedule({
-      frame: this.scheduleFrame++,
       persons: this.personCount,
       wantFace: s.speaker.mode === "auto" && s.speaker.autoSignal !== "movement",
-      loadMs: this.loadMs,
+      loadMs,
       forcePose: this.poseRequests > 0,
       far: this.anyFar,
       sinceFace: now - this.lastFaceAt,
       sincePose: now - this.lastPoseAt,
+      watching: this.governor?.mode !== "active",
     });
     if (plan.face) this.lastFaceAt = now;
     if (plan.pose) this.lastPoseAt = now;
@@ -260,7 +265,12 @@ export class Engine {
   /** Feeds frames from any source (live camera, recording replay, tests). */
   useSource(source: LandmarkSource, followSettings = true): void {
     if (followSettings) this.followSettings();
+    // Camera frame rate only for the live camera (a replay has none).
+    this.cameraStats = source instanceof WorkerSource ? source.stats : null;
+    this.camWindow = null;
+    this.camFps = null;
     this.presenceReset = true; // a new source may run on a different clock (recordings)
+    this.governor = null; // likewise: the rate starts over
     source.start((frame, meta) => this.onFrame(frame, meta));
   }
 
@@ -446,7 +456,49 @@ export class Engine {
     }
   }
 
-  private onFrame(frame: FrameObs, meta: FrameMeta): void {
+  // ---- Adaptive analysis rate (see governor.ts) ------------------------------------------------
+
+  private governor: GovernorState | null = null;
+  private pinnedRate: "full" | null = null;
+
+  /** Frames not analysed because the analysis rate was lowered (nobody in view, no hand). */
+  get skippedFrames(): number {
+    return this.workerStats?.skipped ?? 0;
+  }
+
+  /** Current analysis mode (developer metrics, benchmark). */
+  get rateMode(): string {
+    return this.forced() ? "full" : (this.governor?.mode ?? "watch");
+  }
+
+  /** Benchmark: fixes the analysis rate ("full" = every frame); null = adaptive. */
+  pinRate(mode: "full" | null): void {
+    this.pinnedRate = mode;
+  }
+
+  /**
+   * Every frame is analysed while a wizard or Try it is open (they wait for movements and poses),
+   * while recording (recordings must show what the camera saw) and when pinned.
+   */
+  private forced(): boolean {
+    return this.pinnedRate === "full" || this.awake > 0 || this.poseRequests > 0 || this.keySuppressions > 0 || this.recorder !== null;
+  }
+
+  /** Least time between analysed frames, s; asked by the frame source for every camera frame. */
+  private minInterval(): number {
+    return this.forced() ? 0 : INTERVAL_S[this.governor?.mode ?? "watch"];
+  }
+
+  private updateGovernor(t: number, snapshot: PipelineSnapshot): void {
+    const prev = this.governor?.mode;
+    this.governor = govern(this.governor, {
+      t, hands: snapshot.hands.length, persons: this.personCount, pending: this.pipeline.pending, force: this.forced(),
+    });
+    if (this.governor.mode !== prev) useEngine.getState().set({ rate: this.governor.mode });
+  }
+
+  private onFrame(input: FrameObs, meta: FrameMeta): void {
+    const frame = import.meta.env.MODE === "e2e" && this.sceneOverride ? this.sceneOverride(input) : input;
     this.lastT = frame.t;
     this.lastSize = { w: frame.width, h: frame.height };
     this.observations.publish(frame);
@@ -460,11 +512,13 @@ export class Engine {
       this.handle(e, meta);
     }
     this.frameTap?.();
-    this.personCount = snapshot.persons.length;
+    // People seen on one pose frame only (a phantom) must not make the models search for 4 hands.
+    this.personCount = snapshot.persons.filter((p) => p.confirmed).length;
     this.checkIdle(frame.t, snapshot.hands.length > 0 || snapshot.persons.length > 0);
     if (events.length && useSettings.getState().sound && this.keySuppressions === 0) this.cue(events);
     this.anyFar = snapshot.persons.some((p) => p.far);
     this.wristCrops = snapshot.wristCrops;
+    this.updateGovernor(frame.t, snapshot);
     this.adaptNumHands(frame.t);
     this.frames.publish(snapshot);
     this.updateStats(frame.t, meta, snapshot.calibrated);
@@ -524,14 +578,44 @@ export class Engine {
     this.log.push({ zeit: localIsoTimestamp(new Date()), ...entry });
   }
 
+  /** Analysed frames per second (smoothed). */
+  get analysedFps(): number {
+    return this.fps;
+  }
+
+  private cameraStats: WorkerStats | null = null;
+  private camWindow: { t: number; frames: number } | null = null;
+  private camFps: number | null = null;
+
+  /** Frames per second the camera delivers (null: not measured yet, or no live camera). */
+  get cameraFps(): number | null {
+    return this.camFps;
+  }
+
+  /** Camera frame rate over windows of at least 2 s (dim light makes cameras slow down). */
+  private measureCamera(t: number): void {
+    const st = this.cameraStats;
+    if (!st) return;
+    if (!this.camWindow || t < this.camWindow.t) {
+      this.camWindow = { t, frames: st.cameraFrames };
+    } else if (t - this.camWindow.t >= 2) {
+      this.camFps = (st.cameraFrames - this.camWindow.frames) / (t - this.camWindow.t);
+      this.camWindow = { t, frames: st.cameraFrames };
+    }
+  }
+
   private updateStats(t: number, meta: FrameMeta, calibrated: boolean): void {
     if (this.lastFrameAt) this.fps = 0.9 * this.fps + 0.1 / Math.max(t - this.lastFrameAt, 1e-6);
     this.lastFrameAt = t;
     const s = useEngine.getState();
     if (calibrated !== s.calibrated) s.set({ calibrated });
+    this.measureCamera(t);
+    // The 4 Hz numbers are only shown in the developer tools: no store updates (and re-renders)
+    // for them otherwise.
+    if (!useSettings.getState().dev.unlocked) return;
     if (t - this.lastStatsAt > 0.25) {
       this.lastStatsAt = t;
-      s.set({ fps: this.fps, inferenceMs: meta.inferenceMs });
+      s.set({ fps: this.fps, inferenceMs: meta.inferenceMs, cameraFps: this.camFps });
       const w = this.workerStats;
       useDev.getState().addSample({ fps: this.fps, handMs: w ? w.handMs : meta.inferenceMs, pipelineMs: w ? w.pipelineMs : meta.inferenceMs }, w?.dropped ?? 0);
     }

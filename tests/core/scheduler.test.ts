@@ -1,4 +1,4 @@
-import { schedule } from "../../src/core/pipeline/scheduler.ts";
+import { LoadMeter, LOAD_BUDGET_MS, schedule } from "../../src/core/pipeline/scheduler.ts";
 
 /** n frames at `fps`, feeding back when the face model last ran (as the engine does). */
 const run = (n: number, o: Partial<Parameters<typeof schedule>[0]> = {}, fps = 30) => {
@@ -6,7 +6,7 @@ const run = (n: number, o: Partial<Parameters<typeof schedule>[0]> = {}, fps = 3
   let lastPose = -Infinity;
   return Array.from({ length: n }, (_, frame) => {
     const t = frame / fps;
-    const s = schedule({ frame, persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, sincePose: t - lastPose, ...o });
+    const s = schedule({ persons: 1, wantFace: false, loadMs: 10, forcePose: false, sinceFace: t - lastFace, sincePose: t - lastPose, ...o });
     if (s.face) lastFace = t;
     if (s.pose) lastPose = t;
     return s;
@@ -48,4 +48,27 @@ it("keeps pose gaps below the swipe detector's maxGap while far away, even busy 
     const poses = run(fps * 3, { far: true, loadMs: 50 }, fps).flatMap((s, i) => (s.pose ? [i / fps] : []));
     for (let i = 1; i < poses.length; i++) expect(poses[i]! - poses[i - 1]!).toBeLessThan(0.2);
   }
+});
+
+describe("LoadMeter", () => {
+  it("averages the model time per analysed frame, without adding stale pose times on every request", () => {
+    const m = new LoadMeter();
+    // Hands 12 ms on every frame, pose 30 ms on every 6th; needs() asks twice per result.
+    for (let r = 1; r <= 300; r++) {
+      const ms = 12 + (r % 6 === 0 ? 30 : 0);
+      m.observe(r, ms);
+      m.observe(r, ms);
+    }
+    expect(m.ms).toBeGreaterThan(14);
+    expect(m.ms).toBeLessThan(20);
+    expect(m.ms).toBeLessThan(LOAD_BUDGET_MS); // not "busy"
+  });
+
+  it("only moves when a new result arrived", () => {
+    const m = new LoadMeter();
+    m.observe(1, 20);
+    const once = m.ms;
+    for (let i = 0; i < 10; i++) m.observe(1, 20);
+    expect(m.ms).toBe(once);
+  });
 });
