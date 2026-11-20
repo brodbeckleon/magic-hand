@@ -162,8 +162,8 @@
     "speakerManual": "Per Handzeichen",
     "speakerAuto": "Automatisch",
     "speakerHint": {
-      "manual": "Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
-      "auto": "Magic Hand erkennt, wer gerade spricht. Die offene Hand übersteuert das jederzeit."
+      "manual": "Wer übernehmen will, hält die offene Hand mit den Fingern nach oben ca. 1 Sekunde still. Vor der Brust genügt.",
+      "auto": "Magic Hand erkennt, wer gerade spricht. Eine offene Hand, 1 Sekunde hochgehalten, übersteuert das jederzeit."
     },
     "autoSignal": "Wer darf wechseln?",
     "signalMouth": "Sprechende Person",
@@ -293,6 +293,8 @@
     "step3Next": "Zügig nach {{dir}} wischen: nächste Folie.",
     "step3Prev": "Zurück wischen: vorherige Folie.",
     "step3Return": "Die Hand danach einfach zurückführen. Das löst nichts aus.",
+    "step4Title": "Mehrere Vortragende: übernehmen",
+    "step4": "Sind mehrere Personen im Bild, wechselt nur eine die Folien. Wer übernehmen will, hält die offene Hand mit den Fingern nach oben ca. 1 Sekunde still, auf beliebiger Höhe. Der Ring um die Hand füllt sich, dann bist du dran.",
     "dirLeft": "links",
     "dirRight": "rechts",
     "tipsTitle": "Gut zu wissen",
@@ -358,7 +360,7 @@
     "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
     "ignored_closed": "Nicht erkannt: mit offener Hand wischen",
     "ignored_return": "Rückholbewegung ignoriert",
-    "ignored_not_speaker": "Person {{n}} ist nicht am Wort. Offene Hand 1 s heben, um zu übernehmen.",
+    "ignored_not_speaker": "Person {{n}} hat das Wort nicht. Zum Übernehmen die offene Hand 1 s hochhalten.",
     "speaker": "Person {{n}} wechselt jetzt die Folien"
   },
   "wizard": {
@@ -456,7 +458,7 @@
     "noHand": "Halte eine Hand in die Kamera und kurz ruhig, um zu starten.",
     "focus": "Die Taste ging an Magic Hand selbst. Klicke in deine Präsentation oder auf «Präsentieren».",
     "present": "Tipp: «Präsentieren» verkleinert Magic Hand zu einer Leiste über deiner Präsentation.",
-    "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hebt die offene Hand ca. 1 Sekunde.",
+    "takeover": "Mehrere Personen im Bild: Wer übernehmen will, hält die offene Hand (Finger nach oben) ca. 1 Sekunde still. Vor der Brust genügt.",
     "far": "Du stehst weit weg: Wische mit grossen, deutlichen Armbewegungen."
   },
   "study": {

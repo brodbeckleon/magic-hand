@@ -131,8 +131,9 @@ Einstellungen lässt sich wählen, dass das Präsentieren gleich mit ausgeblende
 Sind mehrere Personen im Bild, darf immer nur eine Person die Folien wechseln. Sie ist im
 Kamerabild markiert, die anderen sind abgedunkelt.
 
-- **Per Handzeichen** (Standard): Wer übernehmen will, hebt die **offene Hand ca. 1 Sekunde**
-  über die Schulter, bis der orange Ring voll ist.
+- **Per Handzeichen** (Standard): Wer übernehmen will, hält die **offene Hand mit den Fingern
+  nach oben ca. 1 Sekunde still**, auf beliebiger Höhe (vor der Brust genügt), bis der orange
+  Ring voll ist.
 - **Automatisch**: Magic Hand gibt das Wort der **sprechenden Person** (Mundbewegung), der
   **aktivsten Person** (Bewegung) oder nach **beidem**. Das Handzeichen übersteuert jederzeit.
 - Mit **Erkannte Personen: Nur ich** folgt Magic Hand nur der Person, die der Kamera am nächsten

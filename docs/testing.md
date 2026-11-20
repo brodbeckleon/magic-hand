@@ -52,7 +52,7 @@ Ist es umgekehrt, `HANDEDNESS_SWAP` umstellen.
 | MHR02 | An 5 Positionen im Bild (links, rechts, Mitte, nah, fern) je 10 Wischgesten | ≥ 90 % ausgelöst |
 | MHR03 | Je 20 Wischgesten pro Richtung auf 3 m und 4 m Abstand | ≥ 90 % bzw. ≥ 80 % |
 | MHR04 | Auflösung 320×240 einstellen, 40 Wischgesten | ≥ 85 % |
-| MHR05 | 2–3 Personen, 10 Übergaben (offene Hand heben) | Übergabe < 2 s, 0 Tasten von Nicht-Sprechenden |
+| MHR05 | 2–3 Personen, 10 Übergaben (offene Hand, Finger nach oben, 1 s still; auch vor der Brust) | Übergabe < 2 s, 0 Tasten von Nicht-Sprechenden |
 | MHR06 | Mit 240-fps-Handyvideo 20 Wischgesten filmen: Ende der Handbewegung bis Folienwechsel | p95 < 500 ms |
 | MHR07 | 3 Minuten frei erklären, mit Händen gestikulieren | ≤ 1 Fehlauslösung |
 | MHR08 | Netzwerkmonitor (Little Snitch / Wireshark), Dateizugriffe (fs_usage / ProcMon), Kamera-LED in Pause | 0 Verbindungen; nur `settings.json` geschrieben; LED aus |

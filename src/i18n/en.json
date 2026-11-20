@@ -162,8 +162,8 @@
     "speakerManual": "By hand sign",
     "speakerAuto": "Automatic",
     "speakerHint": {
-      "manual": "To take over, raise an open hand for about 1 second.",
-      "auto": "Magic Hand detects who is speaking. An open hand overrides it at any time."
+      "manual": "To take over, hold up an open palm with the fingers pointing up for about 1 second. In front of your chest is fine.",
+      "auto": "Magic Hand detects who is speaking. An open palm held up for a second overrides it at any time."
     },
     "autoSignal": "Who may change slides?",
     "signalMouth": "Speaking person",
@@ -293,6 +293,8 @@
     "step3Next": "Swipe briskly to the {{dir}}: next slide.",
     "step3Prev": "Swipe back: previous slide.",
     "step3Return": "Then simply bring your hand back. That does not trigger anything.",
+    "step4Title": "Several presenters: take over",
+    "step4": "With several people in view, only one controls the slides. To take over, hold up an open palm with the fingers pointing up for about a second, at any height. The ring around the hand fills up, then it is your turn.",
     "dirLeft": "left",
     "dirRight": "right",
     "tipsTitle": "Good to know",
@@ -358,7 +360,7 @@
     "ignored_dir": "Not recognised: swipe more horizontally",
     "ignored_closed": "Not recognised: swipe with an open hand",
     "ignored_return": "Return movement ignored",
-    "ignored_not_speaker": "Person {{n}} is not the speaker. Raise an open hand for 1 s to take over.",
+    "ignored_not_speaker": "Person {{n}} does not control the slides. To take over, hold up an open palm for 1 s.",
     "speaker": "Person {{n}} now changes the slides"
   },
   "wizard": {
@@ -456,7 +458,7 @@
     "noHand": "Hold a hand up to the camera and keep it still for a moment to start.",
     "focus": "The key went to Magic Hand itself. Click into your presentation or on “Present”.",
     "present": "Tip: “Present” shrinks Magic Hand into a bar above your presentation.",
-    "takeover": "Several people in view: to take over, raise an open hand for about a second.",
+    "takeover": "Several people in view: to take over, hold up an open palm (fingers up) for about a second. In front of your chest is fine.",
     "far": "You are far away: swipe with big, clear arm movements."
   },
   "study": {

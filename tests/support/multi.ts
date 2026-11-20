@@ -17,6 +17,7 @@ export function presenter(x: number, wrist: Landmark): PoseObs {
 
 /** Hand landmarks for a palm at mirrored-pixel position (cx, cy). */
 export const swipeHand = (cx: number, cy: number): HandObs => ({ landmarks: landmarksFor({ cx, cy, scale: 40 }, W, H), side: "right", sideScore: 0.9 });
+/** The take-over sign: an open palm with the fingers up at normalised (x, y), any height. */
 export const openHand = (x: number, y: number): HandObs => ({ landmarks: palmLandmarks(x, y, 0.07, true), side: "right", sideScore: 0.9 });
 
 /** In the mirrored view, person A (x = 0.3) is on the right, B (x = 0.7) on the left. */

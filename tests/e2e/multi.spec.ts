@@ -23,13 +23,13 @@ test.describe("several presenters", () => {
     a.run(0.5, () => ({ a: swipeHand(aX, 300) })).run(0.25, (i) => ({ a: swipeHand(aX - i * 20, 300) })).run(0.4, () => ({ a: swipeHand(aX - 140, 300) }));
     await playFrames(page, a.frames);
     expect(await sentKeys(page)).toEqual([]);
-    await expect(page.getByTestId("toast")).toContainText("is not the speaker");
+    await expect(page.getByTestId("toast")).toContainText("does not control the slides");
 
-    // A raises an open hand: the claim ring fills, then A has control and can swipe.
+    // A holds up an open palm at chest height: the claim ring fills, then A has control and can swipe.
     const claim = new TwoPeople();
     claim.t = a.t;
-    claim.run(0.5, () => ({ a: openHand(0.27, 0.3) }));
-    const playing = playFrames(page, claim.run(0.9, () => ({ a: openHand(0.27, 0.3) })).frames);
+    claim.run(0.5, () => ({ a: openHand(0.27, 0.65) }));
+    const playing = playFrames(page, claim.run(0.9, () => ({ a: openHand(0.27, 0.65) })).frames);
     await expect(page.locator(".claim-ring[visibility='visible']")).toHaveCount(1);
     await playing;
     const swipe = new TwoPeople();

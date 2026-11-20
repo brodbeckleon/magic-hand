@@ -260,9 +260,8 @@ export class GesturePipeline {
     for (const a of assigned) {
       const c = this.claims.get(a.tr.id) ?? new ClaimDetector();
       this.claims.set(a.tr.id, c);
-      const pose = persons.find((p) => p.id === a.person)?.pose;
       const start = c.startedAt;
-      if (!paused && c.update(t, a.tr.obs.landmarks, a.tr.hand, pose, aspect)) claimed.set(a.person, start ?? t);
+      if (!paused && c.update(t, a.tr.obs.landmarks, a.tr.hand, aspect)) claimed.set(a.person, start ?? t);
       claimProgress.set(a.tr.id, c.progress);
     }
 
