@@ -89,7 +89,7 @@ export function HintHost() {
         seenMulti = true;
         show("takeover");
       }
-      if (s.persons.some((p) => p.far) && !seenFar) {
+      if (s.persons.some((p) => p.far && p.confirmed) && !seenFar) {
         seenFar = true;
         show("far");
       }
