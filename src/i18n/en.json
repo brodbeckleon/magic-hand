@@ -28,10 +28,15 @@
     "ignored_closed": "Ignored: hand not open",
     "ignored_return": "Ignored: return time",
     "ignored_windup": "Ignored: wind-up before a swipe",
+    "ignored_weak": "Ignored: too slow or too short",
+    "ignored_other_hand": "Ignored: not the preferred hand",
     "missed": "Missed (logged)",
     "false": "False trigger (logged)",
     "ignored_not_speaker": "Ignored: person {{n}} is not the speaker",
-    "speaker": "Speaker: person {{n}}"
+    "speaker": "Speaker: person {{n}}",
+    "speaker_none": "Nobody controls the slides",
+    "key_focus": "Not sent: Magic Hand had the focus",
+    "key_failed": "Key could not be sent"
   },
   "flash": {
     "next": "Next slide",
@@ -108,7 +113,43 @@
     "paused": "Paused",
     "noHand": "No hand",
     "focusOther": "Keys go to: {{app}}",
-    "focusOtherHint": "Click into your presentation so the slides change."
+    "focusOtherHint": "Click into your presentation so the slides change.",
+    "status": {
+      "noHand": "No hand in view",
+      "handSeen": "Hand seen",
+      "controls": "Person {{n}} controls the slides",
+      "nobody": "Nobody controls the slides — swipe to take over",
+      "takingOver": "Taking over …"
+    },
+    "event": {
+      "calibrated": "Gestures active",
+      "next": "Next slide",
+      "prev": "Previous slide",
+      "ignored_dir": "Too diagonal: swipe more horizontally",
+      "ignored_closed": "Swipe with an open hand",
+      "ignored_return": "Too soon: let your hand rest, then swipe",
+      "ignored_windup": "Swing ignored: swipe in one go",
+      "ignored_not_speaker": "Person {{n}}: hold up an open palm to take over",
+      "ignored_weak": "Too slow: swipe further and faster",
+      "ignored_other_hand": "Swipe with your preferred hand",
+      "speaker": "Person {{n}} now controls the slides",
+      "speaker_none": "Nobody controls the slides — swipe to take over",
+      "key_focus": "Not sent: click into your presentation",
+      "key_failed": "Key could not be sent",
+      "missed": "Missed (logged)",
+      "false": "False trigger (logged)"
+    },
+    "takeover": "Taking over: {{p}} %"
+  },
+  "overlay": {
+    "controls": "Controls the slides",
+    "person": "Person {{n}}",
+    "reason": {
+      "slow": "Too slow",
+      "still": "Hold still",
+      "turn": "Not your turn",
+      "otherHand": "Other hand is active"
+    }
   },
   "tray": {
     "pause": "Pause",
@@ -273,6 +314,7 @@
     "speakers": "Speakers",
     "speakerNow": "speaker: {{n}}",
     "noPersons": "No people tracked (the pose model runs every few frames).",
+    "idsPerMinute": "{{n}} person ids/min",
     "age": "age",
     "hands": "hands",
     "study": "Study"
@@ -349,8 +391,11 @@
         "prev": "Recognised: previous slide",
         "ignored_dir": "Too diagonal: swipe more horizontally",
         "ignored_closed": "Hand not open: swipe with stretched fingers",
-        "ignored_return": "Return movement: ignored on purpose",
-        "ignored_not_speaker": "Someone else is the speaker"
+        "ignored_return": "Too soon after a swipe: let your hand rest briefly, then swipe",
+        "ignored_not_speaker": "Someone else controls the slides: hold up an open palm for 1 s to take over",
+        "ignored_windup": "Swing ignored: swipe in one go, without swinging back first",
+        "ignored_weak": "Almost: swipe a bit further and faster",
+        "ignored_other_hand": "Not your preferred hand: swipe with the other one"
       },
       "count_one": "{{count}} swipe recognised",
       "count_other": "{{count}} swipes recognised"
@@ -359,9 +404,11 @@
   "toast": {
     "ignored_dir": "Not recognised: swipe more horizontally",
     "ignored_closed": "Not recognised: swipe with an open hand",
-    "ignored_return": "Return movement ignored",
+    "ignored_return": "Too soon after a swipe: let your hand rest briefly, then swipe again",
     "ignored_not_speaker": "Person {{n}} does not control the slides. To take over, hold up an open palm for 1 s.",
-    "speaker": "Person {{n}} now changes the slides"
+    "speaker": "Person {{n}} now controls the slides",
+    "speaker_none": "Nobody controls the slides. The next swipe takes over.",
+    "key_failed": "The key could not be sent, the slide did not change. Check the Accessibility permission."
   },
   "wizard": {
     "progress": "Step {{n}} of {{total}}",

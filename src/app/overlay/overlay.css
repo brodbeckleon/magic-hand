@@ -60,8 +60,14 @@
 .person[data-active="true"] .person-halo { stroke: var(--teal); filter: drop-shadow(0 0 12px rgb(18 165 148 / 0.9)); }
 .person-dim { fill: rgb(8 8 12 / 0); transition: fill 250ms; }
 .person[data-active="false"] .person-dim { fill: rgb(8 8 12 / 0.35); }
-.person-label { fill: white; font-weight: 700; paint-order: stroke; stroke: rgb(0 0 0 / 0.5); stroke-width: 3px; }
-.person[data-active="false"] .person-label { fill: var(--grey); }
+/* Label chips: "Controls the slides" on the active person, "Person N" on the others. */
+.chip-bg { fill: rgb(20 20 27 / 0.85); stroke: rgb(255 255 255 / 0.18); stroke-width: 1px; }
+.chip-text { fill: white; font-weight: 700; font-family: inherit; }
+.person[data-active="true"] .chip-bg { fill: var(--teal-deep); stroke: none; }
+.person[data-active="false"] .chip-text { fill: rgb(255 255 255 / 0.8); }
+/* Why a movement was ignored, next to the hand for a second. */
+.reason .chip-bg { fill: rgb(40 28 8 / 0.92); stroke: var(--amber); stroke-width: 1.5px; }
+.reason .chip-text { fill: var(--amber); }
 .claim-track { stroke: rgb(255 255 255 / 0.25); }
 .claim-fill { stroke: var(--amber); filter: drop-shadow(0 0 6px rgb(255 181 71 / 0.8)); }
 .pose-hand { stroke: var(--teal); stroke-dasharray: 6 5; opacity: 0.9; }

@@ -28,10 +28,15 @@
     "ignored_closed": "Ignoriert: Hand nicht offen",
     "ignored_return": "Ignoriert: Rückholzeit",
     "ignored_windup": "Ignoriert: Ausholen vor dem Wischen",
+    "ignored_weak": "Ignoriert: zu langsam oder zu kurz",
+    "ignored_other_hand": "Ignoriert: nicht die bevorzugte Hand",
     "missed": "Verpasst (protokolliert)",
     "false": "Fehlauslösung (protokolliert)",
     "ignored_not_speaker": "Ignoriert: Person {{n}} ist nicht am Wort",
-    "speaker": "Am Wort: Person {{n}}"
+    "speaker": "Am Wort: Person {{n}}",
+    "speaker_none": "Niemand hat das Wort",
+    "key_focus": "Nicht gesendet: Magic Hand hatte den Fokus",
+    "key_failed": "Taste konnte nicht gesendet werden"
   },
   "flash": {
     "next": "Nächste Folie",
@@ -108,7 +113,43 @@
     "paused": "Pausiert",
     "noHand": "Keine Hand",
     "focusOther": "Tasten gehen an: {{app}}",
-    "focusOtherHint": "Klicke in deine Präsentation, damit die Folien wechseln."
+    "focusOtherHint": "Klicke in deine Präsentation, damit die Folien wechseln.",
+    "status": {
+      "noHand": "Keine Hand im Bild",
+      "handSeen": "Hand erkannt",
+      "controls": "Person {{n}} wechselt die Folien",
+      "nobody": "Niemand hat das Wort – wischen zum Übernehmen",
+      "takingOver": "Übernehmen …"
+    },
+    "event": {
+      "calibrated": "Gesten aktiv",
+      "next": "Nächste Folie",
+      "prev": "Vorherige Folie",
+      "ignored_dir": "Zu schräg: waagrechter wischen",
+      "ignored_closed": "Mit offener Hand wischen",
+      "ignored_return": "Zu früh: Hand kurz ruhen lassen, dann wischen",
+      "ignored_windup": "Ausholen ignoriert: in einem Zug wischen",
+      "ignored_not_speaker": "Person {{n}}: offene Hand hochhalten zum Übernehmen",
+      "ignored_weak": "Zu langsam: weiter und zügiger wischen",
+      "ignored_other_hand": "Mit der bevorzugten Hand wischen",
+      "speaker": "Person {{n}} wechselt jetzt die Folien",
+      "speaker_none": "Niemand hat das Wort – wischen zum Übernehmen",
+      "key_focus": "Nicht gesendet: in die Präsentation klicken",
+      "key_failed": "Taste konnte nicht gesendet werden",
+      "missed": "Verpasst (protokolliert)",
+      "false": "Fehlauslösung (protokolliert)"
+    },
+    "takeover": "Übernehmen: {{p}} %"
+  },
+  "overlay": {
+    "controls": "Wechselt die Folien",
+    "person": "Person {{n}}",
+    "reason": {
+      "slow": "Zu langsam",
+      "still": "Ruhig halten",
+      "turn": "Nicht am Wort",
+      "otherHand": "Andere Hand ist aktiv"
+    }
   },
   "tray": {
     "pause": "Pausieren",
@@ -273,6 +314,7 @@
     "speakers": "Sprecher",
     "speakerNow": "am Wort: {{n}}",
     "noPersons": "Keine Personen erkannt (Pose-Modell läuft nur alle paar Bilder).",
+    "idsPerMinute": "{{n}} Personen-IDs/min",
     "age": "seit",
     "hands": "Hände",
     "study": "Studie"
@@ -349,8 +391,11 @@
         "prev": "Erkannt: vorherige Folie",
         "ignored_dir": "Zu schräg: eher waagrecht wischen",
         "ignored_closed": "Hand nicht offen: mit gestreckten Fingern wischen",
-        "ignored_return": "Rückholbewegung: wird bewusst ignoriert",
-        "ignored_not_speaker": "Eine andere Person ist am Wort"
+        "ignored_return": "Zu kurz nach einer Wischgeste: Hand kurz ruhen lassen, dann wischen",
+        "ignored_not_speaker": "Jemand anderes wechselt die Folien: offene Hand 1 s hochhalten zum Übernehmen",
+        "ignored_windup": "Ausholen ignoriert: in einem Zug wischen, ohne vorher zurückzuschwingen",
+        "ignored_weak": "Fast: etwas weiter und zügiger wischen",
+        "ignored_other_hand": "Nicht die bevorzugte Hand: mit der anderen wischen"
       },
       "count_one": "{{count}} Wischgeste erkannt",
       "count_other": "{{count}} Wischgesten erkannt"
@@ -359,9 +404,11 @@
   "toast": {
     "ignored_dir": "Nicht erkannt: eher waagrecht wischen",
     "ignored_closed": "Nicht erkannt: mit offener Hand wischen",
-    "ignored_return": "Rückholbewegung ignoriert",
+    "ignored_return": "Zu kurz nach einer Wischgeste: Hand kurz ruhen lassen, dann wieder wischen",
     "ignored_not_speaker": "Person {{n}} hat das Wort nicht. Zum Übernehmen die offene Hand 1 s hochhalten.",
-    "speaker": "Person {{n}} wechselt jetzt die Folien"
+    "speaker": "Person {{n}} wechselt jetzt die Folien",
+    "speaker_none": "Niemand hat das Wort. Die nächste Wischgeste übernimmt.",
+    "key_failed": "Die Taste konnte nicht gesendet werden, die Folie hat nicht gewechselt. Bedienungshilfen-Berechtigung prüfen."
   },
   "wizard": {
     "progress": "Schritt {{n}} von {{total}}",
