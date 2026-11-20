@@ -98,6 +98,11 @@ funktionieren aber weiter. Ein Klick auf das Magic-Hand-Symbol in der Menüleist
 Infobereich (oder dessen Menüpunkt «Leiste einblenden») zeigt die Leiste wieder. In den
 Einstellungen lässt sich wählen, dass das Präsentieren gleich mit ausgeblendeter Leiste beginnt.
 
+Um Akku und Lüfter zu schonen, wertet Magic Hand nur dann jedes Kamerabild aus, wenn eine Hand im
+Bild ist (und 1.5 s danach). Steht jemand ohne erhobene Hand da, sind es 15 Bilder pro Sekunde, ist
+seit 5 Sekunden niemand im Bild, 5. Eine Wischgeste geht dadurch nicht verloren: Sobald eine Hand
+erscheint, wird wieder jedes Bild ausgewertet.
+
 ### Pause
 
 - **⌘⌥P** (macOS) bzw. **Ctrl+Alt+P** (Windows) pausiert und setzt fort, auch während die
@@ -217,6 +222,7 @@ pnpm dev           # nur die Oberfläche im Browser (localhost:1420, ohne Tasten
 | `pnpm lint` / `pnpm typecheck` | ESLint / TypeScript |
 | `pnpm check-bundle` | Prüft, dass der Build keine Telemetrie- oder CDN-Adressen enthält |
 | `pnpm replay <datei>` | Entwickler-Aufnahme abspielen und mit der Live-Sitzung vergleichen |
+| `pnpm bench` | Rechenaufwand messen: ausgewertete Bilder, Modellzeit, Hauptthread und CPU pro Szene (niemand, Person, Wischen), im Fenster und in der Leiste |
 | `pnpm tauri build` | Installer bauen (DMG bzw. NSIS/MSI) |
 | `python3 prototype/tools/gen_golden.py` | Golden-Fixtures aus dem Prototyp neu erzeugen |
 

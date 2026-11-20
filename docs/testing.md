@@ -6,6 +6,7 @@
 |--------|-----|
 | `pnpm test` | Vitest: Gestenlogik (Golden-Tests gegen den Python-Prototyp, Property-Tests), Tracker, CSV, Übersetzungen |
 | `pnpm e2e` | Playwright: echte Oberfläche mit Fake-Kamera; synthetische Handbewegungen laufen durch die ganze App |
+| `pnpm bench` | Rechenaufwand in headless Chromium (CPU-Delegate, Fake-Kamera mit 30 fps): ausgewertete / übersprungene / verworfene Bilder, Modellzeit, Hauptthread-Zeiten und CPU der Chromium-Prozesse, je Szene (niemand, Person ohne Hand, Wischen) im Fenster und in der Leiste. `--pin full` wertet jedes Bild aus (wie vor der adaptiven Rate). |
 | `cargo test` (in `src-tauri/`) | Rust: Tastenzuordnung |
 | `python3 prototype/tools/gen_golden.py` | Erzeugt die Golden-Fixtures neu aus dem **unveränderten** Prototyp. CI prüft, dass sie aktuell sind. |
 
@@ -87,6 +88,7 @@ Einstellungen den Abschnitt «Entwickler».
   pnpm replay aufnahme.jsonl.gz                       # Ereignisse auflisten
   pnpm replay aufnahme.jsonl.gz --check               # mit der Live-Sitzung vergleichen
   pnpm replay aufnahme.jsonl.gz --settings x.json     # "Was wäre wenn": z. B. {"swipe":{"distance":3}}
+  pnpm replay aufnahme.jsonl.gz --governor            # mit adaptiver Bildrate (geht eine Geste verloren?)
   ```
 
 - **Regressionstests**: Aufnahmen in `tests/fixtures/recordings/` werden in CI abgespielt und müssen
