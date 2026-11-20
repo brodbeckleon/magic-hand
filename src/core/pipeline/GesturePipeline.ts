@@ -82,7 +82,12 @@ export interface HandView {
 }
 
 export interface PersonView {
+  /** Raw id (log, recordings). */
   id: number;
+  /** Number shown to people (1..maxPeople), null until confirmed. */
+  slot: number | null;
+  /** Seen on at least two pose frames: drawn and counted (a one-frame phantom is not). */
+  confirmed: boolean;
   box: Rect;
   active: boolean;
   /** Normalised activity score (automatic mode), 0..1. */
@@ -154,6 +159,7 @@ export class GesturePipeline {
 
   constructor(settings: PipelineSettings = DEFAULT_PIPELINE_SETTINGS) {
     this.settings = { ...DEFAULT_PIPELINE_SETTINGS, ...settings, swipe: { ...settings.swipe } };
+    this.persons.setMaxSlots(this.settings.maxPeople ?? 4);
   }
 
   /** The hand detectors of the presenter shown in the UI. */
@@ -163,6 +169,7 @@ export class GesturePipeline {
 
   updateSettings(patch: Partial<PipelineSettings>): void {
     this.settings = { ...this.settings, ...patch, swipe: { ...this.settings.swipe, ...patch.swipe } };
+    this.persons.setMaxSlots(this.settings.maxPeople ?? 4);
     for (const p of this.people.values()) {
       p.lock.setParams(this.settings.swipe);
       p.lock.setPreferred(this.settings.preferredHand);
@@ -192,7 +199,7 @@ export class GesturePipeline {
     // People (only on frames where the pose model ran).
     if (frame.poses) {
       const hadPersons = this.lastPersons.length > 0;
-      this.lastPersons = this.persons.update(t, frame.poses);
+      this.lastPersons = this.persons.update(t, frame.poses, aspect);
       this.associator.update(tracks, this.lastPersons, aspect, (id) => this.tracker.has(id));
       if (!hadPersons && this.lastPersons.length) this.handOverSolo(tracks, aspect);
       for (const p of this.lastPersons) {
@@ -365,7 +372,7 @@ export class GesturePipeline {
         persons: persons.map((p) => {
           const st = this.state(p.id);
           return {
-            id: p.id, box: p.box, active: p.id === speaker, score: this.arbiter.scores.get(p.id) ?? null,
+            id: p.id, slot: p.slot, confirmed: p.hits >= 2, box: p.box, active: p.id === speaker, score: this.arbiter.scores.get(p.id) ?? null,
             mouth: st.mouth.score(t), motion: st.motion.value, age: t - p.firstSeen, far: farIds.has(p.id),
             claim: Math.max(0, ...assigned.filter((a) => a.person === p.id).map((a) => claimProgress.get(a.tr.id) ?? 0)),
           };
