@@ -33,6 +33,8 @@ export interface WorkerStats {
   /** Sum of the model times of all results so far, ms (average = modelMsTotal / results). */
   modelMsTotal: number;
   results: number;
+  /** Model time of the newest result (only the models that ran on that frame), ms. */
+  lastModelMs: number;
 }
 
 /**
@@ -73,7 +75,7 @@ export class WorkerSource implements LandmarkSource {
   private lastCallback = 0;
   private ticker: Ticker | null = null;
   private onFrame: ((frame: FrameObs, meta: FrameMeta) => void) | null = null;
-  readonly stats: WorkerStats = { analysed: 0, dropped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0 };
+  readonly stats: WorkerStats = { analysed: 0, dropped: 0, pumped: 0, handMs: 0, poseMs: 0, faceMs: 0, cropMs: 0, pipelineMs: 0, modelMsTotal: 0, results: 0, lastModelMs: 0 };
   private readonly video: HTMLVideoElement;
   private readonly worker: VisionBackend;
   private readonly needs: () => WorkerSourceNeeds;
@@ -141,7 +143,8 @@ export class WorkerSource implements LandmarkSource {
         if (r.faces) this.stats.faceMs = r.faceMs;
         this.stats.cropMs = r.cropMs;
         this.stats.pipelineMs = tDone - tCap;
-        this.stats.modelMsTotal += r.handMs + r.poseMs + r.faceMs + r.cropMs;
+        this.stats.lastModelMs = r.handMs + r.poseMs + r.faceMs + r.cropMs;
+        this.stats.modelMsTotal += this.stats.lastModelMs;
         this.stats.results++;
         onFrame(
           { t: tCap / 1000, width: W, height: H, hands: r.hands, poses: r.poses, faces: r.faces },

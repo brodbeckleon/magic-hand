@@ -5,7 +5,7 @@ import { platform } from "../../platform/index.ts";
 import { classifyCameraError, closeCamera, openCamera } from "../../vision/camera.ts";
 import { MainThreadVision, type VisionBackend } from "../../vision/backend.ts";
 import { chosenDelegate, HANDEDNESS_SWAP, isNoGpuError, type Delegate } from "../../vision/landmarkers.ts";
-import { schedule } from "../../core/pipeline/scheduler.ts";
+import { LoadMeter, schedule } from "../../core/pipeline/scheduler.ts";
 import type { Rect } from "../../core/zone/Zone.ts";
 import { ReplaySource } from "../../vision/sources/ReplaySource.ts";
 import type { FrameMeta, LandmarkSource } from "../../vision/sources/types.ts";
@@ -185,20 +185,20 @@ export class Engine {
   private scheduleFrame = 0;
   private lastFaceAt = -Infinity;
   private lastPoseAt = -Infinity;
-  private loadMs = 0;
+  private readonly load = new LoadMeter();
   private personCount = 0;
 
   /** What the next camera frame should be analysed for (zone crop, which models). */
   private needs() {
     const s = useSettings.getState();
     const st = this.workerStats;
-    if (st) this.loadMs = 0.9 * this.loadMs + 0.1 * (st.handMs + st.poseMs + st.faceMs + st.cropMs);
+    const loadMs = st ? this.load.observe(st.results, st.lastModelMs) : 0;
     const now = performance.now() / 1000;
     const plan = schedule({
       frame: this.scheduleFrame++,
       persons: this.personCount,
       wantFace: s.speaker.mode === "auto" && s.speaker.autoSignal !== "movement",
-      loadMs: this.loadMs,
+      loadMs,
       forcePose: this.poseRequests > 0,
       far: this.anyFar,
       sinceFace: now - this.lastFaceAt,
@@ -481,7 +481,8 @@ export class Engine {
       this.handle(e, meta);
     }
     this.frameTap?.();
-    this.personCount = snapshot.persons.length;
+    // People seen on one pose frame only (a phantom) must not make the models search for 4 hands.
+    this.personCount = snapshot.persons.filter((p) => p.confirmed).length;
     this.checkIdle(frame.t, snapshot.hands.length > 0 || snapshot.persons.length > 0);
     if (events.length && useSettings.getState().sound && this.keySuppressions === 0) this.cue(events);
     this.anyFar = snapshot.persons.some((p) => p.far);

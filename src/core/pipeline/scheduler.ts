@@ -38,6 +38,25 @@ export const FACE_INTERVAL_BUSY_S = 0.4;
  */
 export const FAR_POSE_INTERVAL_S = 0.09;
 
+/**
+ * Average model time per analysed frame (hands + whatever else ran on it). Updated once per new
+ * result: averaging on every request added the last pose and face times again on frames where
+ * those models did not run, so the load looked far higher than it was and "busy" set in early.
+ */
+export class LoadMeter {
+  ms = 0;
+  private seen = 0;
+
+  /** `results`: results received so far; `lastMs`: model time of the newest one. */
+  observe(results: number, lastMs: number): number {
+    if (results !== this.seen) {
+      this.seen = results;
+      this.ms = 0.9 * this.ms + 0.1 * lastMs;
+    }
+    return this.ms;
+  }
+}
+
 export function schedule(i: ScheduleInput): Schedule {
   const busy = i.loadMs > LOAD_BUDGET_MS;
   // With several people, poses keep hands bound to the right person; with one, they only notice
