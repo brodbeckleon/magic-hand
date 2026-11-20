@@ -4,11 +4,22 @@ import type { HandTrack } from "../../src/core/tracking/HandTracker.ts";
 import { ClaimDetector, CLAIM_TIME, isOpenPalm, isRaised } from "../../src/core/speaker/ClaimDetector.ts";
 import { MotionEnergy, MouthActivity } from "../../src/core/speaker/activity.ts";
 import { Arbiter, type Candidate } from "../../src/core/speaker/Arbiter.ts";
-import type { PoseObs } from "../../src/core/types.ts";
+import type { Landmark, PoseObs } from "../../src/core/types.ts";
 import { palmLandmarks } from "../support/landmarks.ts";
 import { person } from "../support/poses.ts";
 
 const DT = 1 / 30;
+
+/** The hand turned by `deg` (clockwise on screen) around its wrist, in pixels of a 4:3 frame. */
+function turned(lms: Landmark[], deg: number): Landmark[] {
+  const w = lms[0]!;
+  const a = (deg * Math.PI) / 180;
+  return lms.map((l) => {
+    const dx = (l.x - w.x) * 4 / 3;
+    const dy = l.y - w.y;
+    return { x: w.x + (dx * Math.cos(a) - dy * Math.sin(a)) * 3 / 4, y: w.y + dx * Math.sin(a) + dy * Math.cos(a), z: 0 };
+  });
+}
 
 describe("assign", () => {
   it("finds the minimum-cost matching and respects the gate", () => {
@@ -122,10 +133,12 @@ describe("ClaimDetector", () => {
     expect(isOpenPalm(palmLandmarks(0.5, 0.5, 0.1, false))).toBe(false);
   });
 
-  it("raised = wrist above the shoulders", () => {
-    const p = person(0.5, 0.3, 0.1); // shoulders at y = 0.4
-    expect(isRaised(palmLandmarks(0.5, 0.35, 0.05, true), p)).toBe(true);
-    expect(isRaised(palmLandmarks(0.5, 0.6, 0.05, true), p)).toBe(false);
+  it("raised = fingers pointing up, at any height (chest height too), not sideways or down", () => {
+    expect(isRaised(palmLandmarks(0.5, 0.35, 0.05, true))).toBe(true); // above the shoulders
+    expect(isRaised(palmLandmarks(0.5, 0.75, 0.05, true))).toBe(true); // in front of the chest
+    expect(isRaised(turned(palmLandmarks(0.5, 0.6, 0.05, true), 90))).toBe(false); // pointing sideways
+    expect(isRaised(turned(palmLandmarks(0.5, 0.6, 0.05, true), 180))).toBe(false); // pointing down
+    expect(isRaised(turned(palmLandmarks(0.5, 0.6, 0.05, true), 40))).toBe(true); // a bit tilted
   });
 
   it("completes after holding an open, raised, still hand for about a second", () => {
@@ -133,7 +146,7 @@ describe("ClaimDetector", () => {
     const lms = palmLandmarks(0.5, 0.3, 0.06, true);
     const hand = { cx: 320, cy: 150, scale: 30 };
     let done = -1;
-    for (let i = 0; i < 45 && done < 0; i++) if (c.update(i * DT, lms, hand, person(0.5, 0.3, 0.1))) done = i * DT;
+    for (let i = 0; i < 45 && done < 0; i++) if (c.update(i * DT, lms, hand)) done = i * DT;
     expect(done).toBeGreaterThanOrEqual(CLAIM_TIME - 1e-9);
     expect(done).toBeLessThan(CLAIM_TIME + 0.1);
   });

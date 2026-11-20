@@ -68,6 +68,13 @@ function GettingStarted() {
           <p className="dim">{t("help.step3Return")}</p>
         </div>
       </article>
+      <article className="help-step">
+        <HoldStillDemo />
+        <div>
+          <h3><span className="step-no">4</span>{t("help.step4Title")}</h3>
+          <p>{t("help.step4")}</p>
+        </div>
+      </article>
       <TryIt />
       <div className="help-tips">
         <h3>{t("help.tipsTitle")}</h3>

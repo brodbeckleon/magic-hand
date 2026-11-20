@@ -15,6 +15,11 @@ export const toReplayEvent = (e: PipelineEvent): ReplayEvent =>
  * recorded live parameter changes. Deterministic: the same recording always gives the same events.
  */
 export function replay(rec: Recording, override: Partial<PipelineSettings> = {}): ReplayEvent[] {
+  return replayDetailed(rec, override).events;
+}
+
+/** replay(), plus the pipeline afterwards (e.g. for how many person ids were handed out). */
+export function replayDetailed(rec: Recording, override: Partial<PipelineSettings> = {}): { events: ReplayEvent[]; pipeline: GesturePipeline } {
   const p = new GesturePipeline({ ...rec.header.settings, ...override, swipe: { ...rec.header.settings.swipe, ...override.swipe } });
   const changes = [...rec.settings];
   const out: ReplayEvent[] = [];
@@ -28,7 +33,7 @@ export function replay(rec: Recording, override: Partial<PipelineSettings> = {})
     }
     for (const e of p.step(f).events) out.push(toReplayEvent(e));
   }
-  return out;
+  return { events: out, pipeline: p };
 }
 
 /** Differences between two event lists (same events at the same frame times). */

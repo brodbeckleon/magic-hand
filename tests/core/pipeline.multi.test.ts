@@ -38,7 +38,8 @@ describe("GesturePipeline with two presenters", () => {
     const p1 = s.p.persons.current;
     const idB = p1.find((p) => p.cx > 0.5)!.id;
     const idA = p1.find((p) => p.cx < 0.5)!.id;
-    expect(s.names()).toEqual([`calibrated@${idB}`, `speaker:${idB}`]);
+    // Holding an open hand up still for a second is also the take-over sign: both in one frame.
+    expect(s.names()).toEqual([`speaker:${idB}`, `calibrated@${idB}`]);
     s.events = [];
     s.run(0.25, (i) => ({ b: swipeHand(bX - i * 20, 300) })).run(1.2, () => ({ b: swipeHand(bX - 140, 300) }));
     expect(s.names()).toContain(`next@${idB}`);
@@ -56,6 +57,26 @@ describe("GesturePipeline with two presenters", () => {
     s.events = [];
     s.run(0.6, () => ({ a: swipeHand(aX, 300) })).run(0.25, (i) => ({ a: swipeHand(aX - i * 20, 300) })).run(0.3, () => ({ a: swipeHand(aX - 140, 300) }));
     expect(s.names()).toContain(`next@${idA}`);
+  });
+
+  it("the open palm works at chest height: no need to raise the arm above the shoulders", () => {
+    const s = new Scene().run(1.8, () => ({ b: swipeHand(bX, 300) }));
+    const idA = s.p.persons.current.find((p) => p.cx < 0.5)!.id;
+    s.events = [];
+    // Wrist at y = 0.75, well below A's shoulders (y = 0.35); fingers up.
+    s.run(1.3, () => ({ a: openHand(0.27, 0.75) }));
+    expect(s.names()).toEqual([`speaker:${idA}`]);
+  });
+
+  it("a hand held still with the fingers pointing sideways does not take over", () => {
+    const s = new Scene().run(1.8, () => ({ b: swipeHand(bX, 300) }));
+    s.events = [];
+    const side = openHand(0.27, 0.6);
+    const w = side.landmarks[0]!;
+    // Rotate 90°: fingers point to the side (aspect-corrected, 4:3).
+    const lms = side.landmarks.map((l) => ({ x: w.x - (l.y - w.y) * 0.75, y: w.y + (l.x - w.x) * (4 / 3), z: 0 }));
+    s.run(1.5, () => ({ a: { ...side, landmarks: lms } }));
+    expect(s.names().filter((n) => n.startsWith("speaker"))).toEqual([]);
   });
 
   it("the snapshot marks the speaker and greys out the other person's hands", () => {

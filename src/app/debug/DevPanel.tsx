@@ -125,20 +125,26 @@ function Speakers() {
   const { t } = useTranslation();
   const engine = useEngineInstance();
   const [snap, setSnap] = useState<PipelineSnapshot | null>(null);
+  const [idRate, setIdRate] = useState(0);
   useEffect(() => {
     let last = 0;
     return engine.frames.subscribe((s) => {
       if (s.t - last < 0.25) return;
       last = s.t;
       setSnap(s);
+      setIdRate(engine.pipeline.persons.idsPerMinute());
     });
   }, [engine]);
   const mode = useSettings((s) => s.speaker);
   if (!snap) return null;
   const f = (v: number | null, d = 2) => (v === null ? "–" : v.toFixed(d));
+  const speakerSlot = snap.persons.find((p) => p.id === snap.speaker)?.slot ?? null;
   return (
     <div className="dev-body" data-testid="dev-speakers">
-      <p className="dev-meta">{mode.mode}{mode.mode === "auto" ? ` · ${mode.autoSignal}` : ""} · {t("dev.speakerNow", { n: snap.speaker ?? "–" })}</p>
+      <p className="dev-meta">
+        {mode.mode}{mode.mode === "auto" ? ` · ${mode.autoSignal}` : ""} · {t("dev.speakerNow", { n: speakerSlot ?? "–" })}
+        {snap.speaker !== null && ` (#${snap.speaker})`} · <span data-testid="dev-id-rate">{t("dev.idsPerMinute", { n: idRate.toFixed(1) })}</span>
+      </p>
       {snap.persons.length === 0 ? (
         <p className="dev-meta">{t("dev.noPersons")}</p>
       ) : (
@@ -147,7 +153,7 @@ function Speakers() {
           <tbody>
             {snap.persons.map((p) => (
               <tr key={p.id} data-active={p.active}>
-                <th>{p.active ? "★" : ""}{p.id}</th>
+                <th>{p.active ? "★" : ""}{p.slot ?? "–"} <span className="dim">#{p.id}</span>{!p.confirmed && " ?"}</th>
                 <td>{p.age.toFixed(0)}s</td>
                 <td>{snap.hands.filter((h) => h.person === p.id).map((h) => h.side[0]).join("") || "–"}</td>
                 <td>{f(p.mouth, 3)}</td>

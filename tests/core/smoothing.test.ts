@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { HandSmoother, OneEuro } from "../../src/core/filter/OneEuro.ts";
-import { DEFAULT_PIPELINE_SETTINGS, GesturePipeline } from "../../src/core/pipeline/GesturePipeline.ts";
+import { DEFAULT_PIPELINE_SETTINGS, EXPLANATIONS, GesturePipeline } from "../../src/core/pipeline/GesturePipeline.ts";
 import { toFrames } from "../support/landmarks.ts";
 import { TraceBuilder, type Frame } from "../support/traces.ts";
 
@@ -85,7 +85,8 @@ describe("pipeline with smoothing", () => {
     const dir = join(import.meta.dirname, "..", "fixtures", "golden");
     for (const f of readdirSync(dir)) {
       const g = JSON.parse(readFileSync(join(dir, f), "utf8")) as { frames: Frame[] };
-      const types = (smoothing: boolean) => run(g.frames, smoothing).map((e) => e.type);
+      // Explanations (e.g. "almost a swipe") may differ; the decisions may not.
+      const types = (smoothing: boolean) => run(g.frames, smoothing).map((e) => e.type).filter((e) => !EXPLANATIONS.has(e));
       expect(types(true), f).toEqual(types(false));
     }
   });

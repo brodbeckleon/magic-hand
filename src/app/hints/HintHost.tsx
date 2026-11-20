@@ -67,6 +67,10 @@ export function HintHost() {
     };
 
     const offEvents = engine.events.subscribe((e) => {
+      if (e.kind === "key_focus") {
+        if (useUi.getState().view === "main") show("focus");
+        return;
+      }
       if (e.kind !== "next" && e.kind !== "prev") return;
       triggers++;
       // A swipe while our own window had the focus: no key was sent (see Engine.handle).
@@ -80,11 +84,12 @@ export function HintHost() {
       } else {
         noHandSince = null;
       }
-      if (s.persons.length >= 2 && !seenMulti) {
+      // Only people seen on more than one pose frame: a one-frame phantom is nobody.
+      if (s.persons.filter((p) => p.confirmed).length >= 2 && !seenMulti) {
         seenMulti = true;
         show("takeover");
       }
-      if (s.persons.some((p) => p.far) && !seenFar) {
+      if (s.persons.some((p) => p.far && p.confirmed) && !seenFar) {
         seenFar = true;
         show("far");
       }

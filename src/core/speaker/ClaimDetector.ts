@@ -1,6 +1,6 @@
 import { isHandOpen } from "../features.ts";
 import { dist } from "../geometry.ts";
-import type { Hand, Landmark, PoseObs } from "../types.ts";
+import type { Hand, Landmark } from "../types.ts";
 
 const TIPS = [8, 12, 16, 20];
 const PIPS = [6, 10, 14, 18];
@@ -12,13 +12,21 @@ export function isOpenPalm(lms: readonly Landmark[], aspect = 4 / 3): boolean {
   return TIPS.every((tip, i) => d(lms[tip]!) > 1.1 * d(lms[PIPS[i]!]!));
 }
 
-/** Hand raised: wrist above the shoulders when the pose is known, otherwise fingers pointing up. */
-export function isRaised(lms: readonly Landmark[], pose?: PoseObs): boolean {
+/**
+ * How far the middle fingertip must be above the wrist, in hand lengths (wrist to middle knuckle).
+ * A stretched hand pointing straight up reaches about 1.9; 1.0 still allows a tilt of roughly 55°.
+ */
+export const UPRIGHT = 1.0;
+
+/**
+ * Hand upright: fingers pointing up, at any height (in front of the chest is fine; nobody has to
+ * raise an arm above the shoulders). Distances are aspect-corrected, in frame heights.
+ */
+export function isRaised(lms: readonly Landmark[], aspect = 4 / 3): boolean {
   const wrist = lms[0]!;
-  const ls = pose?.landmarks[11];
-  const rs = pose?.landmarks[12];
-  if (ls && rs && (ls.visibility ?? 1) > 0.5 && (rs.visibility ?? 1) > 0.5) return wrist.y < Math.max(ls.y, rs.y);
-  return lms[12]!.y < wrist.y - 0.02; // middle fingertip above the wrist
+  const knuckle = lms[9]!;
+  const length = Math.hypot((knuckle.x - wrist.x) * aspect, knuckle.y - wrist.y);
+  return length > 0 && wrist.y - lms[12]!.y >= UPRIGHT * length;
 }
 
 export const CLAIM_TIME = 1.0;
@@ -31,9 +39,9 @@ const STILL = 0.5; // hand lengths
 const DROPOUT = 0.3;
 
 /**
- * "Raise an open hand for about a second" = take over as presenter. Tracks one hand: progress grows
- * while the hand is open, raised and roughly still. It resets when the hand moves, or stops looking
- * open and raised for longer than a short dropout.
+ * "Show an open palm, fingers up, for about a second" = take over as presenter. Tracks one hand:
+ * progress grows while the hand is open, upright and roughly still. It resets when the hand moves,
+ * or stops looking open and upright for longer than a short dropout.
  */
 export class ClaimDetector {
   private start: number | null = null;
@@ -49,9 +57,9 @@ export class ClaimDetector {
   }
 
   /** Returns true once, when the claim completes. */
-  update(t: number, lms: readonly Landmark[] | null, hand: Hand | null, pose?: PoseObs, aspect = 4 / 3): boolean {
+  update(t: number, lms: readonly Landmark[] | null, hand: Hand | null, aspect = 4 / 3): boolean {
     // Open: the 2D check (palm to the camera) or the 3D one (any turn, three fingers are enough).
-    const ok = !!lms && !!hand && (isOpenPalm(lms, aspect) || isHandOpen(lms, aspect)) && isRaised(lms, pose);
+    const ok = !!lms && !!hand && (isOpenPalm(lms, aspect) || isHandOpen(lms, aspect)) && isRaised(lms, aspect);
     if (!ok) {
       if (this.start === null || t - this.lastOk > DROPOUT) this.reset();
       return false;

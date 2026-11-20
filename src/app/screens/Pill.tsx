@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { classifyFocus, type FrontApp } from "../../core/focus/classify.ts";
 import { useTranslation } from "react-i18next";
 import { platform } from "../../platform/index.ts";
+import type { PipelineSnapshot } from "../../core/pipeline/GesturePipeline.ts";
 import { RecBadge } from "../debug/DevPanel.tsx";
 import { Icon } from "../design/Icon.tsx";
 import { useEngineInstance } from "../engine/context.ts";
 import { useEngine } from "../state/engine.ts";
+import { eventText } from "../state/eventText.ts";
 import { useSettings } from "../state/settings.ts";
 import { useUi } from "../state/ui.ts";
 
@@ -25,6 +27,7 @@ export function Pill() {
   const last = useRef<HTMLSpanElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   const handDot = useRef<HTMLSpanElement>(null);
+  const ring = useRef<SVGCircleElement>(null);
   const [focus, setFocus] = useState<FrontApp | null>(null);
 
   // Warn when the slide keys would go to another app (a chat window popped up, wrong window clicked).
@@ -40,25 +43,54 @@ export function Pill() {
   }, []);
   const focusKind = classifyFocus(focus);
 
+  // Second line: what Magic Hand sees right now, briefly replaced by what just happened. Direct DOM
+  // writes, and only when something changed (this runs on every analysed frame).
   useEffect(() => {
     let timer = 0;
+    let back = 0;
+    let eventUntil = 0;
+    let statusKey = "";
+    let statusText = "";
+    const show = (text: string) => {
+      if (last.current && last.current.textContent !== text) last.current.textContent = text;
+    };
     const offEvents = engine.events.subscribe((e) => {
-      if (!last.current || !pill.current) return;
-      const text = e.kind === "next" || e.kind === "prev" ? `${e.swipe === "left" ? "←" : "→"} ${t(`event.${e.kind}`)}` : t(`event.${e.kind}`, { n: e.person ?? "–" });
-      last.current.textContent = text;
+      if (!pill.current) return;
+      const arrow = e.kind === "next" || e.kind === "prev" ? `${e.swipe === "left" ? "←" : "→"} ` : "";
+      show(arrow + eventText(t, "pill.event", e));
+      eventUntil = performance.now() + EVENT_SHOW_MS;
       pill.current.dataset.flash = e.kind;
       clearTimeout(timer);
-      timer = window.setTimeout(() => pill.current && delete pill.current.dataset.flash, 900);
+      clearTimeout(back);
+      timer = window.setTimeout(() => {
+        if (pill.current) delete pill.current.dataset.flash;
+      }, 900);
+      // Back to the live status even if no frame comes (paused: the line stays empty).
+      back = window.setTimeout(() => !useEngine.getState().paused && show(statusText), EVENT_SHOW_MS);
     });
     const offFrames = engine.frames.subscribe((s) => {
       if (handDot.current) handDot.current.dataset.seen = String(s.hands.length > 0);
+      const status = liveStatus(s);
+      updateRing(ring.current, status.claim);
+      if (status.key !== statusKey) {
+        statusKey = status.key;
+        statusText = t(status.text, status.args);
+      }
+      if (performance.now() >= eventUntil) show(statusText);
     });
     return () => {
       offEvents();
       offFrames();
       clearTimeout(timer);
+      clearTimeout(back);
     };
   }, [engine, t]);
+
+  // Paused: the camera is off, so the last status would be stale.
+  useEffect(() => {
+    if (paused && last.current) last.current.textContent = "";
+    updateRing(ring.current, 0);
+  }, [paused]);
 
   useYieldFocusAfterDrag();
 
@@ -79,7 +111,13 @@ export function Pill() {
     <>
     {camera === "large" && <div className="pill-camera-drag" data-tauri-drag-region data-testid="pill-camera" />}
     <div ref={pill} className="pill glass" data-testid="pill" data-state={state} data-focus={focusKind} data-tauri-drag-region>
-      <span ref={handDot} className="pill-dot" data-state={state} data-seen="false" data-tauri-drag-region />
+      <span className="pill-dot-wrap" data-tauri-drag-region>
+        {/* Fills while someone holds up an open palm to take over (several people in view). */}
+        <svg className="pill-ring" viewBox="0 0 24 24" aria-hidden data-testid="pill-takeover" data-progress="0" visibility="hidden">
+          <circle ref={ring} cx="12" cy="12" r="10" fill="none" pathLength={100} strokeDasharray="100" strokeDashoffset="100" transform="rotate(-90 12 12)" />
+        </svg>
+        <span ref={handDot} className="pill-dot" data-state={state} data-seen="false" data-tauri-drag-region />
+      </span>
       <div className="pill-text" data-tauri-drag-region>
         <strong data-tauri-drag-region>
           {paused ? t("pill.paused") : calibrated ? t("pill.ready") : t("pill.waiting")}
@@ -89,7 +127,7 @@ export function Pill() {
             <Icon name="warning" size={13} /> {t("pill.focusOther", { app: focus!.name })}
           </span>
         ) : (
-          <span ref={last} className="pill-last" data-tauri-drag-region />
+          <span ref={last} className="pill-last" data-testid="pill-status" aria-live="polite" data-tauri-drag-region />
         )}
       </div>
       <RecBadge />
@@ -157,6 +195,40 @@ function useYieldFocusAfterDrag() {
       window.removeEventListener("pointermove", onMove, true);
     };
   }, []);
+}
+
+/** How long an event replaces the live status in the bar. */
+const EVENT_SHOW_MS = 1500;
+
+/**
+ * The live status line: who controls the slides with several people in view (or the progress of
+ * someone taking over), otherwise whether a hand is seen. `key` changes only when the text does.
+ */
+export function liveStatus(s: PipelineSnapshot): { key: string; text: string; args?: Record<string, unknown>; claim: number } {
+  const confirmed = s.persons.filter((p) => p.confirmed);
+  if (confirmed.length >= 2) {
+    // The speaker holding a hand still is not taking over (it is the same sign).
+    const claim = Math.max(0, ...confirmed.filter((p) => !p.active).map((p) => p.claim));
+    if (claim > 0.05) {
+      const p = Math.round(claim * 10) * 10; // steps of 10 %: the text does not flicker every frame
+      return { key: `t${p}`, text: "pill.takeover", args: { p }, claim };
+    }
+    const slot = confirmed.find((p) => p.active)?.slot;
+    return slot ? { key: `c${slot}`, text: "pill.status.controls", args: { n: slot }, claim: 0 } : { key: "x", text: "pill.status.nobody", claim: 0 };
+  }
+  return s.hands.length ? { key: "h", text: "pill.status.handSeen", claim: 0 } : { key: "0", text: "pill.status.noHand", claim: 0 };
+}
+
+function updateRing(circle: SVGCircleElement | null, claim: number): void {
+  const svg = circle?.ownerSVGElement;
+  if (!circle || !svg) return;
+  const visible = claim > 0.05 ? "visible" : "hidden";
+  if (svg.getAttribute("visibility") !== visible) svg.setAttribute("visibility", visible);
+  const p = String(Math.round(claim * 100));
+  if (svg.dataset.progress !== p) {
+    svg.dataset.progress = p;
+    circle.setAttribute("stroke-dashoffset", String(100 - Number(p)));
+  }
 }
 
 export type PillCamera = "off" | "small" | "large";

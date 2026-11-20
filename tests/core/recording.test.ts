@@ -18,7 +18,8 @@ describe("recording", () => {
     expect(rec.frames[0]!.poses).toHaveLength(1);
     expect(rec.frames[1]!.poses).toBeNull();
     const events = replay(rec);
-    expect(events.map((e) => e.command ?? e.event)).toEqual(["calibrated", "speaker", "next", "prev", "ignored_return"]);
+    // Holding the hand still is also the take-over sign, so control is given in the same frame.
+    expect(events.map((e) => e.command ?? e.event)).toEqual(["speaker", "calibrated", "next", "prev", "ignored_return"]);
     expect(diffEvents(rec.events, events)).toEqual([]);
   });
 

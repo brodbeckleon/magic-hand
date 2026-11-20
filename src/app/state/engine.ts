@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { CameraError } from "../../vision/camera.ts";
+import type { Side } from "../../core/types.ts";
 import type { Delegate } from "../../vision/landmarkers.ts";
 
 export type EngineStatus =
@@ -11,7 +12,12 @@ export type EngineStatus =
   | { kind: "error"; error: CameraError | "model" | "gpu" };
 
 export type UiEventKind =
-  | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_windup" | "ignored_not_speaker" | "ignored_closed" | "speaker" | "missed" | "false";
+  | "calibrated" | "next" | "prev" | "ignored_dir" | "ignored_return" | "ignored_windup" | "ignored_not_speaker" | "ignored_closed"
+  | "ignored_weak" | "ignored_other_hand" | "speaker" | "missed" | "false"
+  /** A swipe while Magic Hand itself had the focus: the key was not sent (it would land in our UI). */
+  | "key_focus"
+  /** Sending the key failed (e.g. no Accessibility permission): the slide did not change. */
+  | "key_failed";
 
 export interface UiEvent {
   id: number;
@@ -22,8 +28,12 @@ export interface UiEvent {
   reactionMs?: number;
   /** Threshold frame captured -> key, ms. */
   detectMs?: number;
-  /** Person concerned (speaker changes, ignored swipes); null = nobody has control. */
+  /** Person concerned (speaker changes, ignored swipes), raw id; null = nobody has control. */
   person?: number | null;
+  /** The number shown for that person (1..maxPeople); null if not known. */
+  slot?: number | null;
+  /** Hand concerned (ignored movements): where the overlay explains it. */
+  side?: Side;
 }
 
 interface EngineStore {

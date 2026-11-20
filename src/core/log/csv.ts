@@ -23,6 +23,10 @@ export type LogEvent =
   | "ignored_windup"
   | "ignored_not_speaker"
   | "ignored_closed"
+  | "ignored_weak"
+  | "ignored_other_hand"
+  /** A swipe while Magic Hand itself had the focus: no key was sent. */
+  | "nicht_gesendet_fokus"
   | "verpasst"
   | "fehlausloesung"
   | "pause"

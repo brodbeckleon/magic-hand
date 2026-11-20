@@ -164,6 +164,27 @@ test.describe("app shell", () => {
     expect(await page.locator("video.camera").evaluate((v: HTMLVideoElement) => v.srcObject)).toBeNull();
   });
 
+  test("the bar shows what Magic Hand sees, briefly replaced by what happened", async ({ page }) => {
+    await page.getByTestId("present").click();
+    const status = page.getByTestId("pill-status");
+    await play(page, new TraceBuilder().calibrated().hold(0.2));
+    await expect(status).toHaveText("Hand seen");
+    await play(page, new TraceBuilder().calibrated().move(-160, 0, 0.25).hold(0.3));
+    await expect(status).toHaveText("← Next slide");
+    await play(page, new TraceBuilder().hold(0.1).gap(1.8));
+    await expect(status).toHaveText("No hand in view");
+  });
+
+  test("almost a swipe: explained in the bar and next to the hand, but not as a toast", async ({ page }) => {
+    // The movement counts as stopped once the 0.5 s swipe window has slid past it.
+    const playing = play(page, new TraceBuilder().calibrated().move(-70, 0, 0.25).hold(1.5));
+    await expect(page.getByTestId("reason")).toHaveAttribute("visibility", "visible");
+    await expect(page.getByTestId("reason")).toContainText("Too slow");
+    await playing;
+    await expect(page.getByTestId("toast")).toHaveCount(0);
+    expect(await sentKeys(page)).toEqual([]);
+  });
+
   test("explains an ignored diagonal swipe a few times, then stops", async ({ page }) => {
     await play(page, new TraceBuilder().calibrated().move(-90, 160, 0.25).hold(0.5));
     await expect(page.getByTestId("toast")).toContainText("swipe more horizontally");
@@ -209,6 +230,15 @@ test("Help > Try it now: shows what was recognised without sending keys", async 
   await expect(page.getByTestId("try-result")).toContainText("Too diagonal");
   await expect(page.getByTestId("try-panel")).toContainText("1 swipe recognised");
   expect(await sentKeys(page)).toEqual([]);
+});
+
+test("Help > Try it now: a swipe that stops short says what to do", async ({ page }) => {
+  await open(page);
+  await waitLive(page);
+  await page.getByTestId("open-help").click();
+  await page.getByTestId("try-it").click();
+  await play(page, new TraceBuilder().calibrated().move(-70, 0, 0.25).hold(0.8));
+  await expect(page.getByTestId("try-result")).toContainText("swipe a bit further and faster");
 });
 
 test("pill warns when the slide keys would go to another app", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEngine } from "../state/engine.ts";
+import { eventText } from "../state/eventText.ts";
 
 /** The last five inputs, including ignored movements with the reason (prototype top right). */
 export function EventList() {
@@ -13,7 +14,7 @@ export function EventList() {
           <time>{e.clock}</time>
           <span>
             {e.swipe && (e.swipe === "left" ? "← " : "→ ")}
-            {t(`event.${e.kind}`, { n: e.person ?? "–" })}
+            {eventText(t, "event", e)}
             {e.reactionMs !== undefined && ` · ${e.reactionMs.toFixed(0)} ms`}
           </span>
         </li>

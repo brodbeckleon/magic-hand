@@ -23,7 +23,7 @@ test.describe("hints", () => {
 
   test("several people in view: explains how to take over", async ({ page }) => {
     await playFrames(page, new TwoPeople().run(0.6, () => ({ b: swipeHand(bX, 300) })).frames);
-    await expect(page.getByTestId("hint-takeover")).toContainText("raise an open hand");
+    await expect(page.getByTestId("hint-takeover")).toContainText("hold up an open palm");
   });
 
   test("no hints in the developer view (events are listed instead)", async ({ page }) => {

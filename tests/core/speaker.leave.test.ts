@@ -73,10 +73,15 @@ describe("the speaker walks out of the picture and comes back", () => {
     s.events = [];
     swipeB(s, false);
     expect(names(s)).toEqual([`speaker:${idB}`, `next@${idB}`]);
-    s.run(1, { a: swipeHand(aX, 300), b: true });
+    // A comes back and swipes without showing the take-over sign (a palm held still for 1 s).
+    s.run(0.6, { a: swipeHand(aX, 300), b: true });
     s.events = [];
     s.swipeA();
     expect(names(s).filter((n) => n.startsWith("next"))).toEqual([]);
+    // Showing the palm for a second hands control back.
+    s.run(1.2, { a: swipeHand(aX - 140, 300), b: true });
+    const idA = s.p.persons.current.find((p) => p.cx < 0.5)!.id;
+    expect(names(s)).toContain(`speaker:${idA}`);
   });
 
   it("back within 3 s: still the speaker", () => {
