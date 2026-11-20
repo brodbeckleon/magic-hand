@@ -6,6 +6,8 @@
 //   pnpm bench                       all scenes, main window and presenting bar
 //   pnpm bench --seconds 20          longer measurement per scene (default 10, after 6 s to settle)
 //   pnpm bench --pin full            analyse every frame (the behaviour before the adaptive rate)
+//   pnpm bench --camera-fps 20       frame rate of the fake camera (default 30, a typical webcam)
+//   pnpm bench --resolution 1280x720 camera resolution setting (default 640x480)
 //   pnpm bench --views bar --scenes empty,person --json out.json
 //
 // Numbers are per second of wall time. CPU is the sum over Chromium's processes (renderer with
@@ -30,6 +32,8 @@ const pin = opt("pin", "") === "full" ? "full" : null;
 const views = opt("views", "main,bar").split(",") as ("main" | "bar")[];
 const sceneNames = opt("scenes", "empty,person,swipe").split(",") as SceneName[];
 const jsonOut = opt("json", "");
+const cameraFps = Number(opt("camera-fps", "30"));
+const resolution = opt("resolution", "640x480");
 const PORT = 1425;
 const URL = `http://127.0.0.1:${PORT}/?delegate=CPU`;
 
@@ -45,7 +49,14 @@ interface BenchStats {
   mode: string;
   fps: number;
 }
-type Hooks = { __magicHand: { benchStats(): BenchStats; scene(f: unknown[]): void; pinRate(m: "full" | null): void } };
+type Hooks = {
+  __magicHand: {
+    benchStats(): BenchStats;
+    scene(f: unknown[]): void;
+    pinRate(m: "full" | null): void;
+    settings: { getState(): { update(p: object): void } };
+  };
+};
 type SceneFrame = Pick<FrameObs, "hands" | "poses">;
 
 /** Looped scenes at 30 fps (normalised landmarks, any camera size). */
@@ -101,6 +112,12 @@ async function measure(browser: Browser, browserCdp: CDPSession, view: "main" | 
   const page = await browser.newPage({ viewport: { width: 1024, height: 720 } });
   await page.goto(URL);
   await page.getByTestId("status").waitFor({ timeout: 60_000 });
+  if (resolution !== "640x480") {
+    // Changing the resolution restarts the camera.
+    await page.evaluate((r) => (globalThis as unknown as Hooks).__magicHand.settings.getState().update({ camera: { resolution: r } }), resolution);
+    await page.waitForTimeout(1500);
+    await page.getByTestId("status").waitFor({ timeout: 60_000 });
+  }
   if (view === "bar") {
     await page.getByTestId("present").click();
     await page.setViewportSize({ width: 380, height: 353 }); // pillSize("large") for a 4:3 camera
@@ -148,7 +165,7 @@ const server = spawn(join(root, "node_modules", ".bin", "vite"), ["--mode", "e2e
 const rows: Row[] = [];
 try {
   await waitForServer();
-  const browser = await chromium.launch({ args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] });
+  const browser = await chromium.launch({ args: [`--use-fake-device-for-media-stream=fps=${cameraFps}`, "--use-fake-ui-for-media-stream"] });
   const browserCdp = await browser.newBrowserCDPSession();
   for (const view of views) {
     for (const name of sceneNames) {
@@ -163,7 +180,7 @@ try {
 }
 
 const f1 = (v: number) => v.toFixed(1);
-console.log(`\n${seconds} s per scene after ${settle} s${pin ? ", rate pinned to every frame" : ""}; CPU in % of one core\n`);
+console.log(`\n${seconds} s per scene after ${settle} s, ${cameraFps} fps camera at ${resolution}${pin ? ", rate pinned to every frame" : ""}; CPU in % of one core\n`);
 console.log("| view | scene | mode | analysed/s | skipped/s | dropped/s | model ms | main task ms/s | layout ms/s | style ms/s | CPU renderer | CPU GPU | CPU total |");
 console.log("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
 for (const r of rows) {
