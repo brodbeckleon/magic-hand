@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Rect } from "../../core/zone/Zone.ts";
+import { useSettings } from "./settings.ts";
 
 export type Sheet = "preferences" | "help";
 export type WizardKind = "firstRun" | "calibrate";
@@ -8,6 +9,12 @@ export type HelpTab = "start" | "trouble" | "privacy" | "about";
 interface UiStore {
   /** Full window, or the small always-on-top pill while presenting. */
   view: "main" | "pill";
+  /**
+   * Presenting with the bar hidden: the window stays on screen (the camera loop needs a visible
+   * webview) but draws nothing and lets clicks through. The tray / menu-bar icon shows it again.
+   */
+  pillHidden: boolean;
+  setPillHidden(hidden: boolean): void;
   sheet: Sheet | null;
   helpTab: HelpTab;
   /** Guided flow over the live view (replaces the main chrome while open). */
@@ -27,6 +34,8 @@ interface UiStore {
 
 export const useUi = create<UiStore>()((set) => ({
   view: "main",
+  pillHidden: false,
+  setPillHidden: (pillHidden) => set((s) => (s.view === "pill" ? { pillHidden } : {})),
   sheet: null,
   helpTab: "start",
   wizard: null,
@@ -36,7 +45,7 @@ export const useUi = create<UiStore>()((set) => ({
   closeWizard: () => set({ wizard: null, zoneDraft: undefined }),
   openSheet: (sheet, helpTab) => set((s) => ({ sheet, helpTab: helpTab ?? s.helpTab })),
   closeSheet: () => set({ sheet: null }),
-  setView: (view) => set({ view, sheet: null }),
+  setView: (view) => set({ view, sheet: null, pillHidden: view === "pill" && useSettings.getState().pill.start === "hidden" }),
   pauseShortcutOk: true,
   setPauseShortcutOk: (pauseShortcutOk) => set({ pauseShortcutOk }),
 }));
