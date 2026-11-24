@@ -72,18 +72,7 @@ jobs:
         with:
           workspaces: src-tauri
       - run: pnpm install --frozen-lockfile
-      # Ad-hoc signed without APPLE_CERTIFICATE, otherwise with APPLE_SIGNING_IDENTITY (and
-      # notarized with APPLE_ID etc.), as in ci.yml. Only secrets that are set are passed on.
-      - name: apple signing env
-        if: runner.os == 'macOS'
-        run: scripts/apple-signing-env.sh
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # macOS: signed ad hoc (tauri.conf.json: signingIdentity "-"), no Apple secrets (docs/release.md).
       - name: build and upload
         uses: tauri-apps/tauri-action@v0
         env:

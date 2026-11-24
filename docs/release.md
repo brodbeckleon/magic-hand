@@ -29,9 +29,8 @@ veröffentlicht sie unter **Releases** auf GitHub.
      fehl, bleibt der Entwurf liegen: unter *Releases* löschen, Fehler beheben, Tag neu setzen
      (`git push --delete origin v0.2.0`, dann Schritt 2).
 
-Tags mit Bindestrich (z. B. `v0.2.0-beta.1`) werden als Pre-Release markiert. Signiert wird wie
-unten beschrieben, sobald die Secrets angelegt sind; ohne sie ist die macOS-App ad hoc signiert und
-die Windows-Installer sind unsigniert.
+Tags mit Bindestrich (z. B. `v0.2.0-beta.1`) werden als Pre-Release markiert. Die macOS-App ist ad
+hoc signiert, die Windows-Installer sind unsigniert.
 
 ## macOS: signieren und notarisieren
 
@@ -59,8 +58,9 @@ neu erlauben, die Endlosschleife gibt es aber nicht mehr.
 
 Mit einem Zertifikat lautet die Designated Requirement `identifier "ch.zhaw.magichand" and
 certificate root = H"…"`. Sie bleibt über Versionen gleich, solange dasselbe Zertifikat signiert.
-Dafür genügt ein selbst signiertes Codesigning-Zertifikat in den bestehenden Secrets
-(`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`):
+Dafür genügt ein selbst signiertes Codesigning-Zertifikat als Secrets `APPLE_CERTIFICATE`,
+`APPLE_CERTIFICATE_PASSWORD` und `APPLE_SIGNING_IDENTITY`. Die Workflows geben derzeit **keine**
+Apple-Secrets weiter, sie müssen dafür erweitert werden (siehe *Secrets in den Workflows*).
 
 - Tauri erkennt importierte Zertifikate nur, wenn der Common Name mit einem Apple-Präfix beginnt
   (z. B. `Apple Development:`) und das Subject eine Organisationseinheit (OU) hat. Beispiel, das
@@ -96,14 +96,21 @@ Ohne Gatekeeper-Warnung geht es nur mit einem Apple Developer Account.
    | `APPLE_SIGNING_IDENTITY` | z. B. `Developer ID Application: Name (TEAMID)` |
    | `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` | Für die Notarisierung (App-spezifisches Passwort) |
 
-3. Tauri liest diese Variablen beim `tauri build`, signiert und notarisiert automatisch.
+3. Die Variablen im Build-Schritt beider Workflows setzen (siehe unten). Tauri liest sie beim
+   `tauri build`, signiert und notarisiert automatisch.
 
-`scripts/apple-signing-env.sh` gibt in beiden Workflows nur die Secrets weiter, die gesetzt sind.
-GitHub macht aus einem fehlenden Secret einen leeren String, und Tauri nimmt eine vorhandene
-Variable beim Wort, auch wenn sie leer ist. Ein leeres `APPLE_CERTIFICATE` würde als Zertifikat
-importiert, leere `APPLE_ID`/`APPLE_PASSWORD`/`APPLE_TEAM_ID` würden eine Notarisierung starten,
-die fehlschlägt. Notarisiert wird deshalb nur mit Zertifikat und allen drei Werten. Ist nur ein
-Teil davon gesetzt, bricht der Workflow mit einer Meldung ab.
+### Secrets in den Workflows
+
+`ci.yml` und `release.yml` setzen derzeit keine `APPLE_*`-Variablen, deshalb wird immer ad hoc
+signiert. Wer ein Zertifikat einführt, ergänzt sie im macOS-Build-Schritt (`env:`) und beachtet:
+
+- Nur Variablen setzen, deren Secret wirklich existiert. GitHub macht aus einem fehlenden Secret
+  einen leeren String, und Tauri nimmt eine vorhandene Variable beim Wort, auch wenn sie leer ist.
+  Ein leeres `APPLE_CERTIFICATE` wird als Zertifikat importiert; leere `APPLE_ID`/`APPLE_PASSWORD`/
+  `APPLE_TEAM_ID` starten eine Notarisierung, die fehlschlägt.
+- `APPLE_SIGNING_IDENTITY` hat Vorrang vor dem `"-"` aus `tauri.conf.json` und ist mit Zertifikat
+  Pflicht.
+- Für ein selbst signiertes Zertifikat die drei Notarisierungs-Variablen ganz weglassen.
 
 Die App läuft **ohne App Sandbox** (sonst kommen die Pfeiltasten nicht in PowerPoint/Keynote an),
 aber mit Hardened Runtime und der Kamera-Berechtigung (`src-tauri/Entitlements.plist`). Damit ist

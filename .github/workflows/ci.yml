@@ -61,19 +61,8 @@ jobs:
       - run: pnpm assets
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml
-      # Without APPLE_CERTIFICATE the bundle is signed ad hoc (tauri.conf.json); with it,
-      # APPLE_SIGNING_IDENTITY takes precedence (docs/release.md). Only secrets that are set are
-      # passed on: empty ones would make the bundler import an empty certificate or notarize.
-      - name: apple signing env
-        if: runner.os == 'macOS'
-        run: scripts/apple-signing-env.sh
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # Signed ad hoc (tauri.conf.json: signingIdentity "-"). The workflows pass no Apple secrets
+      # (docs/release.md).
       - run: pnpm tauri build ${{ matrix.args }}
       # An unsigned bundle makes macOS ask for the camera and Accessibility again and again.
       - name: verify signature
