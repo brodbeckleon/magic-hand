@@ -12,7 +12,7 @@ vollständig auf dem Gerät.
 - **Auch auf Distanz**: hilft, wenn man weit von der Kamera entfernt steht.
 - **Privat**: keine Bilder werden gespeichert oder gesendet, die App braucht kein Internet.
 
-Ein Projekt im Modul Natural User Interfaces an der ZHAW von Léon Brodbeck, Michael Gasser,
+Ein Projekt im Modul Natural User Interfaces an der ZHAW von Léon Brodbeck, Michel Gasser,
 Kaspar Streiff und Diego Esposito. Der ursprüngliche Python-Prototyp liegt unter
 [`prototype/`](prototype/README.md).
 
