@@ -32,10 +32,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        include:
+          # Universal, as in release.yml: the signature check below needs both architectures.
+          - os: macos-latest
+            args: --target universal-apple-darwin
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            bundle: src-tauri/target/universal-apple-darwin/release/bundle
+          - os: windows-latest
+            args: ""
+            rust-targets: ""
+            bundle: src-tauri/target/release/bundle
     runs-on: ${{ matrix.os }}
-    env:
-      HAS_APPLE_CERT: ${{ secrets.APPLE_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -46,6 +53,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+          targets: ${{ matrix.rust-targets }}
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
@@ -53,28 +61,20 @@ jobs:
       - run: pnpm assets
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml
-      # Signed + notarised only when the secrets exist (docs/release.md). Empty variables would make
-      # the bundler try to import an empty certificate, so the unsigned build sets none.
-      - name: tauri build (signed)
-        if: env.HAS_APPLE_CERT == 'true' && runner.os == 'macOS'
-        run: pnpm tauri build
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      - name: tauri build
-        if: env.HAS_APPLE_CERT != 'true' || runner.os != 'macOS'
-        run: pnpm tauri build
+      # Signed ad hoc (tauri.conf.json: signingIdentity "-"). The workflows pass no Apple secrets
+      # (docs/release.md).
+      - run: pnpm tauri build ${{ matrix.args }}
+      # An unsigned bundle makes macOS ask for the camera and Accessibility again and again.
+      - name: verify signature
+        if: runner.os == 'macOS'
+        run: scripts/verify-macos-signature.sh "${{ matrix.bundle }}/macos/Magic Hand.app"
       - uses: actions/upload-artifact@v4
         with:
           name: magic-hand-${{ matrix.os }}
           path: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/msi/*.msi
+            ${{ matrix.bundle }}/dmg/*.dmg
+            ${{ matrix.bundle }}/nsis/*.exe
+            ${{ matrix.bundle }}/msi/*.msi
           if-no-files-found: ignore
 
   golden:

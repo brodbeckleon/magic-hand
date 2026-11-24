@@ -58,8 +58,6 @@ jobs:
             args: ""
             rust-targets: ""
     runs-on: ${{ matrix.os }}
-    env:
-      HAS_APPLE_CERT: ${{ secrets.APPLE_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -74,30 +72,18 @@ jobs:
         with:
           workspaces: src-tauri
       - run: pnpm install --frozen-lockfile
-      # Signed + notarised only when the secrets exist (docs/release.md), as in ci.yml: empty
-      # variables would make the bundler try to import an empty certificate.
-      - name: build and upload (signed)
-        if: env.HAS_APPLE_CERT == 'true' && runner.os == 'macOS'
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        with:
-          releaseId: ${{ needs.draft.outputs.id }}
-          args: ${{ matrix.args }}
+      # macOS: signed ad hoc (tauri.conf.json: signingIdentity "-"), no Apple secrets (docs/release.md).
       - name: build and upload
-        if: env.HAS_APPLE_CERT != 'true' || runner.os != 'macOS'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           releaseId: ${{ needs.draft.outputs.id }}
           args: ${{ matrix.args }}
+      # The DMG is already in the draft, but a failure here keeps the release from being published.
+      - name: verify signature
+        if: runner.os == 'macOS'
+        run: scripts/verify-macos-signature.sh
 
   publish:
     needs: [draft, build]

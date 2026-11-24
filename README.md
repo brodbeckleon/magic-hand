@@ -32,9 +32,10 @@ Pull Request unter **Checks → CI → Artifacts** (Anmeldung bei GitHub nötig)
 ### macOS (13 oder neuer)
 
 1. Aus dem Release die `.dmg` herunterladen (Apple Silicon und Intel), öffnen und **Magic Hand** in
-   den Ordner **Programme** ziehen. (Das CI-Artefakt **`magic-hand-macos-latest`** läuft nur auf
-   Apple Silicon und muss zuerst entpackt werden.)
-2. Die App ist noch nicht signiert: im Ordner Programme **Rechtsklick → Öffnen → Öffnen**.
+   den Ordner **Programme** ziehen. (Das CI-Artefakt **`magic-hand-macos-latest`** muss zuerst
+   entpackt werden.)
+2. Die App ist nur ad hoc signiert, nicht von Apple notarisiert: im Ordner Programme
+   **Rechtsklick → Öffnen → Öffnen**.
    Meldet macOS, die App sei «beschädigt», einmal im Terminal ausführen und dann erneut öffnen:
    ```bash
    xattr -cr "/Applications/Magic Hand.app"
@@ -44,8 +45,29 @@ Pull Request unter **Checks → CI → Artifacts** (Anmeldung bei GitHub nötig)
    Datenschutz & Sicherheit → Bedienungshilfen* **Magic Hand** einschalten. Ohne diese
    Berechtigung kommen die Tasten nicht in PowerPoint an.
 
-Hinweis: Bei unsignierten Builds vergisst macOS die Berechtigungen nach jeder neuen Version.
-Dann einfach erneut erlauben.
+Hinweis: Die App ist ad hoc signiert. macOS bindet die Berechtigungen an genau diesen Build, deshalb
+muss man Kamera und Bedienungshilfen **nach jedem Update einmal neu erlauben**. Bei den
+Bedienungshilfen dazu den alten Eintrag **Magic Hand** mit «–» entfernen und neu hinzufügen.
+
+#### macOS fragt immer wieder nach Kamera oder Bedienungshilfen
+
+Fragt macOS auch nach dem Erlauben bei jedem Start erneut, hängt noch die Freigabe eines alten
+Builds fest:
+
+1. Magic Hand beenden.
+2. Nur bei **v0.2.0**: Diese Version ist nicht als Ganzes signiert. Zuerst nachsignieren:
+   ```bash
+   codesign --force --deep --sign - "/Applications/Magic Hand.app"
+   ```
+3. Die gespeicherten Berechtigungen zurücksetzen:
+   ```bash
+   tccutil reset All ch.zhaw.magichand
+   ```
+4. **Mac neu starten.** Ohne Neustart hilft der Reset nicht, weil macOS die alte Freigabe bis dahin
+   zwischenspeichert.
+5. Magic Hand öffnen, Kamera und Bedienungshilfen erlauben.
+6. Magic Hand einmal beenden und wieder öffnen (oder auf der Karte **Magic Hand neu starten**
+   klicken). Die Bedienungshilfen gelten oft erst nach einem Neustart der App.
 
 ### Windows (10 und 11)
 
@@ -177,6 +199,7 @@ Kamerabild markiert, die anderen sind abgedunkelt.
 |---------|--------|
 | Folie wechselt nicht | In die Präsentation klicken (sie muss im Vordergrund sein). Unter macOS die Berechtigung Bedienungshilfen prüfen. |
 | Kamera startet nicht | Kamerazugriff in den Systemeinstellungen erlauben; andere Apps schliessen, die die Kamera nutzen (Teams, Zoom). |
+| macOS fragt immer wieder nach Berechtigungen | Siehe [macOS fragt immer wieder nach Kamera oder Bedienungshilfen](#macos-fragt-immer-wieder-nach-kamera-oder-bedienungshilfen). |
 | Wechselt zu oft | Empfindlichkeit «Ruhig» oder eine bevorzugte Hand wählen; die andere Hand kann dann frei gestikulieren. |
 | Wischen wird nicht erkannt | Zügiger und weiter wischen, Licht von vorne. Auf Distanz hilft die Auflösung «Hoch». Oder **Kalibrieren**. |
 | App ist langsam | Auflösung «Niedrig» wählen. |
@@ -227,8 +250,8 @@ pnpm dev           # nur die Oberfläche im Browser (localhost:1420, ohne Tasten
 | `python3 prototype/tools/gen_golden.py` | Golden-Fixtures aus dem Prototyp neu erzeugen |
 
 CI prüft jeden Pull Request: Lint, Typen, Unit- und Oberflächentests (Chromium und WebKit, Dev
-und Produktion), Golden-Fixtures, Builds für macOS und Windows sowie einen Rauchtest der echten
-App unter Linux (`tests/native/smoke.ts`).
+und Produktion), Golden-Fixtures, Builds für macOS (Universal, mit Prüfung der Signatur) und
+Windows sowie einen Rauchtest der echten App unter Linux (`tests/native/smoke.ts`).
 
 Weitere Dokumentation:
 
