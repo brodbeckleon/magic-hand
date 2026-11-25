@@ -40,9 +40,15 @@ describe("SwipeDetector properties", () => {
   });
 
   it("gives the same events wherever the presenter stands (translation invariance, MHR02)", () => {
+    // Positions on a 1/1024 px grid make the shift exact, so the detector sees bit-identical
+    // differences. Otherwise rounding (e.g. 42.4 - 748) can flip a movement at exactly 45°.
+    const onGrid = (frames: Frame[]): Frame[] => frames.map(({ t, hand }) => ({
+      t,
+      hand: hand && { ...hand, cx: Math.round(hand.cx * 1024) / 1024, cy: Math.round(hand.cy * 1024) / 1024 },
+    }));
     fc.assert(fc.property(fc.array(step, { maxLength: 12 }), fc.integer({ min: -2000, max: 2000 }),
       fc.integer({ min: -2000, max: 2000 }), (steps, tx, ty) => {
-        const frames = build(steps, true);
+        const frames = onGrid(build(steps, true));
         expect(run(transform(frames, 1, tx, ty))).toEqual(run(frames));
       }));
   });
